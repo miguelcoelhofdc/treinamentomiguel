@@ -1,0 +1,594 @@
+{
+  "meta": { "version": "1.0", "source": "manual" },
+  "profile": {
+    "name": "Miguel",
+    "age": 30,
+    "height": 175,
+    "initialWeight": 80,
+    "startDate": "2026-06-01",
+    "goals": {
+      "weight": 75,
+      "running5k": "25:00",
+      "pushups": 30,
+      "pullups": 10,
+      "plank": 120
+    },
+    "healthNotes": [
+      "Lesão no ombro direito — sempre pegada neutra, sem dor aguda",
+      "Dor no joelho — controlar amplitude e reportar dor ao profissional",
+      "⚠️ Este app não substitui acompanhamento médico e de educação física profissional."
+    ]
+  },
+  "phases": [
+    {
+      "id": "base",
+      "name": "Base",
+      "startWeek": 1,
+      "endWeek": 8,
+      "description": "Construção aeróbica e adaptação técnica. Foco em consistência, postura e aprender os movimentos com segurança.",
+      "color": "#4CAF50"
+    },
+    {
+      "id": "desenvolvimento",
+      "name": "Desenvolvimento",
+      "startWeek": 9,
+      "endWeek": 17,
+      "description": "Aumento progressivo de volume e intensidade. Intervalos mais longos na corrida, cargas maiores na força.",
+      "color": "#FF9800"
+    },
+    {
+      "id": "performance",
+      "name": "Performance",
+      "startWeek": 18,
+      "endWeek": 26,
+      "description": "Pico de performance e especificidade. Treinos no pace de prova, cargas máximas e AMRAP de calistenia.",
+      "color": "#F44336"
+    }
+  ],
+  "weekTemplate": {
+    "0": { "type": "corrida", "subtype": "longa",    "label": "Corrida Longa",          "icon": "🏃" },
+    "1": { "type": "forca",   "subtype": "forcaA",   "label": "Força A — Inferior",     "icon": "🦵" },
+    "2": { "type": "forca",   "subtype": "forcaB",   "label": "Força B — Superior + Barras", "icon": "💪" },
+    "3": { "type": "descanso","subtype": null,        "label": "Descanso Ativo",         "icon": "🧘" },
+    "4": { "type": "corrida", "subtype": "qualidade","label": "Corrida Qualidade",       "icon": "⚡" },
+    "5": { "type": "forca",   "subtype": "forcaC",   "label": "Força C — Full + Cond",  "icon": "🔥" },
+    "6": { "type": "calistenia","subtype":"calistenia","label": "Calistenia + Metcon",   "icon": "🤸" }
+  },
+  "deloadWeeks": [4, 8, 12, 16, 20, 24],
+  "exercises": {
+    "forcaA": [
+      {
+        "id": "agachamento",
+        "name": "Agachamento Livre",
+        "category": "compound",
+        "equipment": "Barra",
+        "phases": {
+          "base":          { "sets": 3, "reps": "10–12", "rest": "90s" },
+          "desenvolvimento": { "sets": 4, "reps": "8–10", "rest": "2min" },
+          "performance":   { "sets": 4, "reps": "5–8",  "rest": "3min" }
+        },
+        "technique": "Joelhos alinhados com pés, desça até 90° ou onde for confortável, peito aberto.",
+        "caution": "joelho",
+        "cautionNote": "Se dor no joelho: reduza amplitude e relate ao profissional."
+      },
+      {
+        "id": "legpress",
+        "name": "Leg Press 45°",
+        "category": "compound",
+        "equipment": "Máquina",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12",   "rest": "75s" },
+          "desenvolvimento": { "sets": 4, "reps": "10",   "rest": "90s" },
+          "performance":   { "sets": 4, "reps": "8",    "rest": "2min" }
+        },
+        "technique": "Pés centralizados na plataforma; não ultrapasse 90° de flexão.",
+        "caution": "joelho",
+        "cautionNote": "Amplitude segura para o joelho — sem dor."
+      },
+      {
+        "id": "extensora",
+        "name": "Cadeira Extensora (Unilateral)",
+        "category": "prehab",
+        "equipment": "Máquina",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12/lado", "rest": "60s" },
+          "desenvolvimento": { "sets": 3, "reps": "10/lado", "rest": "75s" },
+          "performance":   { "sets": 3, "reps": "10/lado", "rest": "75s" }
+        },
+        "technique": "Extensão controlada. Pré-hab VMO. Amplitude parcial se dor.",
+        "caution": "joelho",
+        "cautionNote": "Exercício de prehab — não force. Reduzir amplitude se dor."
+      },
+      {
+        "id": "legcurl",
+        "name": "Flexão de Joelhos (Leg Curl)",
+        "category": "isolation",
+        "equipment": "Máquina",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12",   "rest": "60s" },
+          "desenvolvimento": { "sets": 4, "reps": "10",   "rest": "75s" },
+          "performance":   { "sets": 4, "reps": "8–10", "rest": "90s" }
+        },
+        "technique": "Isquiotibiais fortes protegem o joelho. Movimento controlado nas duas fases.",
+        "caution": null,
+        "cautionNote": null
+      },
+      {
+        "id": "panturrilha",
+        "name": "Panturrilha em Pé",
+        "category": "isolation",
+        "equipment": "Máquina / Step",
+        "phases": {
+          "base":          { "sets": 4, "reps": "15",    "rest": "45s" },
+          "desenvolvimento": { "sets": 4, "reps": "15",    "rest": "45s" },
+          "performance":   { "sets": 5, "reps": "12–15", "rest": "60s" }
+        },
+        "technique": "Amplitude completa — pausa no topo e na descida.",
+        "caution": null,
+        "cautionNote": null
+      },
+      {
+        "id": "prancha_a",
+        "name": "Prancha Frontal",
+        "category": "core",
+        "equipment": "Nenhum",
+        "phases": {
+          "base":          { "sets": 3, "reps": "30s", "rest": "45s" },
+          "desenvolvimento": { "sets": 3, "reps": "45s", "rest": "45s" },
+          "performance":   { "sets": 3, "reps": "60s", "rest": "45s" }
+        },
+        "technique": "Corpo reto, glúteos contraídos, respire normalmente.",
+        "caution": null,
+        "cautionNote": null
+      }
+    ],
+    "forcaB": [
+      {
+        "id": "facepull",
+        "name": "Face Pull com Elástico",
+        "category": "prehab",
+        "equipment": "Elástico / Polia",
+        "phases": {
+          "base":          { "sets": 3, "reps": "15",    "rest": "60s" },
+          "desenvolvimento": { "sets": 3, "reps": "15",    "rest": "60s" },
+          "performance":   { "sets": 4, "reps": "12–15", "rest": "60s" }
+        },
+        "technique": "Prehab ombro — faça SEMPRE antes dos exercícios de empurrar.",
+        "caution": "ombro",
+        "cautionNote": "Exercício essencial para saúde do ombro. Não pule."
+      },
+      {
+        "id": "supino_halter",
+        "name": "Supino com Halteres (Pegada Neutra)",
+        "category": "compound",
+        "equipment": "Halteres",
+        "phases": {
+          "base":          { "sets": 3, "reps": "10–12", "rest": "90s" },
+          "desenvolvimento": { "sets": 4, "reps": "8–10",  "rest": "2min" },
+          "performance":   { "sets": 4, "reps": "6–8",   "rest": "3min" }
+        },
+        "technique": "Pegada neutra (polegares se olhando). Cotovelo a 45° do tronco.",
+        "caution": "ombro",
+        "cautionNote": "Pegada neutra é essencial. Amplitude sem dor no ombro."
+      },
+      {
+        "id": "remada_halter",
+        "name": "Remada Curvada com Halteres",
+        "category": "compound",
+        "equipment": "Halteres",
+        "phases": {
+          "base":          { "sets": 3, "reps": "10–12", "rest": "90s" },
+          "desenvolvimento": { "sets": 4, "reps": "8–10",  "rest": "2min" },
+          "performance":   { "sets": 4, "reps": "6–8",   "rest": "2min" }
+        },
+        "technique": "Pegada neutra, cotovelo junto ao tronco, escápula retraída no topo.",
+        "caution": null,
+        "cautionNote": null
+      },
+      {
+        "id": "desenvolvimento_halter",
+        "name": "Desenvolvimento com Halteres (Sentado)",
+        "category": "compound",
+        "equipment": "Halteres",
+        "phases": {
+          "base":          { "sets": 3, "reps": "10",  "rest": "90s" },
+          "desenvolvimento": { "sets": 4, "reps": "8",   "rest": "2min" },
+          "performance":   { "sets": 4, "reps": "6–8", "rest": "2min" }
+        },
+        "technique": "Inicie com carga leve. Amplitude controlada, sem forçar o ombro.",
+        "caution": "ombro",
+        "cautionNote": "OMBRO: reduza amplitude se houver dor. Alternativa: elevação frontal."
+      },
+      {
+        "id": "barra_fixa",
+        "name": "Barra Fixa (Assistida ou Elástico)",
+        "category": "compound",
+        "equipment": "Barra",
+        "phases": {
+          "base":          { "sets": 3, "reps": "máx (assistida)", "rest": "2min" },
+          "desenvolvimento": { "sets": 4, "reps": "máx",            "rest": "2min" },
+          "performance":   { "sets": 5, "reps": "máx",            "rest": "2–3min" }
+        },
+        "technique": "Pegada pronada ou neutra. Peito ao bar, escápula ativa antes de puxar.",
+        "caution": "ombro",
+        "cautionNote": "OMBRO: se dor aguda, use elástico assistido ou remada no cabo."
+      },
+      {
+        "id": "rosca_direta",
+        "name": "Rosca Direta com Halteres",
+        "category": "isolation",
+        "equipment": "Halteres",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12",   "rest": "60s" },
+          "desenvolvimento": { "sets": 3, "reps": "10",   "rest": "75s" },
+          "performance":   { "sets": 4, "reps": "8–10", "rest": "75s" }
+        },
+        "technique": "Cotovelo fixo ao lado do corpo, supinação completa no topo.",
+        "caution": null,
+        "cautionNote": null
+      },
+      {
+        "id": "triceps_corda",
+        "name": "Tríceps na Corda (Polia)",
+        "category": "isolation",
+        "equipment": "Polia",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12",   "rest": "60s" },
+          "desenvolvimento": { "sets": 3, "reps": "10",   "rest": "75s" },
+          "performance":   { "sets": 4, "reps": "8–10", "rest": "75s" }
+        },
+        "technique": "Cotovelos fixos, extensão completa, pequena separação das mãos no final.",
+        "caution": null,
+        "cautionNote": null
+      }
+    ],
+    "forcaC": [
+      {
+        "id": "goblet",
+        "name": "Agachamento Goblet",
+        "category": "compound",
+        "equipment": "Halter",
+        "phases": {
+          "base":          { "sets": 3, "reps": "15",    "rest": "75s" },
+          "desenvolvimento": { "sets": 4, "reps": "12",    "rest": "90s" },
+          "performance":   { "sets": 4, "reps": "10–12", "rest": "90s" }
+        },
+        "technique": "Halter no peito. Ótimo aquecimento para joelhos. Tronco ereto.",
+        "caution": "joelho",
+        "cautionNote": "Boa opção de prehab para o joelho. Amplitude controlada."
+      },
+      {
+        "id": "hip_thrust",
+        "name": "Hip Thrust",
+        "category": "compound",
+        "equipment": "Barra / Halter",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12",   "rest": "90s" },
+          "desenvolvimento": { "sets": 4, "reps": "10",   "rest": "2min" },
+          "performance":   { "sets": 4, "reps": "8–10", "rest": "2min" }
+        },
+        "technique": "Glúteo forte = joelho mais protegido. Empurre quadris completamente.",
+        "caution": null,
+        "cautionNote": null
+      },
+      {
+        "id": "remada_unilateral",
+        "name": "Remada Unilateral com Halter",
+        "category": "compound",
+        "equipment": "Halter",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12/lado", "rest": "90s" },
+          "desenvolvimento": { "sets": 4, "reps": "10/lado", "rest": "2min" },
+          "performance":   { "sets": 4, "reps": "8/lado",  "rest": "2min" }
+        },
+        "technique": "Joelho e mão no banco, costas paralelas ao chão, cotovelo alto.",
+        "caution": null,
+        "cautionNote": null
+      },
+      {
+        "id": "elevacao_lateral",
+        "name": "Elevação Lateral com Halteres",
+        "category": "isolation",
+        "equipment": "Halteres",
+        "phases": {
+          "base":          { "sets": 3, "reps": "12", "rest": "60s" },
+          "desenvolvimento": { "sets": 3, "reps": "12", "rest": "60s" },
+          "performance":   { "sets": 3, "reps": "12", "rest": "60s" }
+        },
+        "technique": "Amplitude até 90°. Sem balanço do tronco. Carga leve.",
+        "caution": "ombro",
+        "cautionNote": "OMBRO: amplitude parcial (até 90°). Reduzir carga ou eliminar se houver dor."
+      },
+      {
+        "id": "pushup_variacao",
+        "name": "Flexão de Braço (Variação da Fase)",
+        "category": "compound",
+        "equipment": "Nenhum",
+        "phases": {
+          "base":          { "sets": 3, "reps": "10–15", "rest": "60s", "variation": "Padrão" },
+          "desenvolvimento": { "sets": 3, "reps": "15–20", "rest": "60s", "variation": "Pike Push-Up" },
+          "performance":   { "sets": 3, "reps": "20–25", "rest": "60s", "variation": "Diamante" }
+        },
+        "technique": "Corpo em linha reta. Variação por fase: Padrão → Pike → Diamante.",
+        "caution": "ombro",
+        "cautionNote": "OMBRO: sem dor na amplitude. Se necessário, eleve as mãos."
+      },
+      {
+        "id": "condicionamento",
+        "name": "Circuito Condicionamento — 3 Rounds",
+        "category": "cardio",
+        "equipment": "Nenhum",
+        "phases": {
+          "base":          { "sets": 3, "reps": "circuito", "rest": "60s entre rounds", "circuit": ["Polichinelo 30s", "Agachamento 30s", "Mountain climber 30s"] },
+          "desenvolvimento": { "sets": 3, "reps": "circuito", "rest": "60s entre rounds", "circuit": ["Polichinelo 30s", "Agachamento com salto 30s", "Mountain climber 30s", "Burpee 30s"] },
+          "performance":   { "sets": 3, "reps": "circuito", "rest": "45s entre rounds", "circuit": ["Burpee 30s", "Agach. salto 30s", "Mountain climber 30s", "Polichinelo 30s", "Sprint estac. 30s"] }
+        },
+        "technique": "Mantenha intensidade alta nos intervalos de trabalho.",
+        "caution": null,
+        "cautionNote": null
+      }
+    ],
+    "calistenia": {
+      "pushProgression": [
+        {
+          "id": "push_base",
+          "name": "Flexão Padrão",
+          "forPhase": "base",
+          "sets": 3, "reps": "10–12", "rest": "60s",
+          "technique": "Mãos levemente mais largas que ombros. Corpo reto.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: sem dor. Eleve as mãos se necessário."
+        },
+        {
+          "id": "push_dev",
+          "name": "Pike Push-Up",
+          "forPhase": "desenvolvimento",
+          "sets": 3, "reps": "8–10", "rest": "75s",
+          "technique": "Quadril alto, cabeça entre os braços. Trabalha deltoides.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: amplitude parcial se dor."
+        },
+        {
+          "id": "push_perf",
+          "name": "Flexão Diamante + Archer Push-Up",
+          "forPhase": "performance",
+          "sets": 3, "reps": "8–10 / 5–8", "rest": "90s",
+          "technique": "Diamante: foco no tríceps. Archer: progressão unilateral.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: priorize qualidade sobre quantidade."
+        }
+      ],
+      "pullProgression": [
+        {
+          "id": "pull_base",
+          "name": "Barra — Negativa Assistida",
+          "forPhase": "base",
+          "sets": 3, "reps": "5", "rest": "2min",
+          "technique": "Desça lentamente (3–5s). Foco total na fase excêntrica.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: não force. Pare se dor aguda."
+        },
+        {
+          "id": "pull_dev",
+          "name": "Barra — Amplitude Crescente",
+          "forPhase": "desenvolvimento",
+          "sets": 3, "reps": "5–8", "rest": "2min",
+          "technique": "Busque amplitude máxima possível a cada rep. Peito à barra.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: sem forçar. Mantenha elástico se necessário."
+        },
+        {
+          "id": "pull_perf",
+          "name": "Barra Completa",
+          "forPhase": "performance",
+          "sets": 3, "reps": "máx", "rest": "2–3min",
+          "technique": "Amplitude completa: braços esticados → peito na barra.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: se dor persistir, adicione elástico assistido."
+        }
+      ],
+      "dipsProgression": [
+        {
+          "id": "dips_base",
+          "name": "Paralela Assistida (Elástico)",
+          "forPhase": "base",
+          "sets": 3, "reps": "8", "rest": "90s",
+          "technique": "Tronco levemente inclinado à frente, desça até 90° no cotovelo.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: não desça além do confortável."
+        },
+        {
+          "id": "dips_dev",
+          "name": "Paralela Completa",
+          "forPhase": "desenvolvimento",
+          "sets": 3, "reps": "8–10", "rest": "2min",
+          "technique": "Sem assistência. Amplitude controlada e segura.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: pare se dor aguda."
+        },
+        {
+          "id": "dips_perf",
+          "name": "Paralela com Carga",
+          "forPhase": "performance",
+          "sets": 3, "reps": "6–8", "rest": "2–3min",
+          "technique": "Adicione carga no cinto ou segure halter entre as pernas.",
+          "caution": "ombro",
+          "cautionNote": "OMBRO: adicione carga apenas sem dor na variação sem carga."
+        }
+      ],
+      "core": [
+        { "id": "prancha_lateral", "name": "Prancha Lateral", "sets": 3, "reps": "30–45s/lado", "rest": "45s", "technique": "Quadril alto, corpo em linha reta lateral." },
+        { "id": "hollow_hold",    "name": "Hollow Hold",     "sets": 3, "reps": "20–30s",       "rest": "45s", "technique": "Lombar colada ao chão, braços e pernas estendidos." },
+        { "id": "leg_raise",      "name": "Leg Raise",       "sets": 3, "reps": "10–15",         "rest": "45s", "technique": "Lombar colada durante todo o movimento." }
+      ],
+      "metcon": {
+        "base":          { "format": "AMRAP 15min", "exercises": ["5 Burpees", "10 Agachamentos", "15 Polichinelos", "5 Push-ups"] },
+        "desenvolvimento": { "format": "AMRAP 18min", "exercises": ["8 Burpees", "10 Agachamentos com salto", "15 Mountain climbers", "8 Push-ups"] },
+        "performance":   { "format": "AMRAP 20min", "exercises": ["10 Burpees", "12 Agachamentos com salto", "20 Mountain climbers", "10 Push-ups", "5 Barras"] }
+      }
+    }
+  },
+  "running": {
+    "weeks": [
+      { "week": 1,  "thursday": { "label": "Rodagem fácil 20–25min", "detail": "Pace bem confortável (consegue conversar). Aquecimento 5min caminhando." }, "sunday": { "label": "Corrida longa 30min fácil", "detail": "Pace aeróbico leve. Hidratação a cada 15min." } },
+      { "week": 2,  "thursday": { "label": "4 × 2min forte / 2min trote", "detail": "Aquec. 10min. 4 séries: 2min forte (esforço 7/10) + 2min trote. Volta 10min." }, "sunday": { "label": "Corrida longa 35min fácil", "detail": "Pace confortável. Esforço 5–6/10." } },
+      { "week": 3,  "thursday": { "label": "30min fácil + 4 acelerações 20s", "detail": "Rodagem fácil com 4 acelerações de 20s distribuídas no meio. Recuperação completa entre cada." }, "sunday": { "label": "Corrida longa 40min fácil", "detail": "Pace aeróbico leve. Aproveite para trabalhar a postura." } },
+      { "week": 4,  "thursday": { "label": "DELOAD — 15min fácil", "detail": "Semana de recuperação. Ritmo muito leve, foco em mobilidade pós-corrida." }, "sunday": { "label": "DELOAD — 25min fácil", "detail": "Recuperação ativa. Sem esforço. Aproveite para observar sua técnica." } },
+      { "week": 5,  "thursday": { "label": "5 × 1'30\" forte / 2min trote", "detail": "Aquec. 10min. 5 séries: 1'30\" forte (7–8/10) + 2min trote. Volta 10min." }, "sunday": { "label": "Corrida longa 40min fácil", "detail": "Manter pace confortável, especialmente no início." } },
+      { "week": 6,  "thursday": { "label": "30min progressivo", "detail": "1° terço: bem leve → 2° terço: moderado → 3° terço: no limite confortável. Sem estouro." }, "sunday": { "label": "Corrida longa 45min fácil", "detail": "Pace constante e leve. Nutrição pré-corrida testada." } },
+      { "week": 7,  "thursday": { "label": "6 × 1min forte / 1'30\" trote", "detail": "Aquec. 10min. 6 séries: 1min forte (zona 4) + 1'30\" trote. Volta 10min." }, "sunday": { "label": "Corrida longa 50min fácil", "detail": "Primeira corrida de 50min. Pace deve ser muito leve nos primeiros 20min." } },
+      { "week": 8,  "thursday": { "label": "DELOAD — 20min fácil", "detail": "Recuperação. Passe da metade do plano com qualidade nas pernas." }, "sunday": { "label": "DELOAD — 30min fácil", "detail": "Última rodagem da fase Base. Registre seu peso e faça os testes." } },
+      { "week": 9,  "thursday": { "label": "4 × 3min forte / 2min trote", "detail": "Aquec. 10min. 4 séries: 3min forte (7–8/10) + 2min trote. Volta 10min." }, "sunday": { "label": "Corrida longa 50min fácil", "detail": "Início da fase de Desenvolvimento. Consistência é a chave." } },
+      { "week": 10, "thursday": { "label": "Fartlek 30min (forte/fraco alternado)", "detail": "Aqueça 10min. 30min de fartlek: alterne 2min forte / 2min fácil conforme sentir. Livremente." }, "sunday": { "label": "Corrida longa 55min fácil", "detail": "Pace aeróbico. Comece lentamente e mantenha estável." } },
+      { "week": 11, "thursday": { "label": "3 × 5min tempo / 2'30\" trote", "detail": "Aquec. 10min. 3 séries: 5min no limiar (8/10, difícil mas sustentável) + 2'30\" trote." }, "sunday": { "label": "Corrida longa 60min fácil", "detail": "Primeira hora! Divida mentalmente em 3 blocos de 20min. Hydratação." } },
+      { "week": 12, "thursday": { "label": "DELOAD — 25min fácil", "detail": "Semana de recuperação. Movimentos leves, priorize prehab e sono." }, "sunday": { "label": "DELOAD — 40min fácil", "detail": "Recuperação de volume. Pace muito leve." } },
+      { "week": 13, "thursday": { "label": "4 × 4min forte / 2min trote", "detail": "Aquec. 10min. 4 séries: 4min forte + 2min trote. Mantenha pace consistente." }, "sunday": { "label": "Corrida longa 60min fácil", "detail": "Segundo 60min. Deve parecer mais tranquilo que o primeiro (semana 11)." } },
+      { "week": 14, "thursday": { "label": "Tempo run contínuo 20min", "detail": "Aquec. 10min. 20min contínuos no limiar: difícil, mas controlado. Volta 10min." }, "sunday": { "label": "Corrida longa 65min fácil", "detail": "Pace constante. Observe sinais de fadiga acumulada." } },
+      { "week": 15, "thursday": { "label": "5 × 3min forte / 90s trote", "detail": "Aquec. 10min. 5 séries: 3min forte + 90s trote. Volume de qualidade alto." }, "sunday": { "label": "Corrida longa 70min fácil", "detail": "70 minutos em ritmo leve. Refuel pós-corrida caprichado." } },
+      { "week": 16, "thursday": { "label": "DELOAD — 25min + 4 strides", "detail": "25min leve + 4 acelerações de 20s com recuperação completa. Deload ativo." }, "sunday": { "label": "DELOAD — 45min fácil", "detail": "Manutenção aeróbica. Sem intensidade." } },
+      { "week": 17, "thursday": { "label": "Tempo run contínuo 25min", "detail": "Aquec. 10min. 25min no limiar. Registre o pace médio para comparação." }, "sunday": { "label": "Corrida longa 70min fácil", "detail": "Última longa da fase Desenvolvimento. Avalie sua evolução." } },
+      { "week": 18, "thursday": { "label": "4 × 1km no pace de prova / 2min trote", "detail": "Aquec. 10min. 4 × 1km no pace alvo do seu 5km. Recuperação de 2min." }, "sunday": { "label": "Corrida longa 75min fácil", "detail": "Início da fase Performance. Volume alto com pace conservado." } },
+      { "week": 19, "thursday": { "label": "5 × 1km no pace de prova / 2min trote", "detail": "Aquec. 10min. 5 × 1km no pace de prova. Maior carga de qualidade até agora." }, "sunday": { "label": "Corrida longa 80min fácil", "detail": "80 minutos. Pace estável e leve. Atenção à alimentação pré-corrida." } },
+      { "week": 20, "thursday": { "label": "DELOAD — 20min fácil", "detail": "Recuperação total. Pernas frescas para a fase final." }, "sunday": { "label": "DELOAD — 50min fácil", "detail": "Corrida restauradora. Curta o movimento sem pressão." } },
+      { "week": 21, "thursday": { "label": "3 × 2km no pace de prova / 3min trote", "detail": "Aquec. 10min. 3 × 2km no pace alvo. Mantenha consistência entre as séries." }, "sunday": { "label": "Corrida longa 75min fácil", "detail": "Volta ao volume alto. Aproveite o deload da semana passada." } },
+      { "week": 22, "thursday": { "label": "Tempo run contínuo 30min", "detail": "30min no limiar. Desafiante. Registre pace e sensações para ajuste final." }, "sunday": { "label": "Corrida longa 80min fácil", "detail": "Penúltima longa de alto volume. Hidratação e nutrição estratégica." } },
+      { "week": 23, "thursday": { "label": "4 × 2km no pace de prova / 2'30\" trote", "detail": "Maior sessão de qualidade do ciclo. Mantenha pace constante em todos os 4 km." }, "sunday": { "label": "Corrida longa 85min fácil", "detail": "Pico de volume do programa. Celebre estar aqui!" } },
+      { "week": 24, "thursday": { "label": "DELOAD — 20min fácil", "detail": "Último deload. Guarde energia para as duas últimas semanas." }, "sunday": { "label": "DELOAD — 55min fácil", "detail": "Mantendo base aeróbica antes da fase final." } },
+      { "week": 25, "thursday": { "label": "3 × 3km no pace alvo / 3min trote", "detail": "Sessão de confiança. Sinta o pace de prova e confirme que consegue mantê-lo." }, "sunday": { "label": "Corrida longa 90min fácil", "detail": "Maior corrida do ciclo. Prepare nutrição e hidratação com antecedência." } },
+      { "week": 26, "thursday": { "label": "TAPER — 30min fácil", "detail": "Semana de afunilamento. Corrida leve para manter as pernas soltas antes do teste final." }, "sunday": { "label": "TAPER — 60min fácil (Último Longo)", "detail": "Último longo do ciclo! Parabéns pela jornada. Teste de performance pode ser feito essa semana." } }
+    ]
+  },
+  "mobility": {
+    "shoulder": [
+      { "id": "sh1", "name": "Círculos de Ombro",             "sets": 2, "reps": "10 para cada direção", "freq": "Diário",       "technique": "Amplitude crescente. Aquecimento obrigatório pré-treino." },
+      { "id": "sh2", "name": "Dislocações com Elástico",       "sets": 2, "reps": "10",                  "freq": "Diário",       "technique": "Elástico ou bastão. Braços retos. Amplitude controlada." },
+      { "id": "sh3", "name": "Face Pull",                      "sets": 3, "reps": "15",                  "freq": "3×/semana",    "technique": "Cotovelos altos, retração escapular no final." },
+      { "id": "sh4", "name": "Rotação Interna/Externa (Elástico)", "sets": 3, "reps": "15/lado",         "freq": "3×/semana",    "technique": "Cotovelo a 90°, movimento lento e controlado." },
+      { "id": "sh5", "name": "Stretch de Peitoral na Porta",   "sets": 2, "reps": "30s",                 "freq": "Diário",       "technique": "Braço em L na porta, corpo ligeiramente à frente." },
+      { "id": "sh6", "name": "Stretch do Deltóide Posterior",  "sets": 2, "reps": "30s/lado",            "freq": "Diário",       "technique": "Puxe o braço estendido para o peito com o outro braço." },
+      { "id": "sh7", "name": "Fortalecimento Manguito (Eretores)", "sets": 3, "reps": "15",             "freq": "3×/semana",    "technique": "Com elástico leve. Rotações lentas e controladas." }
+    ],
+    "knee": [
+      { "id": "kn1", "name": "Foam Roll Quadríceps",           "sets": 1, "reps": "2min/lado",           "freq": "3×/semana",    "technique": "Role lentamente, pause em pontos tensos." },
+      { "id": "kn2", "name": "Foam Roll IT Band",              "sets": 1, "reps": "2min/lado",           "freq": "3×/semana",    "technique": "Lateral da coxa, lento e pausado." },
+      { "id": "kn3", "name": "Fortalecimento VMO (Agach. Sissy Parcial)", "sets": 3, "reps": "15",      "freq": "3×/semana",    "technique": "Foco em ativar a cabeça interna do quadríceps." },
+      { "id": "kn4", "name": "Glúteo Médio — Clamshell",      "sets": 3, "reps": "15/lado",             "freq": "3×/semana",    "technique": "Deitado de lado, joelhos dobrados 90°. Eleve o joelho." },
+      { "id": "kn5", "name": "Stretch Hip Flexor",             "sets": 2, "reps": "30s/lado",            "freq": "Diário",       "technique": "Posição de ajoelhar, empurre o quadril à frente." },
+      { "id": "kn6", "name": "Stretch Quadríceps",             "sets": 2, "reps": "30s/lado",            "freq": "Diário",       "technique": "Em pé ou deitado. Puxe o tornozelo em direção ao glúteo." },
+      { "id": "kn7", "name": "Estabilidade de Tornozelo",     "sets": 2, "reps": "15",                  "freq": "Diário",       "technique": "Equilíbrio em uma perna + pequenos movimentos do tornozelo." }
+    ]
+  },
+  "nutrition": {
+    "dailyTargets": {
+      "trainingDay":  { "kcal": 2400, "protein": 160, "carbs": 260, "fat": 80 },
+      "restDay":      { "kcal": 2000, "protein": 155, "carbs": 180, "fat": 78 }
+    },
+    "mealPlan": [
+      { "meal": "Café da manhã",      "time": "07:00", "items": ["3 ovos mexidos", "60g aveia com banana e mel", "Café preto"] },
+      { "meal": "Lanche pré-treino",  "time": "Pré-treino", "items": ["1 banana", "1 scoop whey (se treino à tarde)"] },
+      { "meal": "Almoço",             "time": "12:00", "items": ["200g frango grelhado", "150g arroz cozido", "Feijão à vontade", "Legumes refogados", "Salada verde"] },
+      { "meal": "Lanche da tarde",    "time": "15:30", "items": ["200g iogurte grego integral", "30g castanhas ou amendoim"] },
+      { "meal": "Pós-treino",         "time": "Pós-treino", "items": ["1–2 scoops whey", "150g batata doce ou banana"] },
+      { "meal": "Jantar",             "time": "20:00", "items": ["200g carne moída ou peixe", "Macarrão integral ou arroz", "Brócolis ou abobrinha refogados"] }
+    ],
+    "tips": [
+      "Beba 35ml de água por kg de peso/dia (≈2,8L para 80kg)",
+      "Priorize proteína em todas as refeições — alvo mínimo de 30g por refeição",
+      "Carboidratos maiores ao redor do treino (pré e pós)",
+      "Noite: proteína + gordura, menos carboidrato",
+      "Não pule refeições — consistência é mais importante que perfeição"
+    ],
+    "shoppingList": [
+      { "category": "Proteínas", "items": ["Frango (peito)", "Carne moída (patinho)", "Ovos (dúzia)", "Atum em lata", "Whey protein", "Iogurte grego"] },
+      { "category": "Carboidratos", "items": ["Aveia em flocos", "Arroz branco/integral", "Batata doce", "Banana", "Macarrão integral", "Feijão/lentilha"] },
+      { "category": "Gorduras saudáveis", "items": ["Castanhas", "Amendoim", "Azeite de oliva", "Abacate"] },
+      { "category": "Frutas e vegetais", "items": ["Brócolis", "Abobrinha", "Cenoura", "Tomate", "Alface", "Espinafre", "Banana extra"] },
+      { "category": "Outros", "items": ["Café preto", "Mel", "Temperos naturais", "Água de coco (pós-corrida)"] }
+    ]
+  },
+  "supplements": [
+    {
+      "id": "creatina",
+      "name": "Creatina Monohidratada",
+      "essential": true,
+      "dose": "5g/dia",
+      "timing": "Qualquer horário (consistência > timing)",
+      "notes": "Diluir em água ou suco. Sem necessidade de fase de carga. Tomar todos os dias, inclusive descanso.",
+      "brand": null
+    },
+    {
+      "id": "whey",
+      "name": "Whey Protein",
+      "essential": true,
+      "dose": "1–2 scoops/dia (25–50g proteína)",
+      "timing": "Pós-treino ou entre refeições",
+      "notes": "Complemento proteico — não substitui refeições reais. Whey concentrado é suficiente.",
+      "brand": null
+    },
+    {
+      "id": "cafeina",
+      "name": "Cafeína (Anidra ou Café)",
+      "essential": false,
+      "dose": "100–200mg",
+      "timing": "30–60min pré-treino",
+      "notes": "Apenas em dias de treino. Evitar após 14h para não atrapalhar o sono. Ciclize (tire 1 semana/mês).",
+      "brand": null
+    },
+    {
+      "id": "omega3",
+      "name": "Ômega-3 (EPA/DHA)",
+      "essential": false,
+      "dose": "2g/dia",
+      "timing": "Com as refeições",
+      "notes": "Anti-inflamatório. Benefício extra para quem tem lesão no ombro/joelho.",
+      "brand": null
+    },
+    {
+      "id": "vitD",
+      "name": "Vitamina D3",
+      "essential": false,
+      "dose": "2000–4000 UI/dia",
+      "timing": "Manhã, com gordura",
+      "notes": "Avalie com exame de sangue. Importante para função muscular e imunidade.",
+      "brand": null
+    }
+  ],
+  "dailyRoutines": {
+    "morning": {
+      "label": "Treino de Manhã",
+      "schedule": [
+        { "time": "05:30", "activity": "Acordar" },
+        { "time": "05:40", "activity": "Prehab ombro/joelho (10min)" },
+        { "time": "05:50", "activity": "Café da manhã leve ou treino em jejum" },
+        { "time": "06:20", "activity": "Aquecimento + Treino principal" },
+        { "time": "07:30", "activity": "Pós-treino: whey + carboidrato" },
+        { "time": "08:00", "activity": "Trabalho / rotina do dia" },
+        { "time": "12:00", "activity": "Almoço (maior refeição do dia)" },
+        { "time": "15:30", "activity": "Lanche (iogurte + castanhas)" },
+        { "time": "19:30", "activity": "Jantar (proteína + vegetais, menos carbo)" },
+        { "time": "22:00", "activity": "Dormir (meta: 7–8h)" }
+      ]
+    },
+    "evening": {
+      "label": "Treino à Noite",
+      "schedule": [
+        { "time": "07:00", "activity": "Acordar" },
+        { "time": "07:30", "activity": "Café da manhã completo" },
+        { "time": "12:00", "activity": "Almoço" },
+        { "time": "15:00", "activity": "Lanche pré-treino (banana + whey)" },
+        { "time": "17:00", "activity": "Prehab ombro/joelho (10min)" },
+        { "time": "17:15", "activity": "Aquecimento + Treino principal" },
+        { "time": "18:30", "activity": "Pós-treino: whey + carboidrato" },
+        { "time": "20:00", "activity": "Jantar" },
+        { "time": "23:00", "activity": "Dormir" }
+      ]
+    }
+  },
+  "tests": [
+    { "id": "t5km",    "name": "Corrida 5km",    "unit": "min:seg", "lower": true,  "initial": "35:00", "target": "25:00", "description": "Percorrer 5km no menor tempo possível." },
+    { "id": "tpush",   "name": "Flexões",         "unit": "reps",    "lower": false, "initial": 10,      "target": 30,     "description": "Máximo de flexões em forma perfeita sem parar." },
+    { "id": "tpull",   "name": "Barras",           "unit": "reps",    "lower": false, "initial": 0,       "target": 10,     "description": "Barras completas (pegada pronada, amplitude total)." },
+    { "id": "tplank",  "name": "Prancha",          "unit": "seg",     "lower": false, "initial": 30,      "target": 120,    "description": "Prancha frontal máxima (segundos)." },
+    { "id": "tweight", "name": "Peso Corporal",    "unit": "kg",      "lower": true,  "initial": 80,      "target": 75,     "description": "Peso em jejum, pela manhã, mesmas condições." }
+  ]
+}
