@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Award, Plus, X } from 'lucide-react'
+import { TrendingUp, TrendingDown, Award, Plus, X, BarChart2 } from 'lucide-react'
 import WeightChart from '@/components/charts/WeightChart'
 import PaceChart from '@/components/charts/PaceChart'
 import RunningLogForm from '@/components/RunningLogForm'
@@ -19,6 +19,7 @@ export default function Progress() {
   const [showRunForm, setShowRunForm] = useState(false)
   const [testValues, setTestValues] = useState<Record<string, string>>({})
   const [testSaving, setTestSaving] = useState<Record<string, boolean>>({})
+  const [loading, setLoading] = useState(true)
 
   const initialWeight = plan.profile.initialWeight
   const goalWeight = Number(plan.profile.goals.weight)
@@ -29,11 +30,11 @@ export default function Progress() {
     setRunData(rl)
     setPrs(pr)
 
-    // Load saved test values
     const testLog = await getDailyLog('__tests__')
     if (testLog?.notes) {
       try { setTestValues(JSON.parse(testLog.notes)) } catch { /* noop */ }
     }
+    setLoading(false)
   }
 
   useEffect(() => { load() }, [])
@@ -59,12 +60,35 @@ export default function Progress() {
     setTimeout(() => setTestSaving(s => ({ ...s, [testId]: false })), 1000)
   }
 
+  if (loading) {
+    return (
+      <div className="page-content space-y-4">
+        <div className="skeleton h-8 w-36" />
+        <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
+          <div className="skeleton h-20 rounded-2xl" />
+          <div className="skeleton h-20 rounded-2xl" />
+          <div className="skeleton h-20 rounded-2xl hidden xs:block" />
+        </div>
+        <div className="skeleton h-56 w-full rounded-2xl" />
+        <div className="skeleton h-56 w-full rounded-2xl" />
+      </div>
+    )
+  }
+
+  const emptyChart = (label: string) => (
+    <div className="flex flex-col items-center justify-center py-10 text-center">
+      <BarChart2 size={32} className="text-slate-300 dark:text-neutral-600 mb-3" />
+      <p className="text-body-md text-slate-400 dark:text-slate-500 mb-1">Nenhum dado ainda</p>
+      <p className="text-label text-slate-400 dark:text-slate-500">Registre seu primeiro {label} na tela Hoje</p>
+    </div>
+  )
+
   return (
     <div className="page-content page-enter space-y-4">
       <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Progresso</h1>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
         <div className="card p-3 text-center">
           <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             {currentWeight ? `${currentWeight}` : '—'}
@@ -75,6 +99,7 @@ export default function Progress() {
               {weightDelta < 0 ? '▼' : '▲'} {Math.abs(weightDelta).toFixed(1)}kg
             </p>
           )}
+          <p className="text-label text-slate-400 mt-0.5">(↓ perda · ↑ ganho)</p>
         </div>
         <div className="card p-3 text-center">
           <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{totalKm.toFixed(0)}</p>
@@ -99,7 +124,10 @@ export default function Progress() {
             Meta: {goalWeight}kg
           </div>
         </div>
-        <WeightChart data={weightData} goal={goalWeight} initial={initialWeight} />
+        {weightData.length === 0
+          ? emptyChart('peso')
+          : <WeightChart data={weightData} goal={goalWeight} initial={initialWeight} />
+        }
       </div>
 
       {/* Pace chart */}
@@ -117,7 +145,10 @@ export default function Progress() {
             <RunningLogForm onSaved={() => { setShowRunForm(false); load() }} />
           </div>
         )}
-        <PaceChart data={runData} />
+        {runData.length === 0
+          ? emptyChart('dado')
+          : <PaceChart data={runData} />
+        }
       </div>
 
       {/* Strength PRs */}

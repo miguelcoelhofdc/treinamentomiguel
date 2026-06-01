@@ -83,7 +83,10 @@ export default function RunningLogForm({ defaultDate, defaultType = 'qualidade',
             <span className="self-center text-slate-400 font-bold">:</span>
             <input type="number" min="0" max="59" className="input text-center" placeholder="seg"
               value={form.durationSec}
-              onChange={e => setForm(f => ({ ...f, durationSec: e.target.value }))} />
+              onChange={e => {
+                const value = e.target.value
+                setForm(f => ({ ...f, durationSec: Number(value) > 59 ? '59' : value }))
+              }} />
           </div>
         </div>
       </div>

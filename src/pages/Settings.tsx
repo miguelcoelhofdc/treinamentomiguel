@@ -84,18 +84,18 @@ export default function Settings({ settings, updateSetting }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="label">Altura (cm)</label>
-            <input type="number" className="input" value={settings.height}
+            <input type="number" min="100" max="250" className="input" value={settings.height}
               onChange={e => updateSetting('height', Number(e.target.value))} />
           </div>
           <div>
             <label className="label">Peso inicial (kg)</label>
-            <input type="number" step="0.1" className="input" value={settings.initialWeight}
+            <input type="number" step="0.1" min="30" max="300" className="input" value={settings.initialWeight}
               onChange={e => updateSetting('initialWeight', Number(e.target.value))} />
           </div>
         </div>
         <div>
           <label className="label">Meta de peso (kg)</label>
-          <input type="number" step="0.1" className="input" value={settings.goalWeight}
+          <input type="number" step="0.1" min="30" max="300" className="input" value={settings.goalWeight}
             onChange={e => updateSetting('goalWeight', Number(e.target.value))} />
         </div>
       </div>
@@ -141,6 +141,7 @@ export default function Settings({ settings, updateSetting }: Props) {
           </div>
           <button
             onClick={() => updateSetting('darkMode', !settings.darkMode)}
+            aria-label="Ativar modo escuro"
             className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400
               ${settings.darkMode ? 'bg-primary-500' : 'bg-slate-200'}`}
           >
@@ -190,20 +191,6 @@ export default function Settings({ settings, updateSetting }: Props) {
           </div>
         )}
       </div>
-
-      {/* Health disclaimer */}
-      <div className="card p-4 border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20">
-        <div className="flex items-start gap-2">
-          <AlertTriangle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
-            {['Lesão no ombro direito — sempre pegada neutra, sem dor aguda',
-              'Dor no joelho — controlar amplitude e reportar dor ao profissional',
-              'Este app não substitui acompanhamento médico e de educação física profissional.'
-            ].map((note, i) => <p key={i}>{note}</p>)}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
-

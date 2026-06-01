@@ -1,10 +1,16 @@
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
 import plan from '@/data/plan.json'
 import type { PhaseId, Exercise } from '@/types'
 
 const DAY_NAMES_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+const phaseBorderMap: Record<string, string> = {
+  'base':          'border-l-4 border-green-400',
+  'desenvolvimento': 'border-l-4 border-primary-400',
+  'performance':   'border-l-4 border-red-400',
+}
 
 interface Props { startDate: string }
 
@@ -30,7 +36,11 @@ export default function Plan({ startDate }: Props) {
 
       {/* Week selector */}
       <div className="card p-4 flex items-center justify-between">
-        <button onClick={() => setWeek(w => Math.max(1, w - 1))} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-30" disabled={week <= 1}>
+        <button
+          onClick={() => setWeek(w => Math.max(1, w - 1))}
+          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={week <= 1}
+        >
           <ChevronLeft size={20} />
         </button>
         <div className="text-center">
@@ -41,7 +51,11 @@ export default function Plan({ startDate }: Props) {
             {week === todayTraining.weekNumber && <span className="badge bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">Esta semana</span>}
           </div>
         </div>
-        <button onClick={() => setWeek(w => Math.min(26, w + 1))} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-30" disabled={week >= 26}>
+        <button
+          onClick={() => setWeek(w => Math.min(26, w + 1))}
+          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+          disabled={week >= 26}
+        >
           <ChevronRight size={20} />
         </button>
       </div>
@@ -50,7 +64,7 @@ export default function Plan({ startDate }: Props) {
       <input type="range" min="1" max="26" step="1" value={week} onChange={e => setWeek(Number(e.target.value))} className="w-full" />
 
       {/* Phase description */}
-      <div className="card p-3 border-l-4" style={{ borderLeftColor: phaseInfo?.color }}>
+      <div className={`card p-3 ${phaseBorderMap[phase] ?? 'border-l-4 border-slate-300'}`}>
         <p className="text-xs text-slate-500 dark:text-slate-400">{phaseInfo?.description}</p>
         {isDeload && <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 font-medium">Esta é uma semana de deload — volume reduzido, recuperação ativa.</p>}
       </div>
@@ -67,6 +81,7 @@ export default function Plan({ startDate }: Props) {
               <button
                 className="w-full p-4 flex items-center justify-between"
                 onClick={() => setExpandedDay(isExpanded ? null : dayOfWeek)}
+                aria-expanded={isExpanded}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{tpl.icon}</span>
@@ -77,11 +92,14 @@ export default function Plan({ startDate }: Props) {
                 </div>
                 <div className="flex items-center gap-2">
                   {isToday && <span className="badge bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">Hoje</span>}
-                  {isExpanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                  <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                 </div>
               </button>
 
-              {isExpanded && (
+              <div
+                className="overflow-hidden transition-all duration-200"
+                style={{ maxHeight: isExpanded ? '600px' : '0' }}
+              >
                 <div className="px-4 pb-4 border-t border-slate-100 dark:border-neutral-700 pt-3 space-y-2">
                   {tpl.type === 'descanso' && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">Descanso ativo. Mobilidade, caminhada leve ou recuperação completa.</p>
@@ -124,7 +142,7 @@ export default function Plan({ startDate }: Props) {
                     ) : null
                   })()}
                 </div>
-              )}
+              </div>
             </div>
           )
         })}

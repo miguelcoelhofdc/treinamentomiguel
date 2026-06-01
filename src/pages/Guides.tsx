@@ -1,23 +1,34 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, ShoppingCart, Check } from 'lucide-react'
+import { ChevronDown, ShoppingCart, Check } from 'lucide-react'
 import plan from '@/data/plan.json'
 
-function Accordion({ title, icon, children, defaultOpen = false }: { title: string; icon: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Accordion({ title, icon, children, defaultOpen = false, id }: { title: string; icon: string; children: React.ReactNode; defaultOpen?: boolean; id: string }) {
   const [open, setOpen] = useState(defaultOpen)
+  const contentId = `accordion-${id}`
   return (
     <div className="card overflow-hidden">
-      <button onClick={() => setOpen(o => !o)} className="w-full p-4 flex items-center justify-between">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full p-4 flex items-center justify-between"
+        aria-expanded={open}
+        aria-controls={contentId}
+      >
         <div className="flex items-center gap-3">
           <span className="text-xl">{icon}</span>
           <span className="font-semibold text-slate-800 dark:text-slate-100">{title}</span>
         </div>
-        {open ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+        <ChevronDown size={18} className={`text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && (
+      <div
+        id={contentId}
+        role="region"
+        className="overflow-hidden transition-all duration-200"
+        style={{ maxHeight: open ? '3000px' : '0' }}
+      >
         <div className="px-4 pb-4 border-t border-slate-100 dark:border-neutral-700 pt-3">
           {children}
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -37,7 +48,7 @@ export default function Guides() {
       <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Guias</h1>
 
       {/* Nutrition */}
-      <Accordion title="Nutrição" icon="🥗" defaultOpen>
+      <Accordion title="Nutrição" icon="🥗" defaultOpen id="nutricao">
         <div className="space-y-4">
           <div>
             <p className="section-title">Metas diárias</p>
@@ -77,7 +88,7 @@ export default function Guides() {
                   </div>
                   <ul className="space-y-0.5">
                     {meal.items.map((item, j) => (
-                      <li key={j} className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <li key={j} className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                         <span className="w-1 h-1 rounded-full bg-primary-400 flex-shrink-0" />{item}
                       </li>
                     ))}
@@ -99,7 +110,7 @@ export default function Guides() {
       </Accordion>
 
       {/* Shopping list */}
-      <Accordion title="Lista de Compras" icon="🛒">
+      <Accordion title="Lista de Compras" icon="🛒" id="compras">
         <div className="space-y-4">
           {nut.shoppingList.map(cat => (
             <div key={cat.category}>
@@ -134,7 +145,7 @@ export default function Guides() {
       </Accordion>
 
       {/* Supplements */}
-      <Accordion title="Suplementos" icon="💊">
+      <Accordion title="Suplementos" icon="💊" id="suplementos">
         <div className="space-y-3">
           {plan.supplements.map(sup => (
             <div key={sup.id} className="border border-slate-100 dark:border-neutral-700 rounded-xl p-3">
@@ -155,7 +166,7 @@ export default function Guides() {
       </Accordion>
 
       {/* Mobility */}
-      <Accordion title="Mobilidade & Prehab" icon="🧘">
+      <Accordion title="Mobilidade & Prehab" icon="🧘" id="mobilidade">
         <div className="space-y-4">
           <div>
             <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase mb-2">🦴 Protocolo de Ombro</p>
@@ -165,7 +176,7 @@ export default function Guides() {
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ex.name}</p>
                   <span className="text-xs text-slate-400 ml-2 flex-shrink-0">{ex.freq}</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">{ex.sets}× {ex.reps} — {ex.technique}</p>
+                <p className="text-sm text-slate-500 mt-0.5">{ex.sets}× {ex.reps} — {ex.technique}</p>
               </div>
             ))}
           </div>
@@ -177,7 +188,7 @@ export default function Guides() {
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ex.name}</p>
                   <span className="text-xs text-slate-400 ml-2 flex-shrink-0">{ex.freq}</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">{ex.sets}× {ex.reps} — {ex.technique}</p>
+                <p className="text-sm text-slate-500 mt-0.5">{ex.sets}× {ex.reps} — {ex.technique}</p>
               </div>
             ))}
           </div>
@@ -185,13 +196,19 @@ export default function Guides() {
       </Accordion>
 
       {/* Daily Routine */}
-      <Accordion title="Rotina Diária" icon="⏰">
+      <Accordion title="Rotina Diária" icon="⏰" id="rotina">
         <div className="space-y-3">
-          <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-neutral-600">
+          <div className="flex gap-2">
             {(['morning', 'evening'] as const).map(tab => (
-              <button key={tab} onClick={() => setRoutineTab(tab)}
-                className={`flex-1 py-2 text-sm font-medium transition-colors
-                  ${routineTab === tab ? 'bg-primary-500 text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+              <button
+                key={tab}
+                onClick={() => setRoutineTab(tab)}
+                className={`flex-1 py-2 text-sm font-medium transition-all duration-150 rounded-lg
+                  ${routineTab === tab
+                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 px-3 py-1'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-700'
+                  }`}
+              >
                 {tab === 'morning' ? '🌅 Manhã' : '🌙 Noite'}
               </button>
             ))}

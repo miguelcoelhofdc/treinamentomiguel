@@ -32,6 +32,7 @@
            bg-primary-500 text-white font-semibold text-sm
            active:scale-95 transition-all duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
+    touch-action: manipulation;
   }
 
   .btn-ghost {
@@ -39,6 +40,16 @@
            text-slate-600 dark:text-slate-300 font-medium text-sm
            hover:bg-slate-100 dark:hover:bg-neutral-700
            active:scale-95 transition-all duration-150;
+  }
+
+  .btn-secondary {
+    @apply px-5 py-3 rounded-md bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-semibold active:scale-95 transition-transform;
+    touch-action: manipulation;
+  }
+
+  .btn-icon {
+    @apply w-11 h-11 flex items-center justify-center rounded-lg active:bg-slate-100 dark:active:bg-neutral-700 transition-colors;
+    touch-action: manipulation;
   }
 
   .input {
@@ -73,12 +84,38 @@
   }
 
   .page-content {
-    @apply pt-4 pb-24 px-4 max-w-lg mx-auto min-h-screen;
+    padding-top: 1rem;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    padding-left: 1rem;
+    padding-right: 1rem;
+    max-width: 32rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .section-title {
     @apply text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3;
   }
+
+  /* Escala tipográfica */
+  .text-caption  { @apply text-[11px] font-medium tracking-wide uppercase; }
+  .text-label    { @apply text-[12px] font-medium; }
+  .text-body     { @apply text-[14px] font-normal; }
+  .text-body-md  { @apply text-[15px] font-medium; }
+  .text-title    { @apply text-[18px] font-semibold; }
+  .text-display  { @apply text-[22px] font-bold; }
+
+  /* Cards semânticos */
+  .card-done   { @apply bg-slate-50 dark:bg-neutral-900; }
+  .card-active { @apply ring-2 ring-primary-400 shadow-card-active; }
+
+  /* Badges */
+  .badge-fase    { @apply text-[11px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300; }
+  .badge-caution { @apply text-[11px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-warning-light text-warning-dark; }
+  .badge-done    { @apply text-[11px] font-medium tracking-wide uppercase px-2 py-0.5 rounded-full bg-success-light text-success-dark; }
+
+  /* Skeleton */
+  .skeleton { @apply bg-slate-200 dark:bg-neutral-700 rounded-lg animate-pulse; }
 }
 
 /* Smooth page transitions */
@@ -106,3 +143,51 @@ input[type="range"] {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { @apply bg-transparent; }
 ::-webkit-scrollbar-thumb { @apply bg-slate-200 dark:bg-neutral-600 rounded-full; }
+
+@keyframes check-bounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.8); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.animate-check-bounce { animation: check-bounce 200ms ease-out; }
+.animate-slide-down   { animation: slide-down 180ms ease-out; }
+.animate-slide-up     { animation: slide-up 250ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-check-bounce,
+  .animate-slide-down,
+  .animate-slide-up,
+  .animate-pulse { animation: none !important; }
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2E7D6E;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2E7D6E;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
