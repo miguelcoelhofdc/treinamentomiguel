@@ -12,7 +12,7 @@ const tabs = [
 export default function BottomNav() {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-neutral-800 border-t border-slate-100 dark:border-neutral-700 flex items-center justify-around shadow-nav"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-md border-t border-slate-100/60 dark:border-neutral-700/60 flex items-center justify-around shadow-nav"
       style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))' }}
     >
       {tabs.map(({ to, icon: Icon, label }) => (

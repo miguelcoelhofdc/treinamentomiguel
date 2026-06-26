@@ -32,13 +32,13 @@ export default function Plan({ startDate }: Props) {
 
   return (
     <div className="page-content page-enter space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Plano</h1>
+      <h1 className="text-display text-slate-900 dark:text-white">Plano</h1>
 
       {/* Week selector */}
       <div className="card p-4 flex items-center justify-between">
         <button
           onClick={() => setWeek(w => Math.max(1, w - 1))}
-          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 active:bg-slate-100 dark:active:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
           disabled={week <= 1}
         >
           <ChevronLeft size={20} />
@@ -53,7 +53,7 @@ export default function Plan({ startDate }: Props) {
         </div>
         <button
           onClick={() => setWeek(w => Math.min(26, w + 1))}
-          className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 active:bg-slate-100 dark:active:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
           disabled={week >= 26}
         >
           <ChevronRight size={20} />
