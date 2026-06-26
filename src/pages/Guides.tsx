@@ -45,7 +45,7 @@ export default function Guides() {
 
   return (
     <div className="page-content page-enter space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Guias</h1>
+      <h1 className="text-display text-slate-900 dark:text-white">Guias</h1>
 
       {/* Nutrition */}
       <Accordion title="Nutrição" icon="🥗" defaultOpen id="nutricao">

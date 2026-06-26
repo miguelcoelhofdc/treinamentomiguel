@@ -71,6 +71,11 @@ export default function Today({ startDate }: Props) {
     }
   }, [doneExercises, totalExercises, workoutDone, isRest])
 
+  useEffect(() => {
+    document.body.style.overflow = showCompletionSheet ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [showCompletionSheet])
+
   const handleToggle = async (id: string) => {
     await toggleExerciseCheck(todayStr, id)
     const c = await getExerciseChecks(todayStr)
@@ -149,8 +154,10 @@ export default function Today({ startDate }: Props) {
 
         {/* Session card */}
         <div className="card p-5">
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-3xl">{training.sessionIcon}</span>
+          <div className="flex items-center gap-4 mb-1">
+            <div className="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-3xl flex-shrink-0">
+              {training.sessionIcon}
+            </div>
             <div>
               <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Sessão do dia</p>
               <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{training.sessionLabel}</h2>
@@ -188,7 +195,7 @@ export default function Today({ startDate }: Props) {
               <span className="text-label text-slate-500 dark:text-slate-400">Progresso da sessão</span>
               <span className="text-label font-semibold text-primary-600 dark:text-primary-400">{doneExercises}/{totalExercises}</span>
             </div>
-            <div className="h-1.5 bg-slate-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+            <div className="h-2 bg-slate-200 dark:bg-neutral-700 rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary-500 rounded-full transition-all duration-300"
                 style={{ width: `${totalExercises > 0 ? (doneExercises / totalExercises) * 100 : 0}%` }}
@@ -339,7 +346,10 @@ export default function Today({ startDate }: Props) {
 
       {/* Toast com undo */}
       {showUndo && (
-        <div className="fixed top-4 left-4 right-4 z-50 bg-slate-800 text-white rounded-xl p-4 flex items-center justify-between animate-slide-down">
+        <div
+          className="fixed left-4 right-4 z-50 bg-slate-800 text-white rounded-xl p-4 flex items-center justify-between animate-slide-down"
+          style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))' }}
+        >
           <span className="text-body font-medium">Treino concluído!</span>
           <button onClick={handleUndo} className="text-primary-300 text-label font-semibold ml-4">Desfazer</button>
         </div>
@@ -349,12 +359,17 @@ export default function Today({ startDate }: Props) {
       {showCompletionSheet && (
         <>
           <div className="fixed inset-0 z-40 bg-black/40" onClick={() => {}} />
-          <div className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-neutral-800 rounded-t-xl shadow-modal p-6 animate-slide-up">
-            <div className="w-10 h-1 bg-slate-300 dark:bg-neutral-600 rounded-full mx-auto mb-5" />
-            <h2 className="text-title text-slate-900 dark:text-white mb-1">Sessão concluída!</h2>
-            <p className="text-body text-slate-500 dark:text-slate-400 mb-6">{doneExercises} exercícios realizados</p>
-            <button onClick={handleConcluir} className="btn-primary w-full mb-3">Concluir treino</button>
-            <button onClick={() => setShowCompletionSheet(false)} className="btn-ghost w-full text-center">Agora não</button>
+          <div
+            className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-neutral-800 rounded-t-xl shadow-modal animate-slide-up"
+            style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
+          >
+            <div className="px-6 pt-6">
+              <div className="w-10 h-1 bg-slate-300 dark:bg-neutral-600 rounded-full mx-auto mb-5" />
+              <h2 className="text-title text-slate-900 dark:text-white mb-1">Sessão concluída!</h2>
+              <p className="text-body text-slate-500 dark:text-slate-400 mb-6">{doneExercises} exercícios realizados</p>
+              <button onClick={handleConcluir} className="btn-primary w-full mb-3">Concluir treino</button>
+              <button onClick={() => setShowCompletionSheet(false)} className="btn-ghost w-full text-center">Agora não</button>
+            </div>
           </div>
         </>
       )}

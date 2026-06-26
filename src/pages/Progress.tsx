@@ -85,11 +85,11 @@ export default function Progress() {
 
   return (
     <div className="page-content page-enter space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Progresso</h1>
+      <h1 className="text-display text-slate-900 dark:text-white">Progresso</h1>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 xs:grid-cols-3 gap-2">
-        <div className="card p-3 text-center">
+      <div className="grid grid-cols-2 xs:grid-cols-3 gap-2 items-stretch">
+        <div className="card p-3 text-center flex flex-col">
           <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             {currentWeight ? `${currentWeight}` : '—'}
           </p>
@@ -99,19 +99,19 @@ export default function Progress() {
               {weightDelta < 0 ? '▼' : '▲'} {Math.abs(weightDelta).toFixed(1)}kg
             </p>
           )}
-          <p className="text-label text-slate-400 mt-0.5">(↓ perda · ↑ ganho)</p>
+          <p className="text-label text-slate-400 mt-auto pt-1">(↓ perda · ↑ ganho)</p>
         </div>
-        <div className="card p-3 text-center">
+        <div className="card p-3 text-center flex flex-col">
           <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">{totalKm.toFixed(0)}</p>
           <p className="text-xs text-slate-400">km percorridos</p>
-          <p className="text-xs text-slate-400 mt-0.5">{runData.length} sessões</p>
+          <p className="text-xs text-slate-400 mt-auto pt-1">{runData.length} sessões</p>
         </div>
-        <div className="card p-3 text-center">
+        <div className="card p-3 text-center flex flex-col">
           <p className="text-2xl font-bold text-slate-800 dark:text-slate-100">
             {bestPace ? formatPace(bestPace).replace(' /km', '') : '—'}
           </p>
           <p className="text-xs text-slate-400">Melhor pace</p>
-          <p className="text-xs text-slate-400 mt-0.5">qualidade</p>
+          <p className="text-xs text-slate-400 mt-auto pt-1">qualidade</p>
         </div>
       </div>
 

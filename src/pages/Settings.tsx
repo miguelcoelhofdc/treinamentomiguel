@@ -17,6 +17,12 @@ interface Props {
 export default function Settings({ settings, updateSetting }: Props) {
   const [saved, setSaved] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
+  const [feedback, setFeedback] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+
+  const showFeedback = (msg: string, type: 'success' | 'error' = 'success') => {
+    setFeedback({ msg, type })
+    setTimeout(() => setFeedback(null), 3000)
+  }
 
   const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2000) }
 
@@ -54,9 +60,9 @@ export default function Settings({ settings, updateSetting }: Props) {
           await db.runningLogs.add(rest)
         }
       }
-      alert('Dados importados com sucesso!')
+      showFeedback('Dados importados com sucesso!')
     } catch {
-      alert('Erro ao importar: arquivo inválido.')
+      showFeedback('Erro ao importar: arquivo inválido.', 'error')
     }
   }
 
@@ -66,12 +72,25 @@ export default function Settings({ settings, updateSetting }: Props) {
     await db.strengthLogs.clear()
     await db.exerciseChecks.clear()
     setConfirmReset(false)
-    alert('Todos os dados foram apagados.')
+    showFeedback('Todos os dados foram apagados.')
   }
 
   return (
     <div className="page-content page-enter space-y-4">
-      <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Ajustes</h1>
+      <h1 className="text-display text-slate-900 dark:text-white">Ajustes</h1>
+
+      {feedback && (
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium ${
+          feedback.type === 'success'
+            ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+            : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
+        }`}>
+          {feedback.type === 'success'
+            ? <CheckCircle size={16} />
+            : <AlertTriangle size={16} />}
+          {feedback.msg}
+        </div>
+      )}
 
       {/* Profile */}
       <div className="card p-4 space-y-4">

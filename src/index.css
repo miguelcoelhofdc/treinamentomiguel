@@ -5,6 +5,7 @@
 @layer base {
   :root {
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
   }
 
   html {
@@ -84,7 +85,7 @@
   }
 
   .page-content {
-    padding-top: 1rem;
+    padding-top: calc(1rem + var(--safe-top));
     padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
     padding-left: 1rem;
     padding-right: 1rem;
