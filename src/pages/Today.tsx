@@ -29,7 +29,8 @@ export default function Today({ startDate }: Props) {
   const [workoutDone, setWorkoutDone] = useState(false)
   const [showLog, setShowLog] = useState(false)
   const [showRunLog, setShowRunLog] = useState(false)
-  const [showMobility, setShowMobility] = useState(false)
+  const [showRestMobility, setShowRestMobility] = useState(false)
+  const [showPrehab, setShowPrehab] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
   const [showCompletionSheet, setShowCompletionSheet] = useState(false)
   const [showUndo, setShowUndo] = useState(false)
@@ -144,22 +145,25 @@ export default function Today({ startDate }: Props) {
     <>
       <div className="page-content page-enter space-y-4">
         {/* Header */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="eyebrow mb-1">Seu plano de treino</p>
             <h1 className="text-display text-slate-900 dark:text-white">Hoje</h1>
+            <p className="text-label text-slate-500 dark:text-slate-400 mt-1">{dateLabel}</p>
+          </div>
+          <div className="text-right">
             <span className="badge-fase">Sem {training.weekNumber}</span>
           </div>
-          <p className="text-label text-muted mb-4">{dateLabel}</p>
         </div>
 
         {/* Session card */}
-        <div className="card p-5">
-          <div className="flex items-center gap-4 mb-1">
-            <div className="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-3xl flex-shrink-0">
+        <div className="card p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-3xl flex-shrink-0 ring-1 ring-primary-100 dark:ring-primary-900/50">
               {training.sessionIcon}
             </div>
             <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">Sessão do dia</p>
+              <p className="eyebrow">Sessão do dia</p>
               <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{training.sessionLabel}</h2>
               {training.isDeload && <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">Volume reduzido (~30%)</p>}
             </div>
@@ -212,11 +216,11 @@ export default function Today({ startDate }: Props) {
             <p className="text-sm text-slate-500 dark:text-slate-400">
               Recuperação é parte do treino! Faça mobilidade leve, caminhada ou simplesmente descanse.
             </p>
-            <button onClick={() => setShowMobility(s => !s)} className="btn-ghost mx-auto">
-              <ChevronDown size={16} className={`transition-transform duration-200 ${showMobility ? 'rotate-180' : ''}`} />
+            <button onClick={() => setShowRestMobility(s => !s)} className="btn-ghost mx-auto">
+              <ChevronDown size={16} className={`transition-transform duration-200 ${showRestMobility ? 'rotate-180' : ''}`} />
               Ver rotina de mobilidade
             </button>
-            {showMobility && <MobilitySection />}
+            {showRestMobility && <MobilitySection />}
           </div>
         )}
 
@@ -233,8 +237,8 @@ export default function Today({ startDate }: Props) {
             </div>
 
             {!workoutDone && (
-              <button onClick={handleMarkDone} className="btn-primary w-full">
-                <CheckCircle size={16} /> Marcar corrida como feita
+              <button onClick={() => setShowRunLog(true)} className="btn-primary w-full">
+                <CheckCircle size={16} /> Registrar e concluir corrida
               </button>
             )}
 
@@ -296,22 +300,22 @@ export default function Today({ startDate }: Props) {
         {!isRest && (
           <div className="card overflow-hidden border-primary-100 dark:border-primary-900/30">
             <button
-              onClick={() => setShowMobility(s => !s)}
+              onClick={() => setShowPrehab(s => !s)}
               className="w-full flex items-center justify-between p-4 text-left"
-              aria-expanded={showMobility}
+              aria-expanded={showPrehab}
               aria-controls="prehab-content"
             >
               <div className="flex items-center gap-2">
                 <Zap size={16} className="text-primary-500" />
                 <span className="text-body-md font-semibold text-primary-700 dark:text-primary-300">Prehab antes do treino</span>
               </div>
-              <ChevronDown size={18} className={`text-slate-400 transition-transform duration-200 ${showMobility ? 'rotate-180' : ''}`} />
+              <ChevronDown size={18} className={`text-slate-400 transition-transform duration-200 ${showPrehab ? 'rotate-180' : ''}`} />
             </button>
             <div
               id="prehab-content"
               role="region"
               className="overflow-hidden transition-all duration-200"
-              style={{ maxHeight: showMobility ? '800px' : '0' }}
+              style={{ maxHeight: showPrehab ? '800px' : '0' }}
             >
               <div className="px-4 pb-4">
                 <MobilitySection compact />
@@ -358,14 +362,17 @@ export default function Today({ startDate }: Props) {
       {/* Bottom sheet de conclusão */}
       {showCompletionSheet && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => {}} />
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setShowCompletionSheet(false)} aria-hidden="true" />
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="completion-title"
             className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-neutral-800 rounded-t-xl shadow-modal animate-slide-up"
             style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
           >
             <div className="px-6 pt-6">
               <div className="w-10 h-1 bg-slate-300 dark:bg-neutral-600 rounded-full mx-auto mb-5" />
-              <h2 className="text-title text-slate-900 dark:text-white mb-1">Sessão concluída!</h2>
+              <h2 id="completion-title" className="text-title text-slate-900 dark:text-white mb-1">Sessão concluída!</h2>
               <p className="text-body text-slate-500 dark:text-slate-400 mb-6">{doneExercises} exercícios realizados</p>
               <button onClick={handleConcluir} className="btn-primary w-full mb-3">Concluir treino</button>
               <button onClick={() => setShowCompletionSheet(false)} className="btn-ghost w-full text-center">Agora não</button>

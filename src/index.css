@@ -6,6 +6,8 @@
   :root {
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
+    --surface: #ffffff;
+    --surface-subtle: #f8fafc;
   }
 
   html {
@@ -16,22 +18,24 @@
   body {
     @apply bg-slate-50 text-slate-800 font-sans antialiased;
     overscroll-behavior: none;
+    background-image: radial-gradient(circle at 50% -15%, rgba(46, 125, 110, 0.11), transparent 34rem);
   }
 
   .dark body {
     @apply bg-neutral-900 text-slate-100;
+    background-image: radial-gradient(circle at 50% -15%, rgba(78, 180, 158, 0.09), transparent 34rem);
   }
 }
 
 @layer components {
   .card {
-    @apply bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-slate-100 dark:border-neutral-700;
+    @apply bg-white/95 dark:bg-neutral-800/95 rounded-2xl shadow-sm border border-slate-200/70 dark:border-neutral-700;
   }
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl
            bg-primary-500 text-white font-semibold text-sm
-           active:scale-95 transition-all duration-150
+           shadow-sm shadow-primary-600/20 hover:bg-primary-600 active:scale-[0.98] transition-all duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
     touch-action: manipulation;
   }
@@ -40,7 +44,7 @@
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
            text-slate-600 dark:text-slate-300 font-medium text-sm
            hover:bg-slate-100 dark:hover:bg-neutral-700
-           active:scale-95 transition-all duration-150;
+           active:scale-[0.98] transition-all duration-150;
   }
 
   .btn-secondary {
@@ -56,7 +60,7 @@
   .input {
     @apply w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-neutral-600
            bg-white dark:bg-neutral-700 text-slate-800 dark:text-slate-100
-           text-base focus:outline-none focus:ring-2 focus:ring-primary-400
+           text-base placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400
            transition-shadow duration-150;
   }
 
@@ -85,11 +89,11 @@
   }
 
   .page-content {
-    padding-top: calc(1rem + var(--safe-top));
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    padding-top: calc(1.25rem + var(--safe-top));
+    padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
     padding-left: 1rem;
     padding-right: 1rem;
-    max-width: 32rem;
+    max-width: 36rem;
     margin-left: auto;
     margin-right: auto;
   }
@@ -117,6 +121,14 @@
 
   /* Skeleton */
   .skeleton { @apply bg-slate-200 dark:bg-neutral-700 rounded-lg animate-pulse; }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500;
+  }
+
+  .icon-tile {
+    @apply w-11 h-11 rounded-xl flex items-center justify-center bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300;
+  }
 }
 
 /* Smooth page transitions */
@@ -171,6 +183,15 @@ input[type="range"] {
   .animate-slide-down,
   .animate-slide-up,
   .animate-pulse { animation: none !important; }
+}
+
+button, a, input, textarea, select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgba(46, 125, 110, 0.38);
+  outline-offset: 2px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
