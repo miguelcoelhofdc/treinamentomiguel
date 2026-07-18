@@ -86,14 +86,15 @@ export default function DailyLogForm({ date, onSaved }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-4">
         <div>
           <label className="label">Dor no Ombro</label>
-          <div className="flex gap-1">
+          <div className="grid grid-cols-4 gap-1.5">
             {[0,1,2,3].map(n => (
               <button key={n} onClick={() => set('shoulderPain', n as 0|1|2|3)}
-                aria-label={`Dor nível ${n}`}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all
+                aria-label={`Dor no ombro: ${painLabels[n]}`}
+                aria-pressed={form.shoulderPain === n}
+                className={`min-h-11 px-1 py-1.5 rounded-xl text-[11px] font-semibold leading-tight transition-all
                   ${form.shoulderPain === n
                     ? n === 0 ? 'bg-green-500 text-white' : n === 1 ? 'bg-amber-400 text-amber-900' : n === 2 ? 'bg-orange-500 text-white' : 'bg-red-500 text-white'
                     : 'bg-slate-100 dark:bg-neutral-700 text-slate-500'}`}>
@@ -104,11 +105,12 @@ export default function DailyLogForm({ date, onSaved }: Props) {
         </div>
         <div>
           <label className="label">Dor no Joelho</label>
-          <div className="flex gap-1">
+          <div className="grid grid-cols-4 gap-1.5">
             {[0,1,2,3].map(n => (
               <button key={n} onClick={() => set('kneePain', n as 0|1|2|3)}
-                aria-label={`Dor nível ${n}`}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all
+                aria-label={`Dor no joelho: ${painLabels[n]}`}
+                aria-pressed={form.kneePain === n}
+                className={`min-h-11 px-1 py-1.5 rounded-xl text-[11px] font-semibold leading-tight transition-all
                   ${form.kneePain === n
                     ? n === 0 ? 'bg-green-500 text-white' : n === 1 ? 'bg-amber-400 text-amber-900' : n === 2 ? 'bg-orange-500 text-white' : 'bg-red-500 text-white'
                     : 'bg-slate-100 dark:bg-neutral-700 text-slate-500'}`}>
