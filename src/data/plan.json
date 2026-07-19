@@ -16,7 +16,7 @@
     "healthNotes": [
       "Lesão no ombro direito — sempre pegada neutra, sem dor aguda",
       "Dor no joelho — controlar amplitude e reportar dor ao profissional",
-      "⚠️ Este app não substitui acompanhamento médico e de educação física profissional."
+      "Este app não substitui acompanhamento médico e de educação física profissional."
     ]
   },
   "phases": [
@@ -46,13 +46,13 @@
     }
   ],
   "weekTemplate": {
-    "0": { "type": "corrida", "subtype": "longa",    "label": "Corrida Longa",          "icon": "🏃" },
-    "1": { "type": "forca",   "subtype": "forcaA",   "label": "Força A — Inferior",     "icon": "🦵" },
-    "2": { "type": "forca",   "subtype": "forcaB",   "label": "Força B — Superior + Barras", "icon": "💪" },
-    "3": { "type": "descanso","subtype": null,        "label": "Descanso Ativo",         "icon": "🧘" },
-    "4": { "type": "corrida", "subtype": "qualidade","label": "Corrida Qualidade",       "icon": "⚡" },
-    "5": { "type": "forca",   "subtype": "forcaC",   "label": "Força C — Full + Cond",  "icon": "🔥" },
-    "6": { "type": "calistenia","subtype":"calistenia","label": "Calistenia + Metcon",   "icon": "🤸" }
+    "0": { "type": "corrida", "subtype": "longa",    "label": "Corrida Longa",          "icon": "run" },
+    "1": { "type": "forca",   "subtype": "forcaA",   "label": "Força A — Inferior",     "icon": "strength" },
+    "2": { "type": "forca",   "subtype": "forcaB",   "label": "Força B — Superior + Barras", "icon": "strength" },
+    "3": { "type": "descanso","subtype": null,        "label": "Descanso Ativo",         "icon": "recovery" },
+    "4": { "type": "corrida", "subtype": "qualidade","label": "Corrida Qualidade",       "icon": "run" },
+    "5": { "type": "forca",   "subtype": "forcaC",   "label": "Força C — Full + Cond",  "icon": "strength" },
+    "6": { "type": "calistenia","subtype":"calistenia","label": "Calistenia + Metcon",   "icon": "bodyweight" }
   },
   "deloadWeeks": [4, 8, 12, 16, 20, 24],
   "exercises": {

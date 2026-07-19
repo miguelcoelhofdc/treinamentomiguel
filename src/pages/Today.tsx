@@ -1,15 +1,35 @@
-import { useState, useEffect, useCallback } from 'react'
-import { ChevronDown, AlertTriangle, Dumbbell, Wind, Coffee, Zap, CheckCircle } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  Barbell,
+  CalendarBlank,
+  CaretDown,
+  Check,
+  CheckCircle,
+  Circle,
+  ClipboardText,
+  Coffee,
+  PersonSimpleRun,
+  ShieldCheck,
+  Sparkle,
+  Trophy,
+  Warning,
+  X,
+} from '@phosphor-icons/react'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
 import ExerciseCard from '@/components/ExerciseCard'
 import DailyLogForm from '@/components/DailyLogForm'
 import RunningLogForm from '@/components/RunningLogForm'
+import PageHeader from '@/components/ui/PageHeader'
+import ProgressRing from '@/components/ui/ProgressRing'
+import SessionIcon from '@/components/ui/SessionIcon'
 import { getExerciseChecks, toggleExerciseCheck, getDailyLog, saveDailyLog } from '@/db'
+import { localDateKey } from '@/lib/date'
 import plan from '@/data/plan.json'
-import type { Exercise, PhaseId } from '@/types'
+import type { DailyLog, Exercise, PhaseId } from '@/types'
 
 const DAY_NAMES = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
-const MONTH_NAMES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
+const MONTH_NAMES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
 function getExercisesForType(subtype: string): Exercise[] {
   if (subtype === 'forcaA') return plan.exercises.forcaA as Exercise[]
@@ -18,15 +38,33 @@ function getExercisesForType(subtype: string): Exercise[] {
   return []
 }
 
-interface Props { startDate: string }
+function getReadiness(log?: DailyLog): number | null {
+  if (!log) return null
+  const scores: number[] = []
+  if (log.sleepH != null) scores.push(Math.min(100, (log.sleepH / 8) * 100))
+  if (log.energy != null) scores.push((log.energy / 5) * 100)
+  if (log.shoulderPain != null || log.kneePain != null) {
+    const pain = Math.max(log.shoulderPain ?? 0, log.kneePain ?? 0)
+    scores.push(100 - (pain / 3) * 70)
+  }
+  if (scores.length === 0) return null
+  return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+}
 
-export default function Today({ startDate }: Props) {
-  const today = new Date()
-  const todayStr = today.toISOString().slice(0, 10)
+interface Props {
+  startDate: string
+  name: string
+}
+
+export default function Today({ startDate, name }: Props) {
+  const today = useMemo(() => new Date(), [])
+  const todayStr = localDateKey(today)
   const training = useTrainingDay(startDate)
+  const completionButtonRef = useRef<HTMLButtonElement>(null)
 
   const [checks, setChecks] = useState<Map<string, boolean>>(new Map())
-  const [workoutDone, setWorkoutDone] = useState(false)
+  const [dailyLog, setDailyLog] = useState<DailyLog>()
+  const [pendingChecks, setPendingChecks] = useState<Set<string>>(new Set())
   const [showLog, setShowLog] = useState(false)
   const [showRunLog, setShowRunLog] = useState(false)
   const [showRestMobility, setShowRestMobility] = useState(false)
@@ -35,36 +73,44 @@ export default function Today({ startDate }: Props) {
   const [showCompletionSheet, setShowCompletionSheet] = useState(false)
   const [showUndo, setShowUndo] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
 
-  const loadChecks = useCallback(async () => {
-    const c = await getExerciseChecks(todayStr)
-    setChecks(c)
-    const log = await getDailyLog(todayStr)
-    setWorkoutDone(log?.workoutDone ?? false)
-    setLoading(false)
+  const loadState = useCallback(async () => {
+    setLoadError(false)
+    try {
+      const [nextChecks, log] = await Promise.all([
+        getExerciseChecks(todayStr),
+        getDailyLog(todayStr),
+      ])
+      setChecks(nextChecks)
+      setDailyLog(log)
+    } catch {
+      setLoadError(true)
+    } finally {
+      setLoading(false)
+    }
   }, [todayStr])
 
-  useEffect(() => { loadChecks() }, [loadChecks])
+  useEffect(() => { loadState() }, [loadState])
 
-  // Compute progress before early returns so the completion effect can use it
   const phase = (training.phase as PhaseId) ?? 'base'
   const isRest = training.sessionType === 'descanso'
+  const workoutDone = dailyLog?.workoutDone ?? false
 
-  let totalExercises = 0
-  let doneExercises = 0
+  const calisthenics = useMemo(() => getCalisteniaExercisesHelper(phase), [phase])
+  const sessionItems = useMemo(() => {
+    if (training.sessionType === 'forcaA' || training.sessionType === 'forcaB' || training.sessionType === 'forcaC') {
+      return getExercisesForType(training.sessionType).map(exercise => ({ id: exercise.id }))
+    }
+    if (training.sessionType === 'calistenia') {
+      return [calisthenics.push, calisthenics.pull, calisthenics.dips, ...calisthenics.core, calisthenics.metcon]
+    }
+    return []
+  }, [calisthenics, training.sessionType])
 
-  if (training.sessionType === 'forcaA' || training.sessionType === 'forcaB' || training.sessionType === 'forcaC') {
-    const exs = getExercisesForType(training.sessionType)
-    totalExercises = exs.length
-    doneExercises = exs.filter(ex => checks.get(ex.id)).length
-  } else if (training.sessionType === 'calistenia') {
-    const calData = getCalisteniaExercisesHelper(phase)
-    const allItems = [calData.push, calData.pull, calData.dips, ...calData.core]
-    totalExercises = allItems.length
-    doneExercises = allItems.filter(ex => checks.get(ex.id)).length
-  }
-
-  const showProgressBar = totalExercises > 0
+  const totalExercises = sessionItems.length
+  const doneExercises = sessionItems.filter(item => checks.get(item.id)).length
+  const sessionProgress = workoutDone ? 100 : totalExercises > 0 ? (doneExercises / totalExercises) * 100 : 0
 
   useEffect(() => {
     if (doneExercises > 0 && doneExercises === totalExercises && !workoutDone && !isRest) {
@@ -73,337 +119,386 @@ export default function Today({ startDate }: Props) {
   }, [doneExercises, totalExercises, workoutDone, isRest])
 
   useEffect(() => {
-    document.body.style.overflow = showCompletionSheet ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    if (!showCompletionSheet) return
+    document.body.style.overflow = 'hidden'
+    const focusTimer = window.setTimeout(() => completionButtonRef.current?.focus(), 50)
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowCompletionSheet(false)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.clearTimeout(focusTimer)
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [showCompletionSheet])
 
+  useEffect(() => {
+    if (!showUndo) return
+    const timeout = window.setTimeout(() => setShowUndo(false), 5000)
+    return () => window.clearTimeout(timeout)
+  }, [showUndo])
+
   const handleToggle = async (id: string) => {
-    await toggleExerciseCheck(todayStr, id)
-    const c = await getExerciseChecks(todayStr)
-    setChecks(c)
+    if (pendingChecks.has(id) || workoutDone) return
+    setPendingChecks(current => new Set(current).add(id))
+    try {
+      await toggleExerciseCheck(todayStr, id)
+      setChecks(await getExerciseChecks(todayStr))
+    } finally {
+      setPendingChecks(current => {
+        const next = new Set(current)
+        next.delete(id)
+        return next
+      })
+    }
   }
 
   const handleMarkDone = async () => {
     await saveDailyLog({ date: todayStr, workoutDone: true })
-    setWorkoutDone(true)
+    setDailyLog(current => ({ ...current, date: todayStr, workoutDone: true }))
   }
 
-  const handleConcluir = async () => {
+  const handleConclude = async () => {
     setShowCompletionSheet(false)
     await handleMarkDone()
     setShowUndo(true)
-    setTimeout(() => setShowUndo(false), 5000)
+    setShowLog(true)
   }
 
   const handleUndo = async () => {
     await saveDailyLog({ date: todayStr, workoutDone: false })
-    setWorkoutDone(false)
+    setDailyLog(current => ({ ...current, date: todayStr, workoutDone: false }))
     setShowUndo(false)
   }
 
   const dateLabel = `${DAY_NAMES[today.getDay()]}, ${today.getDate()} de ${MONTH_NAMES[today.getMonth()]}`
+  const firstName = name.trim().split(' ')[0] || 'atleta'
+  const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite'
+  const readiness = getReadiness(dailyLog)
 
   if (training.status === 'notStarted') {
     return (
-      <div className="page-content flex flex-col items-center justify-center gap-4 text-center pt-16">
-        <div className="text-5xl">🗓️</div>
-        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">Plano ainda não começou</h2>
-        <p className="text-slate-500 text-sm">Configure a data de início em <strong>Ajustes</strong> para começar.</p>
+      <div className="page-content flex min-h-[78dvh] flex-col items-start justify-center page-enter">
+        <div className="icon-tile mb-5 h-14 w-14 rounded-[18px]"><CalendarBlank size={28} weight="duotone" /></div>
+        <p className="page-kicker mb-2">Seu ciclo começa em breve</p>
+        <h1 className="page-title max-w-sm">Prepare o ponto de partida.</h1>
+        <p className="mt-3 max-w-sm text-body text-ink-muted">Defina a data de início para liberar a sessão do dia e acompanhar seu ritmo.</p>
+        <Link to="/ajustes" className="btn-primary mt-6">Configurar início</Link>
       </div>
     )
   }
 
   if (training.status === 'completed') {
     return (
-      <div className="page-content flex flex-col items-center justify-center gap-4 text-center pt-16">
-        <div className="text-5xl">🏆</div>
-        <h2 className="text-xl font-bold text-slate-700 dark:text-slate-200">Plano Concluído!</h2>
-        <p className="text-slate-500 text-sm">Parabéns, Miguel! 6 meses de dedicação. Hora de fazer os testes finais em <strong>Progresso</strong>.</p>
+      <div className="page-content flex min-h-[78dvh] flex-col items-start justify-center page-enter">
+        <div className="icon-tile mb-5 h-14 w-14 rounded-[18px]"><Trophy size={28} weight="duotone" /></div>
+        <p className="page-kicker mb-2">Ciclo concluído</p>
+        <h1 className="page-title max-w-sm">Você construiu seis meses de consistência.</h1>
+        <p className="mt-3 max-w-sm text-body text-ink-muted">Parabéns, {firstName}. Compare seus testes e escolha o próximo marco.</p>
+        <Link to="/progresso" className="btn-primary mt-6">Ver meu progresso</Link>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="page-content space-y-4">
-        <div className="skeleton h-7 w-36" />
-        <div className="skeleton h-4 w-24" />
-        <div className="skeleton h-32 w-full rounded-2xl" />
-        <div className="skeleton h-2 w-full rounded-full" />
-        <div className="skeleton h-16 w-full rounded-2xl" />
-        <div className="skeleton h-16 w-full rounded-2xl" />
-        <div className="skeleton h-16 w-full rounded-2xl" />
+      <div className="page-content space-y-5">
+        <div className="space-y-2"><div className="skeleton h-3 w-28" /><div className="skeleton h-9 w-40" /></div>
+        <div className="skeleton h-56 w-full rounded-[28px]" />
+        <div className="skeleton h-20 w-full rounded-[22px]" />
+        <div className="skeleton h-72 w-full rounded-[22px]" />
       </div>
     )
   }
 
-  const runSession = (training.sessionType === 'qualidade' || training.sessionType === 'longa')
+  if (loadError) {
+    return (
+      <div className="page-content flex min-h-[75dvh] flex-col items-start justify-center">
+        <Warning size={32} weight="duotone" className="mb-4 text-amber-700 dark:text-amber-300" />
+        <h1 className="text-title">Não consegui abrir seus dados.</h1>
+        <p className="mt-2 text-body text-ink-muted">Seus registros continuam no dispositivo. Tente carregar novamente.</p>
+        <button onClick={loadState} className="btn-primary mt-5">Tentar novamente</button>
+      </div>
+    )
+  }
+
+  const runSession = training.sessionType === 'qualidade' || training.sessionType === 'longa'
     ? getRunningSession(training.weekNumber, training.dayOfWeek)
     : null
 
   return (
     <>
-      <div className="page-content page-enter space-y-4">
-        {/* Header */}
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="eyebrow mb-1">Seu plano de treino</p>
-            <h1 className="text-display text-slate-900 dark:text-white">Hoje</h1>
-            <p className="text-label text-slate-500 dark:text-slate-400 mt-1">{dateLabel}</p>
-          </div>
-          <div className="text-right">
-            <span className="badge-fase">Sem {training.weekNumber}</span>
-          </div>
-        </div>
+      <main className="page-content page-enter space-y-5">
+        <PageHeader
+          eyebrow={`${greeting}, ${firstName}`}
+          title="Hoje"
+          description={dateLabel}
+          action={<span className="badge-fase">Semana {training.weekNumber}</span>}
+        />
 
-        {/* Session card */}
-        <div className="card p-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-3xl flex-shrink-0 ring-1 ring-primary-100 dark:ring-primary-900/50">
-              {training.sessionIcon}
+        <section className="hero-surface p-5 sm:p-6" aria-labelledby="session-title">
+          <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-white/10" aria-hidden="true" />
+          <div className="absolute -right-5 -top-8 h-28 w-28 rounded-full border border-white/10" aria-hidden="true" />
+
+          <div className="relative flex items-start justify-between gap-4">
+            <div className="flex items-center gap-2 text-primary-200">
+              <span className="status-dot bg-primary-300" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.15em]">Sessão do dia</span>
             </div>
-            <div>
-              <p className="eyebrow">Sessão do dia</p>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{training.sessionLabel}</h2>
-              {training.isDeload && <p className="text-xs text-purple-600 dark:text-purple-400 mt-0.5">Volume reduzido (~30%)</p>}
+            {training.isDeload && <span className="badge bg-white/10 text-primary-100">Volume leve</span>}
+          </div>
+
+          <div className="relative mt-7 flex items-end justify-between gap-5">
+            <div className="min-w-0">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[16px] border border-white/10 bg-white/10 text-primary-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
+                <SessionIcon type={training.sessionType} size={25} weight="duotone" />
+              </div>
+              <h2 id="session-title" className="max-w-[14rem] text-[27px] font-semibold leading-[1.05] tracking-[-0.035em] text-white">
+                {training.sessionLabel}
+              </h2>
+              <p className="mt-2 text-[13px] font-medium text-white/60">
+                {workoutDone ? 'Sessão concluída' : totalExercises > 0 ? `${doneExercises} de ${totalExercises} movimentos` : 'Pronto quando você estiver'}
+              </p>
             </div>
+            <ProgressRing
+              value={sessionProgress}
+              size={78}
+              stroke={7}
+              inverse
+              label={workoutDone ? 'feito' : totalExercises > 0 ? `${doneExercises}/${totalExercises}` : 'hoje'}
+            />
           </div>
 
           {workoutDone && (
-            <div className="flex items-center gap-2 mt-3 p-2.5 bg-green-50 dark:bg-green-900/20 rounded-xl">
-              <CheckCircle size={16} className="text-green-600" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">Treino concluído hoje! 💪</span>
+            <div className="relative mt-5 flex items-center gap-2 rounded-[15px] border border-white/10 bg-white/10 px-3.5 py-3 text-[13px] font-semibold text-primary-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <CheckCircle size={19} weight="fill" /> Feito. Mais um dia entregue.
             </div>
           )}
 
-          {/* Health warning pill */}
           <button
-            onClick={() => setShowAlert(v => !v)}
-            className="w-full flex items-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-neutral-700 text-warning-dark text-label"
+            type="button"
+            onClick={() => setShowAlert(current => !current)}
+            className="relative mt-4 flex min-h-11 w-full items-center gap-2 border-t border-white/10 pt-4 text-left text-[12px] font-semibold text-white/65"
+            aria-expanded={showAlert}
           >
-            <AlertTriangle size={14} className="text-warning flex-shrink-0" />
-            <span>Atenção: ombro + joelho</span>
-            <ChevronDown size={14} className={`ml-auto transition-transform duration-150 ${showAlert ? 'rotate-180' : ''}`} />
+            <ShieldCheck size={17} weight="duotone" className="text-primary-200" />
+            Ombro e joelho sob atenção
+            <CaretDown size={15} weight="bold" className={`ml-auto transition-transform ${showAlert ? 'rotate-180' : ''}`} />
           </button>
           {showAlert && (
-            <p className="text-label text-slate-500 dark:text-slate-400 mt-2">
-              Ombro e joelho: respeite os avisos de cada exercício. Este app não substitui acompanhamento profissional.
+            <p className="relative mt-1 text-[12px] leading-5 text-white/55 reveal-item">
+              Respeite os avisos de cada exercício e ajuste a carga se houver desconforto. O app não substitui acompanhamento profissional.
             </p>
           )}
-        </div>
+        </section>
 
-        {/* Progress bar */}
-        {showProgressBar && (
-          <div className="mt-3 mb-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-label text-slate-500 dark:text-slate-400">Progresso da sessão</span>
-              <span className="text-label font-semibold text-primary-600 dark:text-primary-400">{doneExercises}/{totalExercises}</span>
+        <section className="list-surface" aria-labelledby="checkin-title">
+          <button
+            type="button"
+            onClick={() => setShowLog(current => !current)}
+            className="flex min-h-[76px] w-full items-center gap-3 px-4 text-left"
+            aria-expanded={showLog}
+          >
+            <span className="icon-tile"><ClipboardText size={22} weight="duotone" /></span>
+            <span className="min-w-0 flex-1">
+              <span id="checkin-title" className="block text-[15px] font-semibold text-ink">Check-in diário</span>
+              <span className="mt-0.5 block text-[12px] font-medium text-ink-muted">
+                {readiness == null ? 'Sono, energia, dor e peso em dois minutos' : `Prontidão estimada em ${readiness}%`}
+              </span>
+            </span>
+            {readiness != null && <span className="metric-number text-[18px] text-accent-strong">{readiness}%</span>}
+            <CaretDown size={18} weight="bold" className={`text-ink-muted transition-transform ${showLog ? 'rotate-180' : ''}`} />
+          </button>
+
+          {dailyLog && !showLog && (
+            <div className="grid grid-cols-3 border-t border-line bg-surface-raised/65">
+              <QuickMetric label="Sono" value={dailyLog.sleepH != null ? `${dailyLog.sleepH}h` : '—'} />
+              <QuickMetric label="Energia" value={dailyLog.energy != null ? `${dailyLog.energy}/5` : '—'} />
+              <QuickMetric label="Dor máx." value={`${Math.max(dailyLog.shoulderPain ?? 0, dailyLog.kneePain ?? 0)}/3`} />
             </div>
-            <div className="h-2 bg-slate-200 dark:bg-neutral-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary-500 rounded-full transition-all duration-300"
-                style={{ width: `${totalExercises > 0 ? (doneExercises / totalExercises) * 100 : 0}%` }}
-              />
+          )}
+
+          {showLog && (
+            <div className="border-t border-line p-4 reveal-item">
+              <DailyLogForm date={todayStr} onSaved={() => { setShowLog(false); loadState() }} />
             </div>
-          </div>
+          )}
+        </section>
+
+        {!isRest && (
+          <section className="list-surface">
+            <button
+              type="button"
+              onClick={() => setShowPrehab(current => !current)}
+              className="flex min-h-[72px] w-full items-center gap-3 px-4 text-left"
+              aria-expanded={showPrehab}
+            >
+              <span className="icon-tile"><ShieldCheck size={22} weight="duotone" /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-semibold text-ink">Preparação articular</span>
+                <span className="block text-[12px] font-medium text-ink-muted">Faça antes da sessão principal</span>
+              </span>
+              <CaretDown size={18} weight="bold" className={`text-ink-muted transition-transform ${showPrehab ? 'rotate-180' : ''}`} />
+            </button>
+            {showPrehab && <div className="border-t border-line p-4 reveal-item"><MobilitySection compact /></div>}
+          </section>
         )}
 
-        {/* DESCANSO */}
         {isRest && (
-          <div className="card p-5 text-center space-y-3">
-            <Coffee size={32} className="mx-auto text-slate-400" />
-            <h3 className="font-semibold text-slate-700 dark:text-slate-200">Dia de Descanso Ativo</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Recuperação é parte do treino! Faça mobilidade leve, caminhada ou simplesmente descanse.
-            </p>
-            <button onClick={() => setShowRestMobility(s => !s)} className="btn-ghost mx-auto">
-              <ChevronDown size={16} className={`transition-transform duration-200 ${showRestMobility ? 'rotate-180' : ''}`} />
-              Ver rotina de mobilidade
+          <section className="surface p-5">
+            <Coffee size={28} weight="duotone" className="text-accent-strong" />
+            <h2 className="mt-4 text-title">Recuperar também é treinar.</h2>
+            <p className="mt-2 text-body text-ink-muted">Caminhada leve, mobilidade ou descanso completo. Escolha o que devolve energia.</p>
+            <button onClick={() => setShowRestMobility(current => !current)} className="btn-secondary mt-5 w-full">
+              {showRestMobility ? 'Ocultar mobilidade' : 'Ver rotina de mobilidade'}
+              <CaretDown size={17} weight="bold" className={`transition-transform ${showRestMobility ? 'rotate-180' : ''}`} />
             </button>
-            {showRestMobility && <MobilitySection />}
-          </div>
+            {showRestMobility && <div className="mt-5 border-t border-line pt-5 reveal-item"><MobilitySection /></div>}
+          </section>
         )}
 
-        {/* CORRIDA */}
         {runSession && (
-          <div className="space-y-3">
-            <div className="card p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Wind size={18} className="text-primary-500" />
-                <h3 className="font-semibold text-slate-800 dark:text-slate-100">Sessão de Corrida</h3>
-              </div>
-              <p className="font-medium text-slate-700 dark:text-slate-200">{runSession.label}</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">{runSession.detail}</p>
+          <section className="space-y-3" aria-labelledby="run-title">
+            <div className="section-heading">
+              <div><h2 id="run-title">Roteiro da corrida</h2><p>{runSession.label}</p></div>
+              <PersonSimpleRun size={24} weight="duotone" className="text-accent-strong" />
             </div>
-
-            {!workoutDone && (
-              <button onClick={() => setShowRunLog(true)} className="btn-primary w-full">
-                <CheckCircle size={16} /> Registrar e concluir corrida
-              </button>
-            )}
-
-            <button onClick={() => setShowRunLog(s => !s)} className="btn-ghost w-full border border-slate-200 dark:border-neutral-700">
-              <ChevronDown size={16} className={`transition-transform duration-200 ${showRunLog ? 'rotate-180' : ''}`} />
-              {showRunLog ? 'Fechar' : 'Registrar corrida'}
-            </button>
-            {showRunLog && (
-              <div className="card p-4">
-                <RunningLogForm
-                  defaultDate={todayStr}
-                  defaultType={training.sessionType === 'qualidade' ? 'qualidade' : 'longa'}
-                  onSaved={() => { setShowRunLog(false); handleMarkDone() }}
-                />
-              </div>
-            )}
-          </div>
+            <div className="surface p-5">
+              <p className="text-[15px] leading-6 text-ink-soft">{runSession.detail}</p>
+              {!workoutDone && !showRunLog && (
+                <button onClick={() => setShowRunLog(true)} className="btn-primary mt-5 w-full">
+                  Registrar resultado
+                </button>
+              )}
+              {showRunLog && (
+                <div className="reveal-item">
+                  <div className="mb-4 flex items-center justify-between border-b border-line pb-3">
+                    <p className="text-[14px] font-semibold text-ink">Resultado da sessão</p>
+                    <button onClick={() => setShowRunLog(false)} className="btn-icon" aria-label="Fechar registro"><X size={18} /></button>
+                  </div>
+                  <RunningLogForm
+                    defaultDate={todayStr}
+                    defaultType={training.sessionType === 'qualidade' ? 'qualidade' : 'longa'}
+                    onSaved={() => { setShowRunLog(false); handleMarkDone() }}
+                  />
+                </div>
+              )}
+            </div>
+          </section>
         )}
 
-        {/* FORÇA */}
         {(training.sessionType === 'forcaA' || training.sessionType === 'forcaB' || training.sessionType === 'forcaC') && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Dumbbell size={16} className="text-primary-500" />
-              <p className="section-title mb-0">Exercícios</p>
+          <section className="space-y-3" aria-labelledby="strength-title">
+            <div className="section-heading">
+              <div><h2 id="strength-title">Sequência de força</h2><p>Marque, registre a carga e avance</p></div>
+              <Barbell size={24} weight="duotone" className="text-accent-strong" />
             </div>
-            {getExercisesForType(training.sessionType).map((ex) => (
-              <ExerciseCard
-                key={ex.id}
-                exercise={ex}
-                phase={phase}
-                checked={checks.get(ex.id) ?? false}
-                onToggle={() => handleToggle(ex.id)}
-                isDeload={training.isDeload}
-              />
-            ))}
-            {!workoutDone && (
-              <button onClick={handleMarkDone} className="btn-primary w-full mt-2">
-                <CheckCircle size={16} /> Marcar treino como feito
-              </button>
-            )}
-          </div>
+            <div className="list-surface divide-y divide-line">
+              {getExercisesForType(training.sessionType).map((exercise, index) => (
+                <div key={exercise.id} className="reveal-item" style={{ '--index': index } as CSSProperties}>
+                  <ExerciseCard
+                    exercise={exercise}
+                    phase={phase}
+                    checked={checks.get(exercise.id) ?? false}
+                    onToggle={() => handleToggle(exercise.id)}
+                    isDeload={training.isDeload}
+                    date={todayStr}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
-        {/* CALISTENIA */}
         {training.sessionType === 'calistenia' && (
           <CalisteniaSection
-            phase={phase}
             checks={checks}
             onToggle={handleToggle}
             isDeload={training.isDeload}
-            workoutDone={workoutDone}
-            onMarkDone={handleMarkDone}
-            data={getCalisteniaExercisesHelper(phase)}
+            data={calisthenics}
           />
         )}
 
-        {/* Prehab */}
-        {!isRest && (
-          <div className="card overflow-hidden border-primary-100 dark:border-primary-900/30">
-            <button
-              onClick={() => setShowPrehab(s => !s)}
-              className="w-full flex items-center justify-between p-4 text-left"
-              aria-expanded={showPrehab}
-              aria-controls="prehab-content"
-            >
-              <div className="flex items-center gap-2">
-                <Zap size={16} className="text-primary-500" />
-                <span className="text-body-md font-semibold text-primary-700 dark:text-primary-300">Prehab antes do treino</span>
-              </div>
-              <ChevronDown size={18} className={`text-slate-400 transition-transform duration-200 ${showPrehab ? 'rotate-180' : ''}`} />
-            </button>
-            <div
-              id="prehab-content"
-              role="region"
-              className="overflow-hidden transition-all duration-200"
-              style={{ maxHeight: showPrehab ? '800px' : '0' }}
-            >
-              <div className="px-4 pb-4">
-                <MobilitySection compact />
-              </div>
-            </div>
+        {!isRest && totalExercises > 0 && !workoutDone && (
+          <div className="rounded-[18px] border border-dashed border-line px-4 py-3 text-center text-[13px] font-medium text-ink-muted">
+            {doneExercises === totalExercises
+              ? 'Tudo marcado. Confirme a conclusão da sessão.'
+              : `${totalExercises - doneExercises} ${totalExercises - doneExercises === 1 ? 'movimento restante' : 'movimentos restantes'}`}
           </div>
         )}
+      </main>
 
-        {/* Daily Log */}
-        <div className="card overflow-hidden">
-          <button
-            onClick={() => setShowLog(s => !s)}
-            className="w-full flex items-center justify-between p-4 text-left"
-            aria-expanded={showLog}
-            aria-controls="daily-log-content"
-          >
-            <span className="text-body-md font-semibold text-slate-700 dark:text-slate-200">📋 Log do Dia</span>
-            <ChevronDown size={18} className={`text-slate-400 transition-transform duration-200 ${showLog ? 'rotate-180' : ''}`} />
-          </button>
-          <div
-            id="daily-log-content"
-            role="region"
-            className="overflow-hidden transition-all duration-200"
-            style={{ maxHeight: showLog ? '800px' : '0' }}
-          >
-            <div className="px-4 pb-4">
-              <DailyLogForm date={todayStr} onSaved={() => setShowLog(false)} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Toast com undo */}
       {showUndo && (
         <div
-          className="fixed left-4 right-4 z-50 bg-slate-800 text-white rounded-xl p-4 flex items-center justify-between animate-slide-down"
-          style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))' }}
+          role="status"
+          aria-live="polite"
+          className="fixed left-4 right-4 mx-auto flex max-w-md items-center justify-between rounded-[18px] bg-ink p-4 text-canvas shadow-modal animate-slide-down"
+          style={{ zIndex: 60, top: 'calc(1rem + var(--safe-top))' }}
         >
-          <span className="text-body font-medium">Treino concluído!</span>
-          <button onClick={handleUndo} className="text-primary-300 text-label font-semibold ml-4">Desfazer</button>
+          <span className="flex items-center gap-2 text-[14px] font-semibold"><Check size={18} weight="bold" /> Sessão concluída</span>
+          <button onClick={handleUndo} className="ml-4 text-[13px] font-bold text-primary-200">Desfazer</button>
         </div>
       )}
 
-      {/* Bottom sheet de conclusão */}
       {showCompletionSheet && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setShowCompletionSheet(false)} aria-hidden="true" />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="completion-title"
-            className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-neutral-800 rounded-t-xl shadow-modal animate-slide-up"
-            style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
-          >
-            <div className="px-6 pt-6">
-              <div className="w-10 h-1 bg-slate-300 dark:bg-neutral-600 rounded-full mx-auto mb-5" />
-              <h2 id="completion-title" className="text-title text-slate-900 dark:text-white mb-1">Sessão concluída!</h2>
-              <p className="text-body text-slate-500 dark:text-slate-400 mb-6">{doneExercises} exercícios realizados</p>
-              <button onClick={handleConcluir} className="btn-primary w-full mb-3">Concluir treino</button>
-              <button onClick={() => setShowCompletionSheet(false)} className="btn-ghost w-full text-center">Agora não</button>
+          <button
+            type="button"
+            className="sheet-overlay"
+            onClick={() => setShowCompletionSheet(false)}
+            aria-label="Fechar confirmação"
+          />
+          <section role="dialog" aria-modal="true" aria-labelledby="completion-title" className="sheet-panel animate-slide-up">
+            <div className="px-5 pt-4 sm:px-6">
+              <div className="mx-auto mb-6 h-1 w-11 rounded-full bg-line" />
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[16px] bg-accent-soft text-accent-strong">
+                <Sparkle size={25} weight="duotone" />
+              </div>
+              <h2 id="completion-title" className="text-[27px] font-semibold tracking-[-0.035em] text-ink">Sessão entregue.</h2>
+              <p className="mt-2 text-body text-ink-muted">Você completou {doneExercises} movimentos. Salve o dia e registre como o corpo respondeu.</p>
+              <button ref={completionButtonRef} onClick={handleConclude} className="btn-primary mt-6 w-full">Concluir e fazer check-out</button>
+              <button onClick={() => setShowCompletionSheet(false)} className="btn-ghost mb-1 mt-2 w-full">Revisar antes</button>
             </div>
-          </div>
+          </section>
         </>
       )}
     </>
   )
 }
 
+function QuickMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-r border-line px-3 py-3 text-center last:border-r-0">
+      <p className="metric-number text-[17px]">{value}</p>
+      <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.09em] text-ink-muted">{label}</p>
+    </div>
+  )
+}
+
 function MobilitySection({ compact }: { compact?: boolean }) {
   const shoulder = plan.mobility.shoulder.slice(0, compact ? 3 : undefined)
   const knee = plan.mobility.knee.slice(0, compact ? 3 : undefined)
+
   return (
-    <div className="space-y-3">
-      <div>
-        <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase mb-2">🦴 Ombro</p>
-        {shoulder.map((ex) => (
-          <div key={ex.id} className="text-sm py-1 border-b border-slate-100 dark:border-neutral-700 last:border-0">
-            <span className="font-medium text-slate-700 dark:text-slate-200">{ex.name}</span>
-            <span className="text-slate-400 ml-2">{ex.sets}× {ex.reps}</span>
-          </div>
-        ))}
-      </div>
-      <div>
-        <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-2">🦵 Joelho</p>
-        {knee.map((ex) => (
-          <div key={ex.id} className="text-sm py-1 border-b border-slate-100 dark:border-neutral-700 last:border-0">
-            <span className="font-medium text-slate-700 dark:text-slate-200">{ex.name}</span>
-            <span className="text-slate-400 ml-2">{ex.sets}× {ex.reps}</span>
+    <div className="grid gap-5 sm:grid-cols-2">
+      <MobilityGroup title="Ombro" items={shoulder} />
+      <MobilityGroup title="Joelho" items={knee} />
+    </div>
+  )
+}
+
+function MobilityGroup({ title, items }: { title: string; items: typeof plan.mobility.shoulder }) {
+  return (
+    <div>
+      <p className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">
+        <ShieldCheck size={16} weight="duotone" className="text-accent-strong" /> {title}
+      </p>
+      <div className="divide-y divide-line">
+        {items.map(exercise => (
+          <div key={exercise.id} className="flex items-start justify-between gap-3 py-2.5">
+            <span className="text-[13px] font-semibold leading-5 text-ink-soft">{exercise.name}</span>
+            <span className="shrink-0 text-[12px] font-bold tabular-nums text-ink-muted">{exercise.sets} × {exercise.reps}</span>
           </div>
         ))}
       </div>
@@ -412,98 +507,115 @@ function MobilitySection({ compact }: { compact?: boolean }) {
 }
 
 interface CalisteniaProps {
-  phase: PhaseId
   checks: Map<string, boolean>
   onToggle: (id: string) => void
   isDeload: boolean
-  workoutDone: boolean
-  onMarkDone: () => void
   data: ReturnType<typeof getCalisteniaExercisesHelper>
 }
 
 function getCalisteniaExercisesHelper(phase: PhaseId) {
   const cal = plan.exercises.calistenia
+  const metcon = (cal.metcon as Record<string, typeof cal.metcon.base>)[phase] ?? cal.metcon.base
   return {
-    push: cal.pushProgression.filter(e => e.forPhase === phase)[0] ?? cal.pushProgression[0],
-    pull: cal.pullProgression.filter(e => e.forPhase === phase)[0] ?? cal.pullProgression[0],
-    dips: cal.dipsProgression.filter(e => e.forPhase === phase)[0] ?? cal.dipsProgression[0],
+    push: cal.pushProgression.find(exercise => exercise.forPhase === phase) ?? cal.pushProgression[0],
+    pull: cal.pullProgression.find(exercise => exercise.forPhase === phase) ?? cal.pullProgression[0],
+    dips: cal.dipsProgression.find(exercise => exercise.forPhase === phase) ?? cal.dipsProgression[0],
     core: cal.core,
-    metcon: (cal.metcon as Record<string, typeof cal.metcon.base>)[phase] ?? cal.metcon.base,
+    metcon: { ...metcon, id: `metcon-${phase}` },
   }
 }
 
-function CalisteniaSection({ phase: _phase, checks, onToggle, isDeload: _isDeload, workoutDone, onMarkDone, data }: CalisteniaProps) {
-  const items = [data.push, data.pull, data.dips]
+function CalisteniaSection({ checks, onToggle, isDeload, data }: CalisteniaProps) {
+  const mainItems = [data.push, data.pull, data.dips]
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="text-lg">🤸</span>
-        <p className="section-title mb-0">Calistenia</p>
+    <section className="space-y-3" aria-labelledby="calisthenics-title">
+      <div className="section-heading">
+        <div><h2 id="calisthenics-title">Calistenia</h2><p>Controle, amplitude e consistência</p></div>
+        <Sparkle size={24} weight="duotone" className="text-accent-strong" />
       </div>
 
-      {items.map((ex) => (
-        <div key={ex.id} className={`card p-4 transition-all ${checks.get(ex.id) ? 'card-done' : ''}`}>
-          <div className="flex items-start gap-3">
-            <button onClick={() => onToggle(ex.id)} className="mt-0.5 text-primary-500 active:scale-95 transition-transform">
-              {checks.get(ex.id)
-                ? <CheckCircle size={24} className="text-success" />
-                : <div className="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-neutral-500" />
-              }
-            </button>
-            <div className="flex-1">
-              <p className={`font-semibold ${checks.get(ex.id) ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-100'}`}>
-                {ex.name}
-              </p>
-              <p className="text-sm text-slate-500 mt-0.5">{ex.sets} séries × {ex.reps} · {ex.rest}</p>
-              {ex.caution && (
-                <span className={`inline-flex items-center gap-1 mt-1 text-xs font-medium px-2 py-0.5 rounded-full
-                  ${ex.caution === 'ombro' ? 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-blue-50 text-blue-700'}`}>
-                  ⚠️ Cuidado {ex.caution}
-                </span>
-              )}
-              <p className="text-xs text-slate-400 mt-1">{ex.technique}</p>
-            </div>
-          </div>
-        </div>
-      ))}
+      <div className="list-surface divide-y divide-line">
+        {mainItems.map((exercise, index) => (
+          <CalisthenicsRow
+            key={exercise.id}
+            id={exercise.id}
+            name={exercise.name}
+            prescription={`${Math.max(1, exercise.sets - (isDeload ? 1 : 0))} séries × ${exercise.reps} · ${exercise.rest}`}
+            technique={exercise.technique}
+            caution={exercise.caution}
+            checked={checks.get(exercise.id) ?? false}
+            onToggle={onToggle}
+            index={index}
+          />
+        ))}
 
-      <div className="section-title mt-2">Core</div>
-      {data.core.map((ex) => (
-        <div key={ex.id} className={`card p-4 transition-all ${checks.get(ex.id) ? 'card-done' : ''}`}>
-          <div className="flex items-center gap-3">
-            <button onClick={() => onToggle(ex.id)} className="text-primary-500 active:scale-95 transition-transform">
-              {checks.get(ex.id)
-                ? <CheckCircle size={24} className="text-success" />
-                : <div className="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-neutral-500" />
-              }
-            </button>
-            <div>
-              <p className="font-semibold text-slate-800 dark:text-slate-100">{ex.name}</p>
-              <p className="text-sm text-slate-500">{ex.sets}× {ex.reps} · {ex.rest}</p>
-            </div>
-          </div>
-        </div>
-      ))}
+        {data.core.map((exercise, index) => (
+          <CalisthenicsRow
+            key={exercise.id}
+            id={exercise.id}
+            name={exercise.name}
+            prescription={`${Math.max(1, exercise.sets - (isDeload ? 1 : 0))} × ${exercise.reps} · ${exercise.rest}`}
+            checked={checks.get(exercise.id) ?? false}
+            onToggle={onToggle}
+            index={mainItems.length + index}
+          />
+        ))}
 
-      <div className="card p-4 bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800/30">
-        <p className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase mb-2">🔥 Metcon</p>
-        <p className="font-semibold text-slate-800 dark:text-slate-100">{data.metcon.format}</p>
-        <span className="text-caption text-primary-600 dark:text-primary-400 block mt-2 mb-1">Circuito</span>
-        <div className="border-l-4 border-primary-300 dark:border-primary-700 pl-3 ml-1 space-y-2">
-          {data.metcon.exercises.map((ex, i) => (
-            <p key={i} className="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />{ex}
-            </p>
-          ))}
-        </div>
+        <CalisthenicsRow
+          id={data.metcon.id}
+          name="Bloco metabólico"
+          prescription={data.metcon.format}
+          technique={data.metcon.exercises.join(' · ')}
+          checked={checks.get(data.metcon.id) ?? false}
+          onToggle={onToggle}
+          index={mainItems.length + data.core.length}
+        />
       </div>
+    </section>
+  )
+}
 
-      {!workoutDone && (
-        <button onClick={onMarkDone} className="btn-primary w-full">
-          <CheckCircle size={16} /> Marcar treino como feito
-        </button>
-      )}
+function CalisthenicsRow({
+  id,
+  name,
+  prescription,
+  technique,
+  caution,
+  checked,
+  onToggle,
+  index,
+}: {
+  id: string
+  name: string
+  prescription: string
+  technique?: string
+  caution?: string | null
+  checked: boolean
+  onToggle: (id: string) => void
+  index: number
+}) {
+  return (
+    <div className={`reveal-item flex items-start gap-2 p-3.5 ${checked ? 'bg-accent-soft/45' : 'bg-surface'}`} style={{ '--index': index } as CSSProperties}>
+      <button
+        type="button"
+        onClick={() => onToggle(id)}
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] active:scale-[0.94]"
+        aria-label={checked ? `${name} concluído` : `Marcar ${name} como concluído`}
+        aria-pressed={checked}
+      >
+        {checked
+          ? <CheckCircle size={29} weight="fill" className="text-accent" />
+          : <Circle size={29} className="text-line" />}
+      </button>
+      <div className="min-w-0 flex-1 py-1.5">
+        <div className="flex items-center gap-2">
+          <p className={`text-[15px] font-semibold leading-5 ${checked ? 'text-ink-muted' : 'text-ink'}`}>{name}</p>
+          {caution && <Warning size={16} weight="fill" className="shrink-0 text-amber-600 dark:text-amber-300" />}
+        </div>
+        <p className="mt-0.5 text-[13px] font-medium leading-5 text-ink-muted">{prescription}</p>
+        {technique && <p className="mt-1 text-[12px] leading-5 text-ink-muted">{technique}</p>}
+      </div>
     </div>
   )
 }

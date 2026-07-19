@@ -1,152 +1,239 @@
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
+import { useState, type CSSProperties } from 'react'
+import {
+  ArrowCounterClockwise,
+  CaretDown,
+  CaretLeft,
+  CaretRight,
+  Warning,
+} from '@phosphor-icons/react'
+import PageHeader from '@/components/ui/PageHeader'
+import SessionIcon from '@/components/ui/SessionIcon'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
 import plan from '@/data/plan.json'
-import type { PhaseId, Exercise } from '@/types'
+import type { Exercise, PhaseId, WeekDayTemplate } from '@/types'
 
-const DAY_NAMES_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+const WEEK_DAYS = [1, 2, 3, 4, 5, 6, 0]
 
-const phaseBorderMap: Record<string, string> = {
-  'base':          'border-l-4 border-green-400',
-  'desenvolvimento': 'border-l-4 border-primary-400',
-  'performance':   'border-l-4 border-red-400',
+interface Props {
+  startDate: string
 }
 
-interface Props { startDate: string }
+function getExercises(subtype: string): Exercise[] {
+  if (subtype === 'forcaA') return plan.exercises.forcaA as Exercise[]
+  if (subtype === 'forcaB') return plan.exercises.forcaB as Exercise[]
+  if (subtype === 'forcaC') return plan.exercises.forcaC as Exercise[]
+  return []
+}
 
 export default function Plan({ startDate }: Props) {
   const todayTraining = useTrainingDay(startDate)
-  const [week, setWeek] = useState(Math.max(1, todayTraining.weekNumber || 1))
+  const currentWeek = Math.min(26, Math.max(1, todayTraining.weekNumber || 1))
+  const [week, setWeek] = useState(currentWeek)
   const [expandedDay, setExpandedDay] = useState<number | null>(todayTraining.dayOfWeek ?? null)
 
   const isDeload = plan.deloadWeeks.includes(week)
   const phase: PhaseId = week <= 8 ? 'base' : week <= 17 ? 'desenvolvimento' : 'performance'
-  const phaseInfo = plan.phases.find(p => p.id === phase)
-
-  const getExercises = (subtype: string): Exercise[] => {
-    if (subtype === 'forcaA') return plan.exercises.forcaA as Exercise[]
-    if (subtype === 'forcaB') return plan.exercises.forcaB as Exercise[]
-    if (subtype === 'forcaC') return plan.exercises.forcaC as Exercise[]
-    return []
-  }
+  const phaseInfo = plan.phases.find(item => item.id === phase)
+  const isHomeWeek = week === currentWeek
+  const isCurrentWeek = isHomeWeek && todayTraining.status !== 'notStarted'
 
   return (
-    <div className="page-content page-enter space-y-4">
-      <h1 className="text-display text-slate-900 dark:text-white">Plano</h1>
+    <div className="page-content page-enter">
+      <PageHeader
+        eyebrow="Ciclo de 26 semanas"
+        title="Plano de treino"
+        description="Navegue pela progressão e abra cada sessão para revisar o que vem pela frente."
+      />
 
-      {/* Week selector */}
-      <div className="card p-4 flex items-center justify-between">
-        <button
-          onClick={() => setWeek(w => Math.max(1, w - 1))}
-          className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 active:bg-slate-100 dark:active:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
-          disabled={week <= 1}
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <div className="text-center">
-          <p className="text-lg font-bold text-slate-800 dark:text-slate-100">Semana {week}</p>
-          <div className="flex items-center gap-2 justify-center mt-0.5">
-            <span className="text-sm text-slate-500" style={{ color: phaseInfo?.color }}>{phaseInfo?.name}</span>
-            {isDeload && <span className="badge bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">Deload</span>}
-            {week === todayTraining.weekNumber && <span className="badge bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">Esta semana</span>}
+      <section className="hero-surface p-5 sm:p-6" aria-label="Selecionar semana do plano">
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => setWeek(value => Math.max(1, value - 1))}
+            disabled={week <= 1}
+            aria-label="Semana anterior"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] border border-canvas/10 bg-canvas/10 text-canvas transition duration-200 hover:bg-canvas/15 active:scale-[0.96] disabled:opacity-30"
+          >
+            <CaretLeft size={22} weight="bold" />
+          </button>
+
+          <div className="min-w-0 text-center">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-canvas/60">Semana</p>
+            <p className="mt-1 text-[3rem] font-semibold leading-none tracking-[-0.06em] tabular-nums text-canvas">{week}</p>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <span className="text-[13px] font-semibold text-canvas/75">{phaseInfo?.name}</span>
+              {isDeload && <span className="badge bg-canvas/10 text-canvas">Deload</span>}
+              {isCurrentWeek && <span className="badge bg-canvas text-ink">Semana atual</span>}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setWeek(value => Math.min(26, value + 1))}
+            disabled={week >= 26}
+            aria-label="Próxima semana"
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] border border-canvas/10 bg-canvas/10 text-canvas transition duration-200 hover:bg-canvas/15 active:scale-[0.96] disabled:opacity-30"
+          >
+            <CaretRight size={22} weight="bold" />
+          </button>
+        </div>
+
+        <div className="mt-6">
+          <input
+            type="range"
+            min="1"
+            max="26"
+            step="1"
+            value={week}
+            onChange={event => setWeek(Number(event.target.value))}
+            aria-label={`Semana ${week} de 26`}
+            className="block w-full accent-canvas [&::-moz-range-thumb]:bg-canvas [&::-webkit-slider-thumb]:bg-canvas"
+          />
+          <div className="mt-2 flex justify-between text-[11px] font-semibold tabular-nums text-canvas/55">
+            <span>01</span>
+            <span>26</span>
           </div>
         </div>
+      </section>
+
+      {!isHomeWeek && (
         <button
-          onClick={() => setWeek(w => Math.min(26, w + 1))}
-          className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-neutral-700 active:bg-slate-100 dark:active:bg-neutral-700 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
-          disabled={week >= 26}
+          type="button"
+          onClick={() => setWeek(currentWeek)}
+          className="btn-secondary mt-3 w-full"
         >
-          <ChevronRight size={20} />
+          <ArrowCounterClockwise size={18} weight="bold" />
+          {todayTraining.status === 'notStarted' ? 'Voltar à primeira semana' : 'Voltar à semana atual'}
         </button>
+      )}
+
+      <div className="mt-5 border-l-2 border-accent/35 pl-4">
+        <p className="text-body text-ink-soft">{phaseInfo?.description}</p>
+        {isDeload && (
+          <p className="mt-2 text-[13px] font-semibold leading-5 text-accent-strong">
+            Volume reduzido para consolidar a evolução e recuperar o corpo.
+          </p>
+        )}
       </div>
 
-      {/* Range slider */}
-      <input type="range" min="1" max="26" step="1" value={week} onChange={e => setWeek(Number(e.target.value))} className="w-full" />
+      <section className="mt-8" aria-labelledby="weekly-timeline-title">
+        <div className="section-heading mb-5">
+          <div>
+            <h2 id="weekly-timeline-title">Ritmo da semana</h2>
+            <p>Toque em uma sessão para ver a prescrição.</p>
+          </div>
+          <span className="text-[12px] font-semibold tabular-nums text-ink-muted">7 dias</span>
+        </div>
 
-      {/* Phase description */}
-      <div className={`card p-3 ${phaseBorderMap[phase] ?? 'border-l-4 border-slate-300'}`}>
-        <p className="text-xs text-slate-500 dark:text-slate-400">{phaseInfo?.description}</p>
-        {isDeload && <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 font-medium">Esta é uma semana de deload — volume reduzido, recuperação ativa.</p>}
-      </div>
+        <ol className="relative ml-[22px] border-l border-line">
+          {WEEK_DAYS.map((dayOfWeek, index) => {
+            const template = (plan.weekTemplate as Record<string, WeekDayTemplate>)[String(dayOfWeek)]
+            const isToday = dayOfWeek === todayTraining.dayOfWeek && isCurrentWeek
+            const isExpanded = expandedDay === dayOfWeek
+            const contentId = `plan-day-${dayOfWeek}`
+            const sessionType = template.subtype ?? template.type
 
-      {/* Days grid */}
-      <div className="space-y-2">
-        {[1,2,3,4,5,6,0].map((dayOfWeek) => {
-          const tpl = (plan.weekTemplate as Record<string, typeof plan.weekTemplate[keyof typeof plan.weekTemplate]>)[String(dayOfWeek)]
-          const isToday = dayOfWeek === todayTraining.dayOfWeek && week === todayTraining.weekNumber
-          const isExpanded = expandedDay === dayOfWeek
-
-          return (
-            <div key={dayOfWeek} className={`card overflow-hidden ${isToday ? 'ring-2 ring-primary-400' : ''}`}>
-              <button
-                className="w-full p-4 flex items-center justify-between"
-                onClick={() => setExpandedDay(isExpanded ? null : dayOfWeek)}
-                aria-expanded={isExpanded}
+            return (
+              <li
+                key={dayOfWeek}
+                className="relative pl-8 reveal-item"
+                style={{ '--index': index } as CSSProperties}
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{tpl.icon}</span>
-                  <div className="text-left">
-                    <p className="text-xs text-slate-400">{DAY_NAMES_SHORT[dayOfWeek]}</p>
-                    <p className="font-semibold text-slate-800 dark:text-slate-100">{tpl.label}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isToday && <span className="badge bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400">Hoje</span>}
-                  <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                </div>
-              </button>
+                <span
+                  className={`absolute -left-[22px] top-3 flex h-11 w-11 items-center justify-center rounded-[14px] border shadow-sm transition-colors duration-200 ${
+                    isToday
+                      ? 'border-accent bg-accent text-canvas'
+                      : 'border-line bg-surface text-accent-strong'
+                  }`}
+                  aria-hidden="true"
+                >
+                  <SessionIcon type={sessionType} size={21} weight="duotone" />
+                </span>
 
-              <div
-                className="overflow-hidden transition-all duration-200"
-                style={{ maxHeight: isExpanded ? '600px' : '0' }}
-              >
-                <div className="px-4 pb-4 border-t border-slate-100 dark:border-neutral-700 pt-3 space-y-2">
-                  {tpl.type === 'descanso' && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Descanso ativo. Mobilidade, caminhada leve ou recuperação completa.</p>
-                  )}
+                <div className={index < WEEK_DAYS.length - 1 ? 'border-b border-line/85' : ''}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedDay(isExpanded ? null : dayOfWeek)}
+                    aria-expanded={isExpanded}
+                    aria-controls={contentId}
+                    className="flex min-h-[72px] w-full items-center justify-between gap-3 py-3 text-left transition duration-200 active:translate-y-px"
+                  >
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-2 text-[12px] font-semibold text-ink-muted">
+                        {DAY_NAMES[dayOfWeek]}
+                        {isToday && <span className="badge-fase">Hoje</span>}
+                      </span>
+                      <span className="mt-0.5 block text-[16px] font-semibold leading-5 text-ink">{template.label}</span>
+                    </span>
+                    <CaretDown
+                      size={18}
+                      weight="bold"
+                      className={`shrink-0 text-ink-muted transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
 
-                  {(tpl.type === 'forca') && (
-                    <div className="space-y-2">
-                      {getExercises(tpl.subtype ?? '').map(ex => {
-                        const pd = ex.phases[phase]
-                        return (
-                          <div key={ex.id} className="flex items-start justify-between py-2 border-b border-slate-100 dark:border-neutral-700 last:border-0">
-                            <div>
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ex.name}</p>
-                              {ex.caution && <span className="text-xs text-amber-600 dark:text-amber-400">⚠️ Cuidado {ex.caution}</span>}
-                            </div>
-                            <p className="text-sm text-slate-500 whitespace-nowrap ml-3">{pd.sets}× {pd.reps}</p>
+                  {isExpanded && (
+                    <div id={contentId} role="region" className="reveal-item pb-5">
+                      <div className="rounded-[18px] bg-surface-raised px-4 py-3.5">
+                        {template.type === 'descanso' && (
+                          <p className="text-body text-ink-soft">
+                            Descanso ativo com mobilidade, caminhada leve ou recuperação completa.
+                          </p>
+                        )}
+
+                        {template.type === 'forca' && (
+                          <div className="divide-y divide-line/80">
+                            {getExercises(template.subtype ?? '').map(exercise => {
+                              const prescription = exercise.phases[phase]
+                              return (
+                                <div key={exercise.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                                  <div className="min-w-0">
+                                    <p className="text-[14px] font-semibold leading-5 text-ink">{exercise.name}</p>
+                                    {exercise.caution && (
+                                      <p className="mt-1 flex items-center gap-1.5 text-[12px] font-semibold text-ink-muted">
+                                        <Warning size={13} weight="bold" />
+                                        Atenção ao {exercise.caution}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <p className="shrink-0 text-[13px] font-semibold tabular-nums text-accent-strong">
+                                    {prescription.sets} × {prescription.reps}
+                                  </p>
+                                </div>
+                              )
+                            })}
                           </div>
-                        )
-                      })}
-                    </div>
-                  )}
+                        )}
 
-                  {tpl.type === 'calistenia' && (
-                    <div className="space-y-1">
-                      {['Flexão', 'Barra', 'Paralela', 'Core', 'Metcon'].map(s => (
-                        <p key={s} className="text-sm text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary-400" />{s}
-                        </p>
-                      ))}
-                    </div>
-                  )}
+                        {template.type === 'calistenia' && (
+                          <div className="divide-y divide-line/80">
+                            {['Flexão', 'Barra', 'Paralela', 'Core', 'Metcon'].map(item => (
+                              <p key={item} className="py-2.5 text-[14px] font-medium text-ink-soft first:pt-0 last:pb-0">
+                                {item}
+                              </p>
+                            ))}
+                          </div>
+                        )}
 
-                  {tpl.type === 'corrida' && (() => {
-                    const rs = getRunningSession(week, dayOfWeek)
-                    return rs ? (
-                      <div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{rs.label}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{rs.detail}</p>
+                        {template.type === 'corrida' && (() => {
+                          const runningSession = getRunningSession(week, dayOfWeek)
+                          return runningSession ? (
+                            <div>
+                              <p className="text-[15px] font-semibold text-ink">{runningSession.label}</p>
+                              <p className="mt-1.5 text-[13px] leading-5 text-ink-muted">{runningSession.detail}</p>
+                            </div>
+                          ) : null
+                        })()}
                       </div>
-                    ) : null
-                  })()}
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+              </li>
+            )
+          })}
+        </ol>
+      </section>
     </div>
   )
 }

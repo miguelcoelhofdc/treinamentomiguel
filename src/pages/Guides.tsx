@@ -1,228 +1,316 @@
-import { useState } from 'react'
-import { ChevronDown, ShoppingCart, Check } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import {
+  ArrowRight,
+  CaretDown,
+  Check,
+  Clock,
+  ForkKnife,
+  Heartbeat,
+  MoonStars,
+  Pill,
+  ShoppingCartSimple,
+  SunHorizon,
+} from '@phosphor-icons/react'
+import PageHeader from '@/components/ui/PageHeader'
 import plan from '@/data/plan.json'
 
-function Accordion({ title, icon, children, defaultOpen = false, id }: { title: string; icon: string; children: React.ReactNode; defaultOpen?: boolean; id: string }) {
+interface DisclosureProps {
+  id: string
+  title: string
+  description: string
+  icon: ReactNode
+  children: ReactNode
+  defaultOpen?: boolean
+}
+
+function HubDisclosure({ id, title, description, icon, children, defaultOpen = false }: DisclosureProps) {
   const [open, setOpen] = useState(defaultOpen)
-  const contentId = `accordion-${id}`
+  const contentId = `guide-${id}`
+
   return (
-    <div className="card overflow-hidden">
+    <section>
       <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full p-4 flex items-center justify-between"
+        type="button"
+        onClick={() => setOpen(value => !value)}
+        className="flex min-h-[82px] w-full items-center gap-3 px-4 py-3 text-left transition duration-200 hover:bg-surface-raised/70 active:translate-y-px sm:px-5"
         aria-expanded={open}
         aria-controls={contentId}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-xl">{icon}</span>
-          <span className="font-semibold text-slate-800 dark:text-slate-100">{title}</span>
-        </div>
-        <ChevronDown size={18} className={`text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <span className="icon-tile" aria-hidden="true">{icon}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[16px] font-semibold leading-5 text-ink">{title}</span>
+          <span className="mt-1 block text-[12px] leading-4 text-ink-muted">{description}</span>
+        </span>
+        <CaretDown
+          size={18}
+          weight="bold"
+          className={`shrink-0 text-ink-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
-      <div
-        id={contentId}
-        role="region"
-        className="overflow-hidden transition-all duration-200"
-        style={{ maxHeight: open ? '3000px' : '0' }}
-      >
-        <div className="px-4 pb-4 border-t border-slate-100 dark:border-neutral-700 pt-3">
+
+      {open && (
+        <div id={contentId} role="region" className="reveal-item border-t border-line/80 px-4 pb-6 pt-5 sm:px-5">
           {children}
         </div>
-      </div>
-    </div>
+      )}
+    </section>
   )
 }
 
-export default function Guides() {
+interface GuidesProps {
+  routineType: 'morning' | 'evening'
+}
+
+export default function Guides({ routineType }: GuidesProps) {
   const [checks, setChecks] = useState<Set<string>>(new Set())
-  const [routineTab, setRoutineTab] = useState<'morning' | 'evening'>('morning')
+  const [routineTab, setRoutineTab] = useState<'morning' | 'evening'>(routineType)
 
-  const toggleCheck = (id: string) =>
-    setChecks(s => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n })
+  const toggleCheck = (id: string) => {
+    setChecks(current => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
-  const nut = plan.nutrition
+  const nutrition = plan.nutrition
   const routine = plan.dailyRoutines[routineTab]
 
   return (
-    <div className="page-content page-enter space-y-4">
-      <h1 className="text-display text-slate-900 dark:text-white">Guias</h1>
+    <div className="page-content page-enter">
+      <PageHeader
+        eyebrow="Base de apoio"
+        title="Guias"
+        description="Protocolos práticos para sustentar treino, recuperação e alimentação ao longo da semana."
+      />
 
-      {/* Nutrition */}
-      <Accordion title="Nutrição" icon="🥗" defaultOpen id="nutricao">
-        <div className="space-y-4">
-          <div>
-            <p className="section-title">Metas diárias</p>
-            <div className="grid grid-cols-2 gap-2">
-              {(['trainingDay', 'restDay'] as const).map(dayType => {
-                const t = nut.dailyTargets[dayType]
-                return (
-                  <div key={dayType} className="card p-3">
-                    <p className="text-xs text-slate-400 mb-2">{dayType === 'trainingDay' ? 'Dia de treino' : 'Dia de descanso'}</p>
-                    <div className="space-y-1">
-                      {[
-                        { label: 'Calorias', value: `${t.kcal} kcal` },
-                        { label: 'Proteína', value: `${t.protein}g` },
-                        { label: 'Carbos',   value: `${t.carbs}g` },
-                        { label: 'Gordura',  value: `${t.fat}g` },
-                      ].map(m => (
-                        <div key={m.label} className="flex justify-between text-xs">
-                          <span className="text-slate-500">{m.label}</span>
-                          <span className="font-semibold text-slate-700 dark:text-slate-200">{m.value}</span>
-                        </div>
-                      ))}
+      <div className="list-surface divide-y divide-line/80">
+        <HubDisclosure
+          id="nutrition"
+          title="Nutrição"
+          description="Metas diárias, refeições e princípios simples"
+          icon={<ForkKnife size={21} weight="duotone" />}
+          defaultOpen
+        >
+          <div className="space-y-7">
+            <section>
+              <p className="section-title">Metas diárias</p>
+              <div className="grid overflow-hidden rounded-[18px] border border-line bg-line/70 xs:grid-cols-2">
+                {(['trainingDay', 'restDay'] as const).map(dayType => {
+                  const target = nutrition.dailyTargets[dayType]
+                  const metrics = [
+                    { label: 'Calorias', value: `${target.kcal} kcal` },
+                    { label: 'Proteína', value: `${target.protein} g` },
+                    { label: 'Carboidratos', value: `${target.carbs} g` },
+                    { label: 'Gordura', value: `${target.fat} g` },
+                  ]
+
+                  return (
+                    <div key={dayType} className="bg-surface-raised p-4 odd:border-b odd:border-line xs:odd:border-b-0 xs:odd:border-r">
+                      <p className="mb-3 text-[13px] font-semibold text-ink">
+                        {dayType === 'trainingDay' ? 'Dia de treino' : 'Dia de descanso'}
+                      </p>
+                      <dl className="space-y-2">
+                        {metrics.map(metric => (
+                          <div key={metric.label} className="flex items-baseline justify-between gap-3">
+                            <dt className="text-[12px] text-ink-muted">{metric.label}</dt>
+                            <dd className="text-[13px] font-semibold tabular-nums text-ink">{metric.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+
+            <section>
+              <p className="section-title">Cardápio prático</p>
+              <div className="divide-y divide-line/80 border-y border-line/80">
+                {nutrition.mealPlan.map(meal => (
+                  <div key={`${meal.meal}-${meal.time}`} className="grid grid-cols-[4.75rem_minmax(0,1fr)] gap-3 py-4">
+                    <p className="text-[12px] font-semibold leading-5 tabular-nums text-accent-strong">{meal.time}</p>
+                    <div>
+                      <p className="text-[14px] font-semibold text-ink">{meal.meal}</p>
+                      <ul className="mt-1.5 space-y-1">
+                        {meal.items.map(item => (
+                          <li key={item} className="text-[13px] leading-5 text-ink-muted">{item}</li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <p className="section-title">Princípios para manter</p>
+              <div className="space-y-3">
+                {nutrition.tips.map(tip => (
+                  <p key={tip} className="flex items-start gap-2.5 text-[13px] leading-5 text-ink-soft">
+                    <ArrowRight size={15} weight="bold" className="mt-0.5 shrink-0 text-accent" />
+                    {tip}
+                  </p>
+                ))}
+              </div>
+            </section>
+          </div>
+        </HubDisclosure>
+
+        <HubDisclosure
+          id="shopping"
+          title="Lista de compras"
+          description="Checklist organizado por categoria"
+          icon={<ShoppingCartSimple size={21} weight="duotone" />}
+        >
+          <div className="space-y-6">
+            {nutrition.shoppingList.map(category => (
+              <section key={category.category}>
+                <p className="section-title">{category.category}</p>
+                <div className="divide-y divide-line/75 border-y border-line/75">
+                  {category.items.map(item => {
+                    const id = `${category.category}:${item}`
+                    const done = checks.has(id)
+
+                    return (
+                      <button
+                        type="button"
+                        key={item}
+                        onClick={() => toggleCheck(id)}
+                        aria-pressed={done}
+                        className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left transition duration-200 active:translate-y-px"
+                      >
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border transition-colors duration-200 ${
+                            done ? 'border-accent bg-accent text-canvas' : 'border-line bg-surface'
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {done && <Check size={14} weight="bold" />}
+                        </span>
+                        <span className={`text-[14px] ${done ? 'text-ink-muted line-through' : 'font-medium text-ink'}`}>
+                          {item}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            ))}
+
+            {checks.size > 0 && (
+              <button type="button" onClick={() => setChecks(new Set())} className="btn-secondary w-full">
+                <ShoppingCartSimple size={18} weight="bold" />
+                Limpar {checks.size} {checks.size === 1 ? 'item' : 'itens'}
+              </button>
+            )}
+          </div>
+        </HubDisclosure>
+
+        <HubDisclosure
+          id="supplements"
+          title="Suplementos"
+          description="Dose, horário e prioridade de uso"
+          icon={<Pill size={21} weight="duotone" />}
+        >
+          <div className="divide-y divide-line/80 border-y border-line/80">
+            {plan.supplements.map(supplement => (
+              <article key={supplement.id} className="py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="text-[14px] font-semibold leading-5 text-ink">{supplement.name}</h3>
+                  <span className={supplement.essential ? 'badge-fase' : 'badge bg-surface-raised text-ink-muted'}>
+                    {supplement.essential ? 'Essencial' : 'Opcional'}
+                  </span>
+                </div>
+                <dl className="mt-3 grid gap-2 xs:grid-cols-2">
+                  <div>
+                    <dt className="text-[11px] font-bold uppercase tracking-[0.1em] text-ink-muted">Dose</dt>
+                    <dd className="mt-0.5 text-[13px] font-medium text-ink-soft">{supplement.dose}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-bold uppercase tracking-[0.1em] text-ink-muted">Horário</dt>
+                    <dd className="mt-0.5 text-[13px] font-medium text-ink-soft">{supplement.timing}</dd>
+                  </div>
+                </dl>
+                <p className="mt-3 text-[12px] leading-5 text-ink-muted">{supplement.notes}</p>
+              </article>
+            ))}
+          </div>
+        </HubDisclosure>
+
+        <HubDisclosure
+          id="mobility"
+          title="Mobilidade e prehab"
+          description="Protocolos para ombro e joelho"
+          icon={<Heartbeat size={21} weight="duotone" />}
+        >
+          <div className="space-y-7">
+            {[
+              { title: 'Protocolo de ombro', exercises: plan.mobility.shoulder },
+              { title: 'Protocolo de joelho', exercises: plan.mobility.knee },
+            ].map(protocol => (
+              <section key={protocol.title}>
+                <p className="section-title">{protocol.title}</p>
+                <div className="divide-y divide-line/80 border-y border-line/80">
+                  {protocol.exercises.map(exercise => (
+                    <article key={exercise.id} className="py-3.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-[14px] font-semibold leading-5 text-ink">{exercise.name}</h3>
+                        <span className="shrink-0 text-[11px] font-semibold text-accent-strong">{exercise.freq}</span>
+                      </div>
+                      <p className="mt-1 text-[13px] leading-5 text-ink-muted">
+                        <span className="font-semibold tabular-nums text-ink-soft">{exercise.sets} × {exercise.reps}</span>
+                        {' — '}{exercise.technique}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        </HubDisclosure>
+
+        <HubDisclosure
+          id="routine"
+          title="Rotina diária"
+          description="Organize o treino no melhor período"
+          icon={<Clock size={21} weight="duotone" />}
+        >
+          <div>
+            <div className="grid grid-cols-2 gap-1 rounded-[16px] bg-surface-raised p-1" role="group" aria-label="Período do treino">
+              {(['morning', 'evening'] as const).map(tab => {
+                const active = routineTab === tab
+                const Icon = tab === 'morning' ? SunHorizon : MoonStars
+                return (
+                  <button
+                    type="button"
+                    key={tab}
+                    onClick={() => setRoutineTab(tab)}
+                    aria-pressed={active}
+                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[12px] px-3 text-[13px] font-semibold transition duration-200 active:scale-[0.98] ${
+                      active ? 'bg-surface text-accent-strong shadow-sm' : 'text-ink-muted'
+                    }`}
+                  >
+                    <Icon size={17} weight={active ? 'fill' : 'regular'} />
+                    {tab === 'morning' ? 'Manhã' : 'Noite'}
+                  </button>
                 )
               })}
             </div>
-          </div>
 
-          <div>
-            <p className="section-title">Cardápio prático</p>
-            <div className="space-y-3">
-              {nut.mealPlan.map((meal, i) => (
-                <div key={i} className="border border-slate-100 dark:border-neutral-700 rounded-xl p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium text-slate-700 dark:text-slate-200 text-sm">{meal.meal}</p>
-                    <p className="text-xs text-slate-400">{meal.time}</p>
-                  </div>
-                  <ul className="space-y-0.5">
-                    {meal.items.map((item, j) => (
-                      <li key={j} className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <span className="w-1 h-1 rounded-full bg-primary-400 flex-shrink-0" />{item}
-                      </li>
-                    ))}
-                  </ul>
+            <div className="relative mt-5 ml-2 border-l border-line">
+              {routine.schedule.map(item => (
+                <div key={`${item.time}-${item.activity}`} className="relative grid grid-cols-[3.75rem_minmax(0,1fr)] gap-3 pb-4 pl-5 last:pb-0">
+                  <span className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-accent" />
+                  <time className="text-[12px] font-semibold tabular-nums text-accent-strong">{item.time}</time>
+                  <p className="text-[13px] leading-5 text-ink-soft">{item.activity}</p>
                 </div>
               ))}
             </div>
           </div>
-
-          <div>
-            <p className="section-title">Dicas</p>
-            {nut.tips.map((tip, i) => (
-              <p key={i} className="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2 mb-2">
-                <span className="mt-1 text-primary-400 flex-shrink-0">→</span>{tip}
-              </p>
-            ))}
-          </div>
-        </div>
-      </Accordion>
-
-      {/* Shopping list */}
-      <Accordion title="Lista de Compras" icon="🛒" id="compras">
-        <div className="space-y-4">
-          {nut.shoppingList.map(cat => (
-            <div key={cat.category}>
-              <p className="section-title">{cat.category}</p>
-              <div className="space-y-1">
-                {cat.items.map(item => {
-                  const id = `${cat.category}:${item}`
-                  const done = checks.has(id)
-                  return (
-                    <button key={item} onClick={() => toggleCheck(id)}
-                      className="w-full flex items-center gap-3 py-2 text-left">
-                      <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors
-                        ${done ? 'bg-primary-500' : 'border-2 border-slate-300 dark:border-neutral-500'}`}>
-                        {done && <Check size={12} className="text-white" />}
-                      </div>
-                      <span className={`text-sm ${done ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}`}>
-                        {item}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-          {checks.size > 0 && (
-            <button onClick={() => setChecks(new Set())}
-              className="btn-ghost text-xs w-full mt-2">
-              <ShoppingCart size={14} /> Limpar seleção ({checks.size} itens)
-            </button>
-          )}
-        </div>
-      </Accordion>
-
-      {/* Supplements */}
-      <Accordion title="Suplementos" icon="💊" id="suplementos">
-        <div className="space-y-3">
-          {plan.supplements.map(sup => (
-            <div key={sup.id} className="border border-slate-100 dark:border-neutral-700 rounded-xl p-3">
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">{sup.name}</p>
-                <span className={`badge flex-shrink-0 ${sup.essential ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400' : 'bg-slate-100 text-slate-500 dark:bg-neutral-700 dark:text-slate-400'}`}>
-                  {sup.essential ? 'Essencial' : 'Opcional'}
-                </span>
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-1 text-xs text-slate-500 dark:text-slate-400">
-                <span><strong className="text-slate-600 dark:text-slate-300">Dose:</strong> {sup.dose}</span>
-                <span><strong className="text-slate-600 dark:text-slate-300">Horário:</strong> {sup.timing}</span>
-              </div>
-              <p className="text-xs text-slate-400 mt-1.5">{sup.notes}</p>
-            </div>
-          ))}
-        </div>
-      </Accordion>
-
-      {/* Mobility */}
-      <Accordion title="Mobilidade & Prehab" icon="🧘" id="mobilidade">
-        <div className="space-y-4">
-          <div>
-            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase mb-2">🦴 Protocolo de Ombro</p>
-            {plan.mobility.shoulder.map(ex => (
-              <div key={ex.id} className="py-2.5 border-b border-slate-100 dark:border-neutral-700 last:border-0">
-                <div className="flex justify-between items-start">
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ex.name}</p>
-                  <span className="text-xs text-slate-400 ml-2 flex-shrink-0">{ex.freq}</span>
-                </div>
-                <p className="text-sm text-slate-500 mt-0.5">{ex.sets}× {ex.reps} — {ex.technique}</p>
-              </div>
-            ))}
-          </div>
-          <div>
-            <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-2">🦵 Protocolo de Joelho</p>
-            {plan.mobility.knee.map(ex => (
-              <div key={ex.id} className="py-2.5 border-b border-slate-100 dark:border-neutral-700 last:border-0">
-                <div className="flex justify-between items-start">
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ex.name}</p>
-                  <span className="text-xs text-slate-400 ml-2 flex-shrink-0">{ex.freq}</span>
-                </div>
-                <p className="text-sm text-slate-500 mt-0.5">{ex.sets}× {ex.reps} — {ex.technique}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Accordion>
-
-      {/* Daily Routine */}
-      <Accordion title="Rotina Diária" icon="⏰" id="rotina">
-        <div className="space-y-3">
-          <div className="flex gap-2">
-            {(['morning', 'evening'] as const).map(tab => (
-              <button
-                key={tab}
-                onClick={() => setRoutineTab(tab)}
-                className={`flex-1 py-2 text-sm font-medium transition-all duration-150 rounded-lg
-                  ${routineTab === tab
-                    ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 px-3 py-1'
-                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-700'
-                  }`}
-              >
-                {tab === 'morning' ? '🌅 Manhã' : '🌙 Noite'}
-              </button>
-            ))}
-          </div>
-          <div className="space-y-2">
-            {routine.schedule.map((item, i) => (
-              <div key={i} className="flex items-center gap-3 py-1.5">
-                <span className="text-xs font-mono text-primary-600 dark:text-primary-400 w-12 flex-shrink-0">{item.time}</span>
-                <span className="text-sm text-slate-600 dark:text-slate-300">{item.activity}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Accordion>
+        </HubDisclosure>
+      </div>
     </div>
   )
 }

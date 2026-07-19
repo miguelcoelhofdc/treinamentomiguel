@@ -1,66 +1,180 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
 import type { RunningLog } from '@/types'
 
-interface Props { data: RunningLog[] }
-
-const formatDate = (d: string) => {
-  const [, m, day] = d.split('-')
-  return `${day}/${m}`
+interface PaceChartProps {
+  data: RunningLog[]
 }
 
-const formatPace = (val: number) => {
-  if (!val) return ''
-  return `${Math.floor(val)}:${String(Math.round((val % 1) * 60)).padStart(2, '0')}`
+interface PaceDatum {
+  date: string
+  label: string
+  qualidade?: number
+  longa?: number
 }
 
-const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) => {
-  if (!active || !payload?.length) return null
-  const isDark = document.documentElement.classList.contains('dark')
+interface TooltipPayload {
+  dataKey?: string | number
+  name?: string
+  value?: number | string
+  color?: string
+}
+
+const accentColor = 'hsl(var(--color-accent))'
+const secondaryColor = 'hsl(var(--color-ink-soft))'
+const mutedColor = 'hsl(var(--color-ink-muted))'
+const lineColor = 'hsl(var(--color-line))'
+const surfaceColor = 'hsl(var(--color-surface))'
+
+function formatDate(date: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  return match ? `${match[3]}/${match[2]}` : date
+}
+
+function formatPace(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return '—'
+  const totalSeconds = Math.round(value * 60)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = String(totalSeconds % 60).padStart(2, '0')
+  return `${minutes}:${seconds}`
+}
+
+function PaceTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean
+  payload?: TooltipPayload[]
+  label?: string | number
+}) {
+  const validPayload = payload?.filter((item) => Number.isFinite(Number(item.value))) ?? []
+  if (!active || validPayload.length === 0) return null
+
   return (
-    <div style={{
-      background: isDark ? '#1e293b' : '#ffffff',
-      border: `1px solid ${isDark ? '#374151' : '#e2e8f0'}`,
-    }} className="rounded-xl px-3 py-2 shadow-lg text-sm">
-      <p className="text-slate-400 text-xs mb-1">{label}</p>
-      {payload.map(p => (
-        <p key={p.name} className="font-bold" style={{ color: p.color }}>
-          {p.name}: {formatPace(p.value)} min/km
-        </p>
-      ))}
+    <div className="rounded-[14px] border border-line bg-surface px-3 py-2 shadow-card">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted">{label}</p>
+      <div className="mt-1.5 space-y-1">
+        {validPayload.map((item) => (
+          <p
+            key={String(item.dataKey ?? item.name)}
+            className="text-[13px] font-semibold tabular-nums"
+            style={{ color: item.color }}
+          >
+            {item.name}: {formatPace(Number(item.value))} min/km
+          </p>
+        ))}
+      </div>
     </div>
   )
 }
 
-export default function PaceChart({ data }: Props) {
-  const isDark = document.documentElement.classList.contains('dark')
-  const tickColor = isDark ? '#94a3b8' : '#64748b'
-  const gridColor = isDark ? '#374151' : '#e2e8f0'
+export default function PaceChart({ data }: PaceChartProps) {
+  const grouped = new Map<string, PaceDatum>()
 
-  const grouped: Record<string, { date: string; qualidade?: number; longa?: number }> = {}
-  for (const log of data) {
-    if (!log.paceMinKm) continue
-    const key = log.date
-    grouped[key] = grouped[key] ?? { date: formatDate(log.date) }
-    if (log.type === 'qualidade') grouped[key].qualidade = log.paceMinKm
-    if (log.type === 'longa') grouped[key].longa = log.paceMinKm
+  for (const run of [...data].sort((a, b) => a.date.localeCompare(b.date))) {
+    const pace = run.paceMinKm
+    if (
+      pace == null
+      || !Number.isFinite(pace)
+      || pace <= 0
+      || (run.type !== 'qualidade' && run.type !== 'longa')
+    ) continue
+
+    const point = grouped.get(run.date) ?? {
+      date: run.date,
+      label: formatDate(run.date),
+    }
+    const key = run.type
+    const previous = point[key]
+    point[key] = previous == null ? pace : Math.min(previous, pace)
+    grouped.set(run.date, point)
   }
 
-  const chartData = Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date))
+  const chartData = Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date))
+  if (chartData.length === 0) return null
+
+  const paceValues = chartData.flatMap((point) => [point.qualidade, point.longa])
+    .filter((value): value is number => value != null && Number.isFinite(value))
+  const rawMin = Math.min(...paceValues)
+  const rawMax = Math.max(...paceValues)
+  const span = Math.max(0.3, rawMax - rawMin)
+  const padding = Math.max(0.12, span * 0.15)
+  const domain: [number, number] = [rawMin - padding, rawMax + padding]
+  const showDots = chartData.length <= 10
 
   return (
-    <>
-      <p className="text-label text-slate-400 text-right mb-1">↓ pace menor = mais rápido</p>
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
-          <XAxis dataKey="date" tick={{ fontSize: 11, fill: tickColor }} />
-          <YAxis reversed tick={{ fontSize: 11, fill: tickColor }} tickFormatter={formatPace} domain={['auto', 'auto']} />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Line type="monotone" dataKey="qualidade" name="Qualidade" stroke="#F97316" strokeWidth={2} dot={{ r: 4 }} connectNulls />
-          <Line type="monotone" dataKey="longa"     name="Longa"     stroke="#2E7D6E" strokeWidth={2} dot={{ r: 4 }} connectNulls />
+    <div role="img" aria-label="Gráfico cronológico do pace das corridas de qualidade e longas">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-2">
+        <p className="text-[11px] font-semibold text-ink-muted">Quanto menor o pace, mais rápido.</p>
+        <div className="flex items-center gap-4 text-[11px] font-semibold text-ink-muted" aria-hidden="true">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-0.5 w-4 rounded-full bg-accent" /> Qualidade
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-4 border-t-2 border-dashed border-ink-soft" /> Longa
+          </span>
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={232}>
+        <LineChart data={chartData} margin={{ top: 12, right: 10, left: -8, bottom: 4 }}>
+          <CartesianGrid vertical={false} stroke={lineColor} strokeDasharray="2 7" />
+          <XAxis
+            dataKey="label"
+            axisLine={false}
+            tickLine={false}
+            minTickGap={26}
+            tickMargin={10}
+            tick={{ fontSize: 11, fontWeight: 500, fill: mutedColor }}
+          />
+          <YAxis
+            reversed
+            domain={domain}
+            axisLine={false}
+            tickLine={false}
+            tickMargin={8}
+            width={39}
+            tick={{ fontSize: 11, fontWeight: 500, fill: mutedColor }}
+            tickFormatter={formatPace}
+          />
+          <Tooltip
+            content={<PaceTooltip />}
+            cursor={{ stroke: lineColor, strokeWidth: 1 }}
+            wrapperStyle={{ outline: 'none' }}
+          />
+          <Line
+            type="monotone"
+            dataKey="qualidade"
+            name="Qualidade"
+            stroke={accentColor}
+            strokeWidth={3}
+            dot={showDots ? { r: 3, fill: surfaceColor, stroke: accentColor, strokeWidth: 2 } : false}
+            activeDot={{ r: 5, fill: accentColor, stroke: surfaceColor, strokeWidth: 3 }}
+            connectNulls
+            isAnimationActive={false}
+          />
+          <Line
+            type="monotone"
+            dataKey="longa"
+            name="Longa"
+            stroke={secondaryColor}
+            strokeWidth={2.5}
+            strokeDasharray="7 5"
+            dot={showDots ? { r: 3, fill: surfaceColor, stroke: secondaryColor, strokeWidth: 2 } : false}
+            activeDot={{ r: 5, fill: secondaryColor, stroke: surfaceColor, strokeWidth: 3 }}
+            connectNulls
+            isAnimationActive={false}
+          />
         </LineChart>
       </ResponsiveContainer>
-    </>
+    </div>
   )
 }

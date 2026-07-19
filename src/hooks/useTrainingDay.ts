@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { TrainingDay, PhaseId } from '@/types'
 import plan from '@/data/plan.json'
+import { localDateKey } from '@/lib/date'
 
 function getPhase(week: number): PhaseId {
   if (week <= 8) return 'base'
@@ -10,7 +11,7 @@ function getPhase(week: number): PhaseId {
 
 export function useTrainingDay(startDate: string, targetDate?: string): TrainingDay {
   return useMemo(() => {
-    const today = targetDate ?? new Date().toISOString().slice(0, 10)
+    const today = targetDate ?? localDateKey()
     const start = new Date(startDate + 'T00:00:00')
     const current = new Date(today + 'T00:00:00')
 

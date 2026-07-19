@@ -79,8 +79,18 @@ export async function getAllRunningLogs(): Promise<RunningLog[]> {
 }
 
 // Strength log helpers
+export async function getStrengthLog(date: string, exercise: string): Promise<StrengthLog | undefined> {
+  const logs = await db.strengthLogs.where('date').equals(date).toArray()
+  return logs.find(log => log.exercise === exercise)
+}
+
 export async function saveStrengthLog(log: StrengthLog): Promise<void> {
-  await db.strengthLogs.add(log)
+  const existing = await getStrengthLog(log.date, log.exercise)
+  if (existing?.id) {
+    await db.strengthLogs.update(existing.id, log)
+  } else {
+    await db.strengthLogs.add(log)
+  }
 }
 
 export async function getStrengthPRs(): Promise<Map<string, { weightKg: number; reps: number; date: string }>> {
