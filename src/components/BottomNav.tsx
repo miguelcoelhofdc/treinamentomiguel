@@ -46,7 +46,7 @@ export default function BottomNav() {
                 <span
                   className={`flex items-center justify-center transition duration-200 ${
                     primary
-                      ? `-mt-5 h-12 w-12 rounded-[17px] border-[3px] border-canvas shadow-[0_12px_24px_-14px_rgba(35,73,56,0.9)] ${isActive ? 'bg-accent text-white' : 'bg-ink text-canvas'}`
+                      ? `-mt-5 h-12 w-12 rounded-[17px] border-[3px] border-canvas shadow-[0_12px_24px_-14px_rgba(15,18,22,0.7)] ${isActive ? 'bg-accent text-canvas' : 'bg-ink text-canvas'}`
                       : `h-7 w-10 rounded-xl ${isActive ? 'bg-accent-soft text-accent-strong' : 'group-hover:text-ink-soft'}`
                   }`}
                 >

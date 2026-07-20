@@ -505,7 +505,7 @@ export default function Settings({ settings, updateSetting }: Props) {
             role={feedback.type === 'error' ? 'alert' : 'status'}
             className={`flex items-start gap-3 rounded-[18px] border px-4 py-3.5 text-[14px] font-semibold leading-5 ${
               feedback.type === 'success'
-                ? 'border-accent/20 bg-accent-soft/65 text-accent-strong'
+                ? 'border-success/25 bg-success-light text-success-dark dark:border-success/40 dark:bg-success/15 dark:text-success'
                 : 'border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/35 dark:text-red-300'
             }`}
           >

@@ -109,7 +109,7 @@ export default function DailyLogForm({ date, onSaved }: Props) {
               onClick={() => set('energy', value)}
               className={`min-h-[54px] rounded-[13px] border px-1 py-2 text-center transition duration-200 active:scale-[0.97] ${
                 form.energy === value
-                  ? 'border-accent bg-accent text-white'
+                  ? 'border-accent bg-accent text-canvas'
                   : 'border-line bg-surface-raised text-ink-muted'
               }`}
             >

@@ -208,7 +208,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
                 </div>
                 <button
                   type="submit"
-                  className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-accent text-white transition active:scale-[0.96] disabled:opacity-50"
+                  className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-accent text-canvas transition active:scale-[0.96] disabled:opacity-50"
                   aria-label="Adicionar série"
                   disabled={!weight || !reps || savingSet}
                 >
