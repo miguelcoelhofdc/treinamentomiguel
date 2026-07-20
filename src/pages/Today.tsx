@@ -18,6 +18,7 @@ import {
 } from '@phosphor-icons/react'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
 import ExerciseCard from '@/components/ExerciseCard'
+import ViewMovementButton from '@/components/visualizer/ViewMovementButton'
 import DailyLogForm from '@/components/DailyLogForm'
 import RunningLogForm from '@/components/RunningLogForm'
 import PageHeader from '@/components/ui/PageHeader'
@@ -496,9 +497,10 @@ function MobilityGroup({ title, items }: { title: string; items: typeof plan.mob
       </p>
       <div className="divide-y divide-line">
         {items.map(exercise => (
-          <div key={exercise.id} className="flex items-start justify-between gap-3 py-2.5">
-            <span className="text-[13px] font-semibold leading-5 text-ink-soft">{exercise.name}</span>
+          <div key={exercise.id} className="flex items-center justify-between gap-2 py-1.5">
+            <span className="min-w-0 flex-1 text-[13px] font-semibold leading-5 text-ink-soft">{exercise.name}</span>
             <span className="shrink-0 text-[12px] font-bold tabular-nums text-ink-muted">{exercise.sets} × {exercise.reps}</span>
+            <ViewMovementButton exerciseId={exercise.id} exerciseName={exercise.name} variant="icon" />
           </div>
         ))}
       </div>
@@ -616,6 +618,7 @@ function CalisthenicsRow({
         <p className="mt-0.5 text-[13px] font-medium leading-5 text-ink-muted">{prescription}</p>
         {technique && <p className="mt-1 text-[12px] leading-5 text-ink-muted">{technique}</p>}
       </div>
+      <ViewMovementButton exerciseId={id} exerciseName={name} variant="icon" className="mt-1.5" />
     </div>
   )
 }

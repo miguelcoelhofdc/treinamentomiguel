@@ -9,6 +9,7 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import { getStrengthLog, saveStrengthLog } from '@/db'
+import ViewMovementButton from '@/components/visualizer/ViewMovementButton'
 import type { Exercise, PhaseId, StrengthSet } from '@/types'
 
 interface Props {
@@ -127,6 +128,12 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
             <div>
               <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">Execução</p>
               <p className="text-ink-soft">{exercise.technique}</p>
+              <ViewMovementButton
+                exerciseId={exercise.id}
+                exerciseName={exercise.name}
+                phase={phase}
+                className="mt-2.5"
+              />
             </div>
 
             {exercise.cautionNote && (
