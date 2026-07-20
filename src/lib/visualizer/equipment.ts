@@ -58,12 +58,13 @@ export function buildEquipment(
       ? [rig.markers.handL, rig.markers.handR]
       : [to === 'left' ? rig.markers.handL : rig.markers.handR]
 
-  /** Barra com anilhas, eixo local X, comprimento `width`. */
-  const makeBarbell = (width: number, plateRadius = 0.13) => {
+  /** Barra com anilhas (ou bastão, com plates=false), eixo local X. */
+  const makeBarbell = (width: number, plates = true, plateRadius = 0.13) => {
     const barbell = new THREE.Group()
     const bar = new THREE.Mesh(geo(new THREE.CylinderGeometry(0.016, 0.016, width, 10)), material)
     bar.rotation.z = Math.PI / 2
     barbell.add(bar)
+    if (!plates) return barbell
     for (const side of [1, -1]) {
       const plate = new THREE.Mesh(geo(new THREE.CylinderGeometry(plateRadius, plateRadius, 0.035, 18)), material)
       plate.rotation.z = Math.PI / 2
@@ -90,7 +91,7 @@ export function buildEquipment(
     switch (spec.type) {
       case 'barbell': {
         const width = spec.width ?? 1.3
-        const barbell = makeBarbell(width)
+        const barbell = makeBarbell(width, spec.plates ?? true)
         if (spec.attach === 'back') {
           // Apoiada no trapézio, atrás do pescoço
           barbell.position.set(0, 0.15, -0.06)

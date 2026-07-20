@@ -81,7 +81,7 @@ export interface Keyframe {
 }
 
 export type EquipmentSpec =
-  | { type: 'barbell'; attach: 'hands' | 'back' | 'hips'; width?: number }
+  | { type: 'barbell'; attach: 'hands' | 'back' | 'hips'; width?: number; plates?: boolean }
   | { type: 'dumbbell'; attach: 'both' | 'left' | 'right'; axis?: 'x' | 'z' }
   | {
       type: 'bench'
@@ -109,6 +109,8 @@ export interface CameraHint {
   elevation: number
   /** Distância da câmera ao alvo, em metros (padrão 3.1). */
   distance?: number
+  /** Ponto que a câmera orbita (padrão [0, 0.85, 0]); use em exercícios suspensos. */
+  target?: [number, number, number]
 }
 
 export interface ExerciseAnimation {

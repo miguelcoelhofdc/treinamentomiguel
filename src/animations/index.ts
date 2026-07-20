@@ -3,6 +3,10 @@ import type { ExerciseAnimation } from './types'
 import { composites, type CompositeMovement } from './composites'
 import { forcaA } from './forcaA'
 import { forcaB } from './forcaB'
+import { forcaC } from './forcaC'
+import { calistenia } from './calistenia'
+import { mobility } from './mobility'
+import { submovimentos } from './submovimentos'
 
 /**
  * Registry central: id do exercício (plan.json) → animação.
@@ -12,6 +16,10 @@ import { forcaB } from './forcaB'
 export const animations: Record<string, ExerciseAnimation> = {
   ...forcaA,
   ...forcaB,
+  ...forcaC,
+  ...calistenia,
+  ...mobility,
+  ...submovimentos,
 }
 
 export interface MovementOption {

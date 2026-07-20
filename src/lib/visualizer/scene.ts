@@ -20,8 +20,6 @@ export interface VisualizerScene {
   dispose: () => void
 }
 
-const TARGET = new THREE.Vector3(0, 0.85, 0)
-
 export function createVisualizerScene(canvas: HTMLCanvasElement, hint?: CameraHint): VisualizerScene {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -30,13 +28,14 @@ export function createVisualizerScene(canvas: HTMLCanvasElement, hint?: CameraHi
 
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 50)
 
+  const TARGET = new THREE.Vector3(...(hint?.target ?? [0, 0.85, 0]))
   const azimuth = (hint?.azimuth ?? 30) * (Math.PI / 180)
   const elevation = (hint?.elevation ?? 12) * (Math.PI / 180)
   const distance = hint?.distance ?? 3.1
   const initialPosition = new THREE.Vector3(
-    Math.sin(azimuth) * Math.cos(elevation) * distance,
+    TARGET.x + Math.sin(azimuth) * Math.cos(elevation) * distance,
     TARGET.y + Math.sin(elevation) * distance,
-    Math.cos(azimuth) * Math.cos(elevation) * distance,
+    TARGET.z + Math.cos(azimuth) * Math.cos(elevation) * distance,
   )
 
   const controls = new OrbitControls(camera, canvas)

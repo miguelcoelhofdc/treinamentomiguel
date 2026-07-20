@@ -43,25 +43,25 @@ export const deitadoBanco: Pose = {
   ankleR: [24, 0, 0],
 }
 
-/** Prancha alta (topo da flexão): corpo reto, mãos sob os ombros. */
+/** Prancha alta (topo da flexão): corpo reto ~19° do chão, mãos sob os ombros. */
 export const pranchaAlta: Pose = {
-  rootPos: [0, 0.72, 0],
-  root: [82, 0, 0],
+  rootPos: [0, 0.36, 0],
+  root: [71, 0, 0],
   spine: [-4, 0, 0],
   chest: [-4, 0, 0],
-  neck: [-8, 0, 0],
-  shoulderL: [88, 0, 6],
-  shoulderR: [88, 0, -6],
+  neck: [-14, 0, 0],
+  shoulderL: [71, 0, 6],
+  shoulderR: [71, 0, -6],
   elbowL: [4, 0, 0],
   elbowR: [4, 0, 0],
-  wristL: [-78, 0, 0],
-  wristR: [-78, 0, 0],
+  wristL: [-70, 0, 0],
+  wristR: [-70, 0, 0],
   hipL: [-4, 0, 4],
   hipR: [-4, 0, -4],
   kneeL: [2, 0, 0],
   kneeR: [2, 0, 0],
-  ankleL: [62, 0, 0],
-  ankleR: [62, 0, 0],
+  ankleL: [70, 0, 0],
+  ankleR: [70, 0, 0],
 }
 
 /** Pendurado na barra fixa (braços estendidos acima da cabeça). */
