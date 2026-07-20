@@ -8,6 +8,7 @@ const Plan = lazy(() => import('@/pages/Plan'))
 const Progress = lazy(() => import('@/pages/Progress'))
 const Guides = lazy(() => import('@/pages/Guides'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const DevVisualizer = import.meta.env.DEV ? lazy(() => import('@/pages/DevVisualizer')) : null
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -51,6 +52,7 @@ export default function App() {
           />
           <Route path="/guias" element={<Guides routineType={settings.routineType} />} />
           <Route path="/ajustes" element={<Settings settings={settings} updateSetting={updateSetting} />} />
+          {DevVisualizer && <Route path="/dev/viz" element={<DevVisualizer />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
