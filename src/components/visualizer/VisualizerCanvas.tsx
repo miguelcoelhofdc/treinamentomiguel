@@ -30,6 +30,7 @@ const VisualizerCanvas = forwardRef<VisualizerCanvasHandle, Props>(function Visu
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<VisualizerScene | null>(null)
   const animatorRef = useRef<ExerciseAnimator | null>(null)
+  const renderFrameRef = useRef<(() => void) | null>(null)
   const playingRef = useRef(playing)
   const speedRef = useRef(speed)
   const onProgressRef = useRef(onProgress)
@@ -42,9 +43,12 @@ const VisualizerCanvas = forwardRef<VisualizerCanvasHandle, Props>(function Visu
   useImperativeHandle(ref, () => ({
     seek: progress => {
       animatorRef.current?.setProgress(progress)
+      // Estando pausado, o loop fica ocioso; repinta para refletir o scrubber.
+      renderFrameRef.current?.()
     },
     resetCamera: () => {
       sceneRef.current?.resetCamera()
+      renderFrameRef.current?.()
     },
   }))
 
@@ -79,22 +83,44 @@ const VisualizerCanvas = forwardRef<VisualizerCanvasHandle, Props>(function Visu
     animator.setProgress(initialProgress)
     equipment?.update()
 
-    const resize = () => scene.setSize(container.clientWidth, container.clientHeight)
+    // Repinta o estado atual sem avançar a animação — usado no resize e no seek
+    // (scrubber) enquanto pausado, quando o loop está ocioso.
+    const renderFrame = () => {
+      equipment?.update()
+      scene.controls.update()
+      scene.renderer.render(scene.scene, scene.camera)
+    }
+    renderFrameRef.current = renderFrame
+
+    const resize = () => {
+      scene.setSize(container.clientWidth, container.clientHeight)
+      renderFrame()
+    }
     resize()
     const observer = new ResizeObserver(resize)
     observer.observe(container)
+
+    // Render inicial para não abrir em branco antes do primeiro tick.
+    renderFrame()
 
     let last = performance.now()
     scene.renderer.setAnimationLoop(now => {
       const dt = Math.min((now - last) / 1000, 0.1)
       last = now
+      let changed = false
       if (playingRef.current) {
         const progress = animator.advance(dt * speedRef.current)
         onProgressRef.current?.(progress)
+        changed = true
       }
       equipment?.update()
-      scene.controls.update()
-      scene.renderer.render(scene.scene, scene.camera)
+      // controls.update() retorna true enquanto a câmera muda (inclui o
+      // assentamento do damping pós-interação). Render sob demanda: fica
+      // ocioso quando pausado e em repouso, evitando pressionar a GPU no mobile.
+      const controlsChanged = scene.controls.update()
+      if (changed || controlsChanged) {
+        scene.renderer.render(scene.scene, scene.camera)
+      }
     })
 
     return () => {
@@ -105,6 +131,7 @@ const VisualizerCanvas = forwardRef<VisualizerCanvasHandle, Props>(function Visu
       scene.dispose()
       sceneRef.current = null
       animatorRef.current = null
+      renderFrameRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animation])

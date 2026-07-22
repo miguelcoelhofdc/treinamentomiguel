@@ -27,28 +27,65 @@ export default function ExerciseVisualizerSheet({ exerciseId, exerciseName, phas
   const canvasRef = useRef<VisualizerCanvasHandle>(null)
   const progressRef = useRef<HTMLInputElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
   const active = movements[Math.min(activeIndex, movements.length - 1)]
 
   useEffect(() => {
     closeButtonRef.current?.focus()
-    document.body.style.overflow = 'hidden'
+
+    // Trava de scroll robusta no iOS: `overflow: hidden` sozinho não segura o
+    // body no Safari mobile (rubber-band). Fixamos o body preservando a posição
+    // e restauramos ao fechar.
+    const scrollY = window.scrollY
+    const { body } = document
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.overflow = 'hidden'
+
+    // Impede que a pinça de dois dedos sobre o canvas vire zoom da página no
+    // iOS (o que deixa o app "travado" num zoom estranho). Os gestos do
+    // OrbitControls usam pointer events e não são afetados por isto.
+    const preventGesture = (event: Event) => event.preventDefault()
+    document.addEventListener('gesturestart', preventGesture)
+    document.addEventListener('gesturechange', preventGesture)
+    document.addEventListener('gestureend', preventGesture)
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') onCloseRef.current()
     }
     window.addEventListener('keydown', onKey)
+
     return () => {
-      document.body.style.overflow = ''
+      body.style.position = ''
+      body.style.top = ''
+      body.style.left = ''
+      body.style.right = ''
+      body.style.overflow = ''
+      window.scrollTo(0, scrollY)
+      document.removeEventListener('gesturestart', preventGesture)
+      document.removeEventListener('gesturechange', preventGesture)
+      document.removeEventListener('gestureend', preventGesture)
       window.removeEventListener('keydown', onKey)
     }
-  }, [onClose])
+  }, [])
 
   if (!active) return null
 
   return (
     <>
-      <button type="button" className="sheet-overlay" onClick={onClose} aria-label="Fechar visualização" />
-      <div className="modal-center">
+      <div className="sheet-overlay" aria-hidden="true" />
+      <div
+        className="modal-center"
+        onClick={event => {
+          // Fecha ao tocar na área escurecida (fora do card). O card para a
+          // propagação por ser filho: cliques nele têm target !== currentTarget.
+          if (event.target === event.currentTarget) onClose()
+        }}
+      >
         <section
           role="dialog"
           aria-modal="true"
@@ -93,7 +130,7 @@ export default function ExerciseVisualizerSheet({ exerciseId, exerciseName, phas
               </div>
             )}
 
-            <div className="relative h-[38dvh] min-h-[240px] overflow-hidden rounded-[22px] border border-line bg-surface-raised">
+            <div className="relative h-[38dvh] min-h-[240px] overflow-hidden overscroll-contain rounded-[22px] border border-line bg-surface-raised" style={{ touchAction: 'none' }}>
               <Suspense
                 fallback={
                   <div className="flex h-full items-center justify-center" aria-busy="true">
