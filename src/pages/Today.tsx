@@ -25,7 +25,7 @@ import ProgressRing from '@/components/ui/ProgressRing'
 import SessionIcon from '@/components/ui/SessionIcon'
 import { getExerciseChecks, toggleExerciseCheck, getDailyLog, saveDailyLog } from '@/db'
 import { localDateKey } from '@/lib/date'
-import plan from '@/data/plan.json'
+import plan from '@/data/activePlan'
 import type { DailyLog, Exercise, PhaseId } from '@/types'
 
 const DAY_NAMES = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
@@ -176,6 +176,11 @@ export default function Today({ startDate, name }: Props) {
   const firstName = name.trim().split(' ')[0] || 'atleta'
   const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite'
   const readiness = getReadiness(dailyLog)
+  const hasJointCautions = [
+    ...plan.exercises.forcaA,
+    ...plan.exercises.forcaB,
+    ...plan.exercises.forcaC,
+  ].some(exercise => exercise.caution !== null)
 
   if (training.status === 'notStarted') {
     return (
@@ -283,12 +288,14 @@ export default function Today({ startDate, name }: Props) {
             aria-expanded={showAlert}
           >
             <ShieldCheck size={17} weight="duotone" className="text-primary-200" />
-            Ombro e joelho sob atenção
+            {hasJointCautions ? 'Ombro e joelho sob atenção' : 'Sinais do corpo sob atenção'}
             <CaretDown size={15} weight="bold" className={`ml-auto transition-transform ${showAlert ? 'rotate-180' : ''}`} />
           </button>
           {showAlert && (
             <p className="relative mt-1 text-[12px] leading-5 text-white/55 reveal-item">
-              Respeite os avisos de cada exercício e ajuste a carga se houver desconforto. O app não substitui acompanhamento profissional.
+              {hasJointCautions
+                ? 'Respeite os avisos de cada exercício e ajuste a carga se houver desconforto. O app não substitui acompanhamento profissional.'
+                : 'Interrompa se houver dor aguda, tontura, mal-estar, falta de ar fora do esperado ou dor no peito. O app não substitui acompanhamento profissional.'}
             </p>
           )}
         </section>
@@ -482,8 +489,8 @@ function MobilitySection({ compact }: { compact?: boolean }) {
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
-      <MobilityGroup title="Ombro" items={shoulder} />
-      <MobilityGroup title="Joelho" items={knee} />
+      <MobilityGroup title="Parte superior" items={shoulder} />
+      <MobilityGroup title="Quadril e pernas" items={knee} />
     </div>
   )
 }

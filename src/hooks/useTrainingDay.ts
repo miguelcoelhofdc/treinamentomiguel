@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { TrainingDay, PhaseId } from '@/types'
-import plan from '@/data/plan.json'
+import plan from '@/data/activePlan'
 import { localDateKey } from '@/lib/date'
 
 function getPhase(week: number): PhaseId {
@@ -57,7 +57,8 @@ export function useTrainingDay(startDate: string, targetDate?: string): Training
 export function getRunningSession(weekNumber: number, dayOfWeek: number) {
   const runWeek = plan.running.weeks.find(w => w.week === weekNumber)
   if (!runWeek) return null
-  if (dayOfWeek === 4) return runWeek.thursday
-  if (dayOfWeek === 0) return runWeek.sunday
+  const template = plan.weekTemplate[String(dayOfWeek)]
+  if (template?.subtype === 'qualidade') return runWeek.thursday
+  if (template?.subtype === 'longa') return runWeek.sunday
   return null
 }

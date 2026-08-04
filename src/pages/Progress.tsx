@@ -21,7 +21,7 @@ import WeightChart from '@/components/charts/WeightChart'
 import PaceChart from '@/components/charts/PaceChart'
 import RunningLogForm from '@/components/RunningLogForm'
 import { getWeightHistory, getAllRunningLogs, getStrengthPRs, getDailyLog, saveDailyLog } from '@/db'
-import plan from '@/data/plan.json'
+import plan from '@/data/activePlan'
 import type { RunningLog, TestDefinition } from '@/types'
 
 interface ProgressProps {

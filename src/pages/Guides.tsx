@@ -12,7 +12,7 @@ import {
   SunHorizon,
 } from '@phosphor-icons/react'
 import PageHeader from '@/components/ui/PageHeader'
-import plan from '@/data/plan.json'
+import plan from '@/data/activePlan'
 
 interface DisclosureProps {
   id: string
@@ -211,7 +211,7 @@ export default function Guides({ routineType }: GuidesProps) {
         <HubDisclosure
           id="supplements"
           title="Suplementos"
-          description="Dose, horário e prioridade de uso"
+          description="Uso atual e orientações de segurança"
           icon={<Pill size={21} weight="duotone" />}
         >
           <div className="divide-y divide-line/80 border-y border-line/80">
@@ -242,13 +242,13 @@ export default function Guides({ routineType }: GuidesProps) {
         <HubDisclosure
           id="mobility"
           title="Mobilidade e prehab"
-          description="Protocolos para ombro e joelho"
+          description="Preparação para parte superior e pernas"
           icon={<Heartbeat size={21} weight="duotone" />}
         >
           <div className="space-y-7">
             {[
-              { title: 'Protocolo de ombro', exercises: plan.mobility.shoulder },
-              { title: 'Protocolo de joelho', exercises: plan.mobility.knee },
+              { title: 'Parte superior', exercises: plan.mobility.shoulder },
+              { title: 'Quadril, joelhos e tornozelos', exercises: plan.mobility.knee },
             ].map(protocol => (
               <section key={protocol.title}>
                 <p className="section-title">{protocol.title}</p>

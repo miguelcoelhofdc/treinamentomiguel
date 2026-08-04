@@ -2,6 +2,13 @@ import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from '@/components/BottomNav'
 import { useSettings } from '@/hooks/useSettings'
+import Access from '@/pages/Access'
+import {
+  ACCESS_PROFILES,
+  clearStoredProfile,
+  getStoredProfileId,
+  type ProfileId,
+} from '@/lib/auth'
 
 const Today = lazy(() => import('@/pages/Today'))
 const Plan = lazy(() => import('@/pages/Plan'))
@@ -33,8 +40,14 @@ function AppSkeleton() {
   )
 }
 
-export default function App() {
+function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
   const { settings, updateSetting, loaded } = useSettings()
+  const activeProfile = ACCESS_PROFILES[profileId]
+
+  const handleLogout = () => {
+    clearStoredProfile()
+    window.location.assign('/')
+  }
 
   if (!loaded) return <div className="app-shell"><AppSkeleton /></div>
 
@@ -50,11 +63,28 @@ export default function App() {
             element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} />}
           />
           <Route path="/guias" element={<Guides routineType={settings.routineType} />} />
-          <Route path="/ajustes" element={<Settings settings={settings} updateSetting={updateSetting} />} />
+          <Route
+            path="/ajustes"
+            element={(
+              <Settings
+                settings={settings}
+                updateSetting={updateSetting}
+                profileId={profileId}
+                profileLabel={activeProfile.label}
+                onLogout={handleLogout}
+              />
+            )}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
       <BottomNav />
     </div>
   )
+}
+
+export default function App() {
+  const profileId = getStoredProfileId()
+  if (!profileId) return <Access />
+  return <AuthenticatedApp profileId={profileId} />
 }

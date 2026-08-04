@@ -16,6 +16,7 @@ import {
   MoonStars,
   Palette,
   ShieldCheck,
+  SignOut,
   SpinnerGap,
   Sun,
   Trash,
@@ -26,6 +27,7 @@ import {
 } from '@phosphor-icons/react'
 import PageHeader from '@/components/ui/PageHeader'
 import { db } from '@/db'
+import type { ProfileId } from '@/lib/auth'
 import { localDateKey } from '@/lib/date'
 import type {
   AppSettings,
@@ -51,6 +53,9 @@ interface Props {
     key: K,
     value: SettingsData[K],
   ) => void | Promise<void>
+  profileId: ProfileId
+  profileLabel: string
+  onLogout: () => void
 }
 
 interface BackupPayload {
@@ -204,7 +209,7 @@ function SettingsSection({
   )
 }
 
-export default function Settings({ settings, updateSetting }: Props) {
+export default function Settings({ settings, updateSetting, profileId, profileLabel, onLogout }: Props) {
   const [profileDraft, setProfileDraft] = useState<ProfileDraft>({
     name: settings.name,
     height: String(settings.height),
@@ -319,7 +324,7 @@ export default function Settings({ settings, updateSetting }: Props) {
         db.exerciseChecks.toArray(),
       ])
       const payload: BackupPayload = {
-        kind: 'treino-miguel-backup',
+        kind: `treino-${profileId}-backup`,
         schemaVersion: 1,
         exportedAt: new Date().toISOString(),
         daily,
@@ -332,7 +337,7 @@ export default function Settings({ settings, updateSetting }: Props) {
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `treino-backup-${localDateKey()}.json`
+      anchor.download = `treino-${profileId}-backup-${localDateKey()}.json`
       document.body.appendChild(anchor)
       anchor.click()
       anchor.remove()
@@ -377,6 +382,10 @@ export default function Settings({ settings, updateSetting }: Props) {
     try {
       if (file.size > 10 * 1024 * 1024) throw new Error('Arquivo muito grande.')
       const payload = parseBackup(await file.text())
+      const expectedKind = `treino-${profileId}-backup`
+      if (payload.kind && payload.kind !== expectedKind) {
+        throw new Error(`Este backup pertence a outro perfil. Entre na conta correta antes de restaurar.`)
+      }
 
       await db.transaction(
         'rw',
@@ -740,6 +749,30 @@ export default function Settings({ settings, updateSetting }: Props) {
                   settings.darkMode ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
+            </button>
+          </div>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        icon={UserCircle}
+        title="Conta ativa"
+        description="Troque de pessoa sem misturar os dados armazenados."
+      >
+        <div className="list-surface p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-accent-soft text-accent-strong" aria-hidden="true">
+                <UserCircle size={23} weight="duotone" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[15px] font-semibold text-ink">Perfil de {profileLabel}</p>
+                <p className="mt-1 text-[12px] leading-4 text-ink-muted">Plano, histórico e backups exclusivos desta conta.</p>
+              </div>
+            </div>
+            <button type="button" onClick={onLogout} className="btn-secondary w-full shrink-0 sm:w-auto" disabled={busy !== null}>
+              <SignOut size={18} weight="bold" />
+              Trocar acesso
             </button>
           </div>
         </div>

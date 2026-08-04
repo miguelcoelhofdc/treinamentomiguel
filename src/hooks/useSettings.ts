@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getSetting, setSetting } from '@/db'
-import plan from '@/data/plan.json'
+import plan from '@/data/activePlan'
 
 interface Settings {
   startDate: string

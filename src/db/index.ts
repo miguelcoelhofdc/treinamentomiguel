@@ -1,5 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck } from '@/types'
+import { ACCESS_PROFILES, getStoredProfileId } from '@/lib/auth'
 
 class TrainingDB extends Dexie {
   dailyLogs!: Table<DailyLog>
@@ -8,8 +9,8 @@ class TrainingDB extends Dexie {
   settings!: Table<AppSettings>
   exerciseChecks!: Table<ExerciseCheck>
 
-  constructor() {
-    super('treinamento-miguel')
+  constructor(databaseName: string) {
+    super(databaseName)
     this.version(1).stores({
       dailyLogs:      '++id, date',
       runningLogs:    '++id, date, type',
@@ -20,7 +21,9 @@ class TrainingDB extends Dexie {
   }
 }
 
-export const db = new TrainingDB()
+const activeProfileId = getStoredProfileId() ?? 'miguel'
+
+export const db = new TrainingDB(ACCESS_PROFILES[activeProfileId].databaseName)
 
 // Settings helpers
 export async function getSetting(key: string): Promise<string | null> {

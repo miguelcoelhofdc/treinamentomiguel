@@ -9,7 +9,7 @@ import {
 import PageHeader from '@/components/ui/PageHeader'
 import SessionIcon from '@/components/ui/SessionIcon'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
-import plan from '@/data/plan.json'
+import plan from '@/data/activePlan'
 import type { Exercise, PhaseId, WeekDayTemplate } from '@/types'
 
 const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
