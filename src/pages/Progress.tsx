@@ -220,6 +220,11 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
   const weightDelta = currentWeight == null ? null : currentWeight - initialWeight
   const weightProgress = calculateWeightProgress(initialWeight, goalWeight, currentWeight)
   const WeightTrendIcon = (weightDelta ?? 0) <= 0 ? TrendDown : TrendUp
+  const weightTrendColor = weightDelta == null || weightDelta === 0
+    ? 'text-white/70'
+    : weightDelta < 0
+      ? 'text-success'
+      : 'text-danger'
 
   const strengthRecords = useMemo(
     () => Array.from(prs.entries()).sort(([nameA], [nameB]) => nameA.localeCompare(nameB, 'pt-BR')),
@@ -299,7 +304,7 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
               {currentWeight != null && <span className="text-[14px] font-semibold text-white/55">kg</span>}
             </h2>
             <p className="mt-3 flex max-w-[30ch] items-center gap-2 text-[13px] leading-5 text-white/70">
-              {weightDelta != null && <WeightTrendIcon size={16} weight="bold" className="shrink-0 text-primary-300" />}
+              {weightDelta != null && <WeightTrendIcon size={16} weight="bold" className={`shrink-0 ${weightTrendColor}`} />}
               {weightChangeCopy}
             </p>
           </div>
@@ -462,7 +467,7 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
                   {comparison && (
                     <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${
                       comparison === 'improved'
-                        ? 'bg-accent-soft text-accent-strong'
+                        ? 'bg-success-light text-success-dark dark:bg-success/15 dark:text-success'
                         : 'bg-surface-raised text-ink-muted'
                     }`}>
                       {comparison === 'improved' && <TrendUp size={13} weight="bold" />}

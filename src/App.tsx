@@ -15,6 +15,7 @@ const Plan = lazy(() => import('@/pages/Plan'))
 const Progress = lazy(() => import('@/pages/Progress'))
 const Guides = lazy(() => import('@/pages/Guides'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const DevVisualizer = import.meta.env.DEV ? lazy(() => import('@/pages/DevVisualizer')) : null
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -75,6 +76,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
               />
             )}
           />
+          {DevVisualizer && <Route path="/dev/viz" element={<DevVisualizer />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
