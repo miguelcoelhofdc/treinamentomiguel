@@ -39,6 +39,7 @@ export default {
       },
       fontFamily: {
         sans: ['Outfit Variable', 'Outfit', 'Avenir Next', 'system-ui', 'sans-serif'],
+        handwritten: ['Caveat Variable', 'Caveat', 'Segoe Print', 'Bradley Hand', 'cursive'],
       },
       screens: {
         xs: '375px',

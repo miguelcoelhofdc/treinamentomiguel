@@ -45,6 +45,10 @@ interface TextItem {
   x: number
   y: number
   text: string
+  source?: 'manual' | 'recognized'
+  width?: number
+  height?: number
+  color?: string
 }
 
 interface BoardState {
@@ -119,7 +123,16 @@ function readStoredBoard(): BoardState {
       if (!isRecord(item) || typeof item.id !== 'string' || typeof item.text !== 'string'
         || typeof item.x !== 'number' || typeof item.y !== 'number'
         || !Number.isFinite(item.x) || !Number.isFinite(item.y)) return []
-      return [{ id: item.id, text: item.text.slice(0, 10_000), x: clamp(item.x), y: clamp(item.y) }]
+      return [{
+        id: item.id,
+        text: item.text.slice(0, 10_000),
+        x: clamp(item.x),
+        y: clamp(item.y),
+        source: item.source === 'recognized' ? 'recognized' : 'manual',
+        width: typeof item.width === 'number' ? clamp(item.width, 0.02, 1) : undefined,
+        height: typeof item.height === 'number' ? clamp(item.height, 0.02, 1) : undefined,
+        color: typeof item.color === 'string' ? item.color.slice(0, 32) : undefined,
+      }]
     })
 
     return { version: 1, strokes, texts }
@@ -328,7 +341,14 @@ function TextBlock({
 
   const longestLine = draft.split('\n').reduce((longest, line) => Math.max(longest, line.length), 0)
   const desiredWidth = Math.min(520, Math.max(180, longestLine * 13 + 28))
-  const anchorOnRight = item.x > 0.72
+  const isRecognized = item.source === 'recognized' && typeof item.width === 'number'
+  const recognizedWidthPercent = Math.max(8, (item.width || 0.2) * 100)
+  const recognizedHeightPercent = Math.max(2.2, (item.height || 0.08) * 100)
+  const recognizedWidth = `clamp(120px, ${recognizedWidthPercent}vw, 92vw)`
+  const recognizedMaxWidth = `min(92vw, calc(100vw - ${item.x * 100}% - 1rem))`
+  const recognizedFontSize = `clamp(18px, ${Math.max(1.8, recognizedHeightPercent * 0.78)}vh, 72px)`
+  const recognizedMinHeight = `clamp(30px, ${recognizedHeightPercent * 0.84}vh, 160px)`
+  const anchorOnRight = !isRecognized && item.x > 0.72
   const availableWidth = anchorOnRight ? item.x * 100 : (1 - item.x) * 100
 
   const handleMoveStart = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -410,8 +430,18 @@ function TextBlock({
           setDraft(event.target.value)
           onEditPreview(item.id, event.target.value)
         }}
-        className="block select-text resize-none overflow-hidden border-0 bg-transparent p-0 font-sans text-[clamp(1.2rem,1.65vw,1.65rem)] font-medium leading-[1.28] tracking-[-0.018em] text-[#2b2a2d] outline-none placeholder:text-[#b5bfcc] focus:ring-0"
-        style={{ width: desiredWidth, maxWidth: `min(520px, calc(${availableWidth}vw - 1rem))` }}
+        className={`block select-text resize-none overflow-hidden border-0 bg-transparent p-0 font-medium text-[#2b2a2d] outline-none placeholder:text-[#b5bfcc] focus:ring-0 ${
+          isRecognized
+            ? 'font-handwritten leading-[0.92] tracking-[0.005em]'
+            : 'font-sans text-[clamp(1.2rem,1.65vw,1.65rem)] leading-[1.28] tracking-[-0.018em]'
+        }`}
+        style={{
+          width: isRecognized ? recognizedWidth : desiredWidth,
+          maxWidth: isRecognized ? recognizedMaxWidth : `min(520px, calc(${availableWidth}vw - 1rem))`,
+          minHeight: isRecognized ? recognizedMinHeight : undefined,
+          fontSize: isRecognized ? recognizedFontSize : undefined,
+          color: isRecognized ? item.color || '#2b2a2d' : undefined,
+        }}
       />
     </div>
   )
@@ -705,6 +735,10 @@ export default function Whiteboard() {
         x: recognitionImage.bounds.left,
         y: recognitionImage.bounds.top,
         text: result.text,
+        source: 'recognized',
+        width: clamp(recognitionImage.bounds.right - recognitionImage.bounds.left, 0.02, 1),
+        height: clamp(recognitionImage.bounds.bottom - recognitionImage.bounds.top, 0.02, 1),
+        color: strokes[0]?.color || '#2b2a2d',
       }
       const next = {
         ...latest,
