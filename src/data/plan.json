@@ -1,5 +1,11 @@
 {
   "meta": { "version": "1.0", "source": "manual" },
+  "ui": {
+    "showJointPainCheckin": true,
+    "showStrengthPRs": true,
+    "showMovementVisualizer": true,
+    "simplifiedExerciseLog": false
+  },
   "profile": {
     "name": "Miguel",
     "age": 30,

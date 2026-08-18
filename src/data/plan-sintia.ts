@@ -296,6 +296,11 @@ export const sintiaPlan: Plan = {
     version: '1.0-sintia',
     source: 'Questionário preenchido por Sintia Said Coelho em agosto de 2026',
   },
+  ui: {
+    showJointPainCheckin: false,
+    simplifiedExerciseLog: true,
+    showMovementVisualizer: false,
+  },
   profile: {
     name: 'Sintia Said Coelho',
     age: 58,

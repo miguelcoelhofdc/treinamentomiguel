@@ -127,8 +127,16 @@ export interface TestDefinition {
   description: string
 }
 
+export interface PlanUiConfig {
+  showJointPainCheckin?: boolean
+  showStrengthPRs?: boolean
+  showMovementVisualizer?: boolean
+  simplifiedExerciseLog?: boolean
+}
+
 export interface Plan {
   meta: { version: string; source: string }
+  ui?: PlanUiConfig
   profile: {
     name: string
     age: number
