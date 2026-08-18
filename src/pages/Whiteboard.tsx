@@ -11,6 +11,7 @@ import {
   ArrowCounterClockwise,
   ArrowsInSimple,
   ArrowsOutSimple,
+  CheckCircle,
   DotsSixVertical,
   Eraser,
   FilePlus,
@@ -18,9 +19,11 @@ import {
   PencilSimple,
   TextT,
   Trash,
+  WarningCircle,
   X,
   type Icon,
 } from '@phosphor-icons/react'
+import { createRecognitionImage, recognizeHandwriting } from '@/lib/handwritingRecognition'
 
 type Tool = 'text' | 'pen' | 'eraser'
 
@@ -52,8 +55,15 @@ interface BoardState {
 
 type Confirmation = 'clear' | 'new' | null
 
+interface RecognitionNotice {
+  kind: 'info' | 'recognizing' | 'success' | 'error'
+  title: string
+  description: string
+  retryable?: boolean
+}
+
 const STORAGE_KEY = 'letalk-meeting-whiteboard-v1'
-const SMART_PEN_KEY = 'letalk-meeting-whiteboard-smart-pen-v1'
+const TEXT_CONVERSION_KEY = 'letalk-meeting-whiteboard-ink-to-text-v1'
 const MAX_HISTORY = 50
 const EMPTY_BOARD: BoardState = { version: 1, strokes: [], texts: [] }
 const PEN_COLORS = [
@@ -118,9 +128,9 @@ function readStoredBoard(): BoardState {
   }
 }
 
-function readSmartPenPreference() {
+function readTextConversionPreference() {
   try {
-    return window.localStorage.getItem(SMART_PEN_KEY) === 'true'
+    return window.localStorage.getItem(TEXT_CONVERSION_KEY) === 'true'
   } catch {
     return false
   }
@@ -471,9 +481,8 @@ export default function Whiteboard() {
   const [tool, setTool] = useState<Tool>('text')
   const [penColor, setPenColor] = useState(PEN_COLORS[0].value)
   const [penWidth, setPenWidth] = useState(4)
-  const [smartPen, setSmartPen] = useState(readSmartPenPreference)
-  const [showSmartHint, setShowSmartHint] = useState(false)
-  const [isRefining, setIsRefining] = useState(false)
+  const [textConversion, setTextConversion] = useState(readTextConversionPreference)
+  const [recognitionNotice, setRecognitionNotice] = useState<RecognitionNotice | null>(null)
   const [pendingFocusId, setPendingFocusId] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<Confirmation>(null)
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement))
@@ -487,8 +496,13 @@ export default function Whiteboard() {
   const editOriginalRef = useRef(new Map<string, BoardState>())
   const moveOriginalRef = useRef(new Map<string, BoardState>())
   const renderFrameRef = useRef<number | null>(null)
-  const smartHintTimerRef = useRef<number | null>(null)
-  const refiningTimerRef = useRef<number | null>(null)
+  const recognitionTimerRef = useRef<number | null>(null)
+  const noticeTimerRef = useRef<number | null>(null)
+  const recognitionAbortRef = useRef<AbortController | null>(null)
+  const pendingRecognitionIdsRef = useRef(new Set<string>())
+  const failedRecognitionIdsRef = useRef<string[]>([])
+  const recognitionInFlightRef = useRef(false)
+  const runRecognitionRef = useRef<() => Promise<void>>(async () => undefined)
   const skipNextPersistRef = useRef(false)
 
   const applyBoard = useCallback((next: BoardState) => {
@@ -555,17 +569,18 @@ export default function Whiteboard() {
 
   useEffect(() => () => {
     if (renderFrameRef.current !== null) window.cancelAnimationFrame(renderFrameRef.current)
-    if (smartHintTimerRef.current !== null) window.clearTimeout(smartHintTimerRef.current)
-    if (refiningTimerRef.current !== null) window.clearTimeout(refiningTimerRef.current)
+    if (recognitionTimerRef.current !== null) window.clearTimeout(recognitionTimerRef.current)
+    if (noticeTimerRef.current !== null) window.clearTimeout(noticeTimerRef.current)
+    recognitionAbortRef.current?.abort()
   }, [])
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(SMART_PEN_KEY, String(smartPen))
+      window.localStorage.setItem(TEXT_CONVERSION_KEY, String(textConversion))
     } catch {
       // The preference is optional when browser storage is unavailable.
     }
-  }, [smartPen])
+  }, [textConversion])
 
   useEffect(() => {
     if (skipNextPersistRef.current) {
@@ -615,21 +630,139 @@ export default function Whiteboard() {
     })
   }, [applyBoard])
 
-  const toggleSmartPen = useCallback(() => {
-    const next = !smartPen
-    setSmartPen(next)
-    setShowSmartHint(next)
-    if (smartHintTimerRef.current !== null) {
-      window.clearTimeout(smartHintTimerRef.current)
-      smartHintTimerRef.current = null
+  const showRecognitionNotice = useCallback((notice: RecognitionNotice, duration?: number) => {
+    setRecognitionNotice(notice)
+    if (noticeTimerRef.current !== null) {
+      window.clearTimeout(noticeTimerRef.current)
+      noticeTimerRef.current = null
     }
+    if (duration) {
+      noticeTimerRef.current = window.setTimeout(() => {
+        setRecognitionNotice(null)
+        noticeTimerRef.current = null
+      }, duration)
+    }
+  }, [])
+
+  const cancelRecognition = useCallback(() => {
+    if (recognitionTimerRef.current !== null) {
+      window.clearTimeout(recognitionTimerRef.current)
+      recognitionTimerRef.current = null
+    }
+    pendingRecognitionIdsRef.current.clear()
+    failedRecognitionIdsRef.current = []
+    recognitionAbortRef.current?.abort()
+    recognitionAbortRef.current = null
+  }, [])
+
+  const scheduleRecognition = useCallback((delay = 900) => {
+    if (recognitionTimerRef.current !== null) window.clearTimeout(recognitionTimerRef.current)
+    recognitionTimerRef.current = window.setTimeout(() => {
+      recognitionTimerRef.current = null
+      void runRecognitionRef.current()
+    }, delay)
+  }, [])
+
+  const processPendingRecognition = useCallback(async () => {
+    if (recognitionInFlightRef.current) {
+      scheduleRecognition(350)
+      return
+    }
+
+    const strokeIds = [...pendingRecognitionIdsRef.current]
+    pendingRecognitionIdsRef.current.clear()
+    if (!strokeIds.length) return
+
+    const idSet = new Set(strokeIds)
+    const current = stateRef.current
+    const strokes = current.strokes.filter(stroke => idSet.has(stroke.id))
+    const surface = surfaceRef.current
+    if (!strokes.length || !surface) return
+
+    const rect = surface.getBoundingClientRect()
+    const recognitionImage = createRecognitionImage(strokes, rect.width, rect.height)
+    if (!recognitionImage) return
+
+    recognitionInFlightRef.current = true
+    const controller = new AbortController()
+    recognitionAbortRef.current = controller
+    showRecognitionNotice({
+      kind: 'recognizing',
+      title: 'Lendo sua escrita…',
+      description: 'Os traços serão substituídos por texto alinhado.',
+    })
+
+    try {
+      const result = await recognizeHandwriting(recognitionImage.image, controller.signal)
+      if (controller.signal.aborted) return
+
+      const latest = stateRef.current
+      const allStrokesStillExist = strokeIds.every(id => latest.strokes.some(stroke => stroke.id === id))
+      if (!allStrokesStillExist) return
+
+      const textItem: TextItem = {
+        id: makeId('recognized-text'),
+        x: recognitionImage.bounds.left,
+        y: recognitionImage.bounds.top,
+        text: result.text,
+      }
+      const next = {
+        ...latest,
+        strokes: latest.strokes.filter(stroke => !idSet.has(stroke.id)),
+        texts: [...latest.texts, textItem],
+      }
+      failedRecognitionIdsRef.current = []
+      pushHistory(latest)
+      applyBoard(next)
+      showRecognitionNotice({
+        kind: 'success',
+        title: 'Texto convertido',
+        description: result.confidence < 0.55
+          ? 'A leitura ficou editável. Confira palavras menos legíveis.'
+          : 'A escrita agora está reta, alinhada e editável.',
+      }, 2400)
+    } catch (error) {
+      if (controller.signal.aborted) return
+      failedRecognitionIdsRef.current = strokeIds.filter(id => (
+        stateRef.current.strokes.some(stroke => stroke.id === id)
+      ))
+      showRecognitionNotice({
+        kind: 'error',
+        title: 'Não consegui ler esse trecho',
+        description: error instanceof Error ? error.message : 'Os rabiscos foram mantidos no quadro.',
+        retryable: failedRecognitionIdsRef.current.length > 0,
+      })
+    } finally {
+      if (recognitionAbortRef.current === controller) recognitionAbortRef.current = null
+      recognitionInFlightRef.current = false
+      if (pendingRecognitionIdsRef.current.size) scheduleRecognition(650)
+    }
+  }, [applyBoard, pushHistory, scheduleRecognition, showRecognitionNotice])
+
+  useEffect(() => {
+    runRecognitionRef.current = processPendingRecognition
+  }, [processPendingRecognition])
+
+  const retryRecognition = useCallback(() => {
+    failedRecognitionIdsRef.current.forEach(id => pendingRecognitionIdsRef.current.add(id))
+    failedRecognitionIdsRef.current = []
+    scheduleRecognition(0)
+  }, [scheduleRecognition])
+
+  const toggleTextConversion = useCallback(() => {
+    const next = !textConversion
+    setTextConversion(next)
     if (next) {
-      smartHintTimerRef.current = window.setTimeout(() => {
-        setShowSmartHint(false)
-        smartHintTimerRef.current = null
-      }, 3200)
+      showRecognitionNotice({
+        kind: 'info',
+        title: 'Conversão em texto ativada',
+        description: 'Após uma pausa, apenas o trecho escrito é enviado para leitura e vira texto digitado.',
+      }, 4200)
+    } else {
+      cancelRecognition()
+      setRecognitionNotice(null)
     }
-  }, [smartPen])
+  }, [cancelRecognition, showRecognitionNotice, textConversion])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -644,11 +777,11 @@ export default function Whiteboard() {
       if (event.key.toLowerCase() === 't') setTool('text')
       if (event.key.toLowerCase() === 'p') setTool('pen')
       if (event.key.toLowerCase() === 'e') setTool('eraser')
-      if (event.key.toLowerCase() === 'b' && tool === 'pen') toggleSmartPen()
+      if (event.key.toLowerCase() === 'c' && tool === 'pen') toggleTextConversion()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [toggleSmartPen, tool, undo])
+  }, [toggleTextConversion, tool, undo])
 
   const getPoint = useCallback((clientX: number, clientY: number): Point => {
     const rect = surfaceRef.current?.getBoundingClientRect()
@@ -698,7 +831,7 @@ export default function Whiteboard() {
         color: penColor,
         width: penWidth,
         points: [point],
-        smart: smartPen || undefined,
+        smart: textConversion || undefined,
       }
       scheduleRender()
       return
@@ -742,12 +875,8 @@ export default function Whiteboard() {
       draftStrokeRef.current = null
       commitBoard(current => ({ ...current, strokes: [...current.strokes, stroke] }))
       if (stroke.smart) {
-        setIsRefining(true)
-        if (refiningTimerRef.current !== null) window.clearTimeout(refiningTimerRef.current)
-        refiningTimerRef.current = window.setTimeout(() => {
-          setIsRefining(false)
-          refiningTimerRef.current = null
-        }, 520)
+        pendingRecognitionIdsRef.current.add(stroke.id)
+        scheduleRecognition()
       }
       scheduleRender()
     }
@@ -807,6 +936,8 @@ export default function Whiteboard() {
   }, [pushHistory])
 
   const confirmAction = () => {
+    cancelRecognition()
+    setRecognitionNotice(null)
     if (confirmation === 'clear') {
       commitBoard(current => (
         current.strokes.length || current.texts.length ? EMPTY_BOARD : current
@@ -836,7 +967,7 @@ export default function Whiteboard() {
   return (
     <main ref={pageRef} className="fixed inset-0 isolate overflow-hidden bg-[#fffdfa] font-sans text-[#2b2a2d]" style={{ colorScheme: 'light' }}>
       <h1 className="sr-only">Quadro de reunião Letalk</h1>
-      <p className="sr-only">Use Texto para adicionar anotações, Caneta para desenhar, Escrita bonita para suavizar os traços e Borracha para remover rabiscos.</p>
+      <p className="sr-only">Use Texto para adicionar anotações, Caneta para desenhar, Converter em texto para transformar escrita manual em texto digitado e Borracha para remover rabiscos.</p>
 
       <div
         ref={surfaceRef}
@@ -879,19 +1010,41 @@ export default function Whiteboard() {
         className="pointer-events-none absolute left-5 top-5 w-[124px] text-[#2b2a2d] opacity-90 sm:left-8 sm:top-7 sm:w-[154px]"
       />
 
-      {showSmartHint && tool === 'pen' && (
+      {recognitionNotice && (
         <div
-          role="status"
-          className="pointer-events-none fixed right-4 top-20 flex max-w-[15rem] items-start gap-2.5 rounded-[14px] border border-[#ded9f1] bg-white/96 p-3 text-[#2b2a2d] shadow-[0_18px_42px_-24px_rgba(79,65,154,0.34)] backdrop-blur-md animate-slide-down sm:right-7 sm:top-7"
+          role={recognitionNotice.kind === 'error' ? 'alert' : 'status'}
+          aria-live="polite"
+          className="fixed right-4 top-20 flex max-w-[17rem] items-start gap-2.5 rounded-[14px] border border-[#ded9f1] bg-white/96 p-3 text-[#2b2a2d] shadow-[0_18px_42px_-24px_rgba(79,65,154,0.34)] backdrop-blur-md animate-slide-down sm:right-7 sm:top-7"
           style={{ zIndex: 20 }}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#ece9fb] text-[#5c4dc0]">
-            <MagicWand size={17} weight="fill" aria-hidden="true" />
+          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] ${
+            recognitionNotice.kind === 'error'
+              ? 'bg-[#faecec] text-[#b74242]'
+              : recognitionNotice.kind === 'success'
+                ? 'bg-[#e9f5ef] text-[#158064]'
+                : 'bg-[#ece9fb] text-[#5c4dc0]'
+          }`}>
+            {recognitionNotice.kind === 'error' ? (
+              <WarningCircle size={18} weight="fill" aria-hidden="true" />
+            ) : recognitionNotice.kind === 'success' ? (
+              <CheckCircle size={18} weight="fill" aria-hidden="true" />
+            ) : (
+              <MagicWand className={recognitionNotice.kind === 'recognizing' ? 'animate-pulse' : ''} size={17} weight="fill" aria-hidden="true" />
+            )}
           </span>
-          <span>
-            <span className="block text-[13px] font-semibold leading-4">Escrita bonita ativada</span>
-            <span className="mt-1 block text-[11px] leading-4 text-[#718097]">Solte a caneta para corrigir tremidos e uniformizar o traço.</span>
-          </span>
+          <div>
+            <p className="text-[13px] font-semibold leading-4">{recognitionNotice.title}</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#718097]">{recognitionNotice.description}</p>
+            {recognitionNotice.retryable && (
+              <button
+                type="button"
+                onClick={retryRecognition}
+                className="mt-2 text-[11px] font-semibold text-[#5546b6] transition hover:text-[#3e328f] active:translate-y-px"
+              >
+                Tentar novamente
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -939,19 +1092,18 @@ export default function Whiteboard() {
           <button
             type="button"
             role="switch"
-            aria-checked={smartPen}
-            aria-label="Escrita bonita"
-            title="Escrita bonita (B)"
-            onClick={toggleSmartPen}
+            aria-checked={textConversion}
+            aria-label="Converter escrita em texto"
+            title="Converter escrita em texto (C)"
+            onClick={toggleTextConversion}
             className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[11px] border px-2 text-[12px] font-semibold transition duration-200 active:scale-[0.96] ${
-              smartPen
+              textConversion
                 ? 'border-[#d9d3f1] bg-[#ece9fb] text-[#5546b6]'
                 : 'border-transparent text-[#68778c] hover:bg-[#f4f2fb] hover:text-[#5546b6]'
             }`}
           >
-            <MagicWand className={isRefining ? 'animate-pulse' : ''} size={18} weight={smartPen ? 'fill' : 'regular'} aria-hidden="true" />
-            <span className="hidden xs:inline">Escrita bonita</span>
-            {isRefining && <span className="sr-only" role="status">Traço aprimorado</span>}
+            <MagicWand size={18} weight={textConversion ? 'fill' : 'regular'} aria-hidden="true" />
+            <span className="hidden xs:inline">Converter em texto</span>
           </button>
         </div>
       )}
