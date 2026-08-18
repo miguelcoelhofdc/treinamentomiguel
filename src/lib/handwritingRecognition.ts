@@ -27,6 +27,8 @@ interface RecognitionResponse {
   confidence: number
 }
 
+const CLIENT_TIMEOUT_MS = 22_000
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
@@ -133,12 +135,30 @@ export function createRecognitionImage(
 }
 
 export async function recognizeHandwriting(image: string, signal?: AbortSignal): Promise<RecognitionResponse> {
-  const response = await fetch('/api/recognize-handwriting', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image }),
-    signal,
-  })
+  const controller = new AbortController()
+  let timedOut = false
+  const abortFromCaller = () => controller.abort()
+  signal?.addEventListener('abort', abortFromCaller, { once: true })
+  const timeout = window.setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, CLIENT_TIMEOUT_MS)
+
+  let response: Response
+  try {
+    response = await fetch('/api/recognize-handwriting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image }),
+      signal: controller.signal,
+    })
+  } catch (error) {
+    if (timedOut) throw new Error('A leitura demorou demais. Seus traços foram mantidos; tente novamente.')
+    throw error
+  } finally {
+    window.clearTimeout(timeout)
+    signal?.removeEventListener('abort', abortFromCaller)
+  }
 
   const payload: unknown = await response.json().catch(() => null)
   if (!response.ok) {
