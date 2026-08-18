@@ -7,6 +7,8 @@ export interface ShapeItem {
   y: number
   width: number
   height: number
+  /** Direction of the shape in degrees. Arrows use this to point away from their anchor. */
+  rotation?: number
   fill: string
   stroke: string
   strokeWidth: number

@@ -14,12 +14,12 @@ import {
   AlignLeft,
   AlignRight,
   AlignTop,
+  ArrowClockwise,
   ArrowCounterClockwise,
   ArrowRight,
   ArrowsInSimple,
   ArrowsOutSimple,
   BoundingBox,
-  CheckCircle,
   Circle,
   Columns,
   Copy,
@@ -29,7 +29,6 @@ import {
   Eraser,
   FilePlus,
   FlagBanner,
-  MagicWand,
   Note,
   PencilSimple,
   Rows,
@@ -37,12 +36,10 @@ import {
   Square,
   TextT,
   Trash,
-  WarningCircle,
   X,
   type Icon,
 } from '@phosphor-icons/react'
 import { ShapeLayer } from '@/components/whiteboard/ShapeLayer'
-import { createRecognitionImage, recognizeHandwriting } from '@/lib/handwritingRecognition'
 import {
   SHAPE_DEFAULT_SIZE,
   SHAPE_PALETTE,
@@ -89,15 +86,7 @@ interface BoardState {
 
 type Confirmation = 'clear' | 'new' | null
 
-interface RecognitionNotice {
-  kind: 'info' | 'recognizing' | 'success' | 'error'
-  title: string
-  description: string
-  retryable?: boolean
-}
-
 const STORAGE_KEY = 'letalk-meeting-whiteboard-v1'
-const TEXT_CONVERSION_KEY = 'letalk-meeting-whiteboard-ink-to-text-v1'
 const MAX_HISTORY = 50
 const EMPTY_BOARD: BoardState = { version: 2, strokes: [], texts: [], shapes: [] }
 const PEN_COLORS = [
@@ -190,6 +179,9 @@ function readStoredBoard(): BoardState {
         fill: typeof shape.fill === 'string' ? shape.fill.slice(0, 32) : SHAPE_PALETTE[0].fill,
         stroke: typeof shape.stroke === 'string' ? shape.stroke.slice(0, 32) : SHAPE_PALETTE[0].stroke,
         strokeWidth: typeof shape.strokeWidth === 'number' ? clamp(shape.strokeWidth, 1, 8) : 2,
+        rotation: typeof shape.rotation === 'number' && Number.isFinite(shape.rotation)
+          ? Math.max(-360, Math.min(360, shape.rotation))
+          : 0,
         label: typeof shape.label === 'string' ? shape.label.slice(0, 2_000) : undefined,
       }]
     })
@@ -198,58 +190,6 @@ function readStoredBoard(): BoardState {
   } catch {
     return EMPTY_BOARD
   }
-}
-
-function readTextConversionPreference() {
-  try {
-    return window.localStorage.getItem(TEXT_CONVERSION_KEY) === 'true'
-  } catch {
-    return false
-  }
-}
-
-function pointDistanceInPixels(start: Point, end: Point, width: number, height: number) {
-  return Math.hypot((end.x - start.x) * width, (end.y - start.y) * height)
-}
-
-function beautifyStroke(stroke: Stroke, width: number, height: number): Stroke {
-  if (stroke.points.length < 3 || width <= 0 || height <= 0) return { ...stroke, smart: true }
-
-  const cleaned = [stroke.points[0]]
-  for (let index = 1; index < stroke.points.length - 1; index += 1) {
-    const point = stroke.points[index]
-    if (pointDistanceInPixels(cleaned[cleaned.length - 1], point, width, height) >= 0.9) cleaned.push(point)
-  }
-  const last = stroke.points[stroke.points.length - 1]
-  if (pointDistanceInPixels(cleaned[cleaned.length - 1], last, width, height) > 0.2) cleaned.push(last)
-  if (cleaned.length < 3) return { ...stroke, points: cleaned, smart: true }
-
-  const smoothPass = (points: Point[], strength: number) => points.map((point, index) => {
-    if (index === 0 || index === points.length - 1) return point
-    const previous = points[index - 1]
-    const next = points[index + 1]
-    const incomingX = (point.x - previous.x) * width
-    const incomingY = (point.y - previous.y) * height
-    const outgoingX = (next.x - point.x) * width
-    const outgoingY = (next.y - point.y) * height
-    const incomingLength = Math.hypot(incomingX, incomingY)
-    const outgoingLength = Math.hypot(outgoingX, outgoingY)
-    const direction = incomingLength && outgoingLength
-      ? (incomingX * outgoingX + incomingY * outgoingY) / (incomingLength * outgoingLength)
-      : 0
-    const cornerProtection = clamp((direction + 1) / 2, 0.18, 1)
-    const amount = strength * cornerProtection
-    const averageX = (previous.x + point.x * 2 + next.x) / 4
-    const averageY = (previous.y + point.y * 2 + next.y) / 4
-    return {
-      x: clamp(point.x + (averageX - point.x) * amount),
-      y: clamp(point.y + (averageY - point.y) * amount),
-    }
-  })
-
-  const firstPass = smoothPass(cleaned, 0.9)
-  const points = cleaned.length > 7 ? smoothPass(firstPass, 0.56) : firstPass
-  return { ...stroke, points, smart: true }
 }
 
 function drawStroke(context: CanvasRenderingContext2D, stroke: Stroke, width: number, height: number) {
@@ -577,8 +517,6 @@ export default function Whiteboard() {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
   const [draftShape, setDraftShape] = useState<ShapeItem | null>(null)
   const [selectionRect, setSelectionRect] = useState<{ start: Point; current: Point } | null>(null)
-  const [textConversion, setTextConversion] = useState(readTextConversionPreference)
-  const [recognitionNotice, setRecognitionNotice] = useState<RecognitionNotice | null>(null)
   const [pendingFocusId, setPendingFocusId] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<Confirmation>(null)
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement))
@@ -596,13 +534,6 @@ export default function Whiteboard() {
   const editOriginalRef = useRef(new Map<string, BoardState>())
   const moveOriginalRef = useRef(new Map<string, BoardState>())
   const renderFrameRef = useRef<number | null>(null)
-  const recognitionTimerRef = useRef<number | null>(null)
-  const noticeTimerRef = useRef<number | null>(null)
-  const recognitionAbortRef = useRef<AbortController | null>(null)
-  const pendingRecognitionIdsRef = useRef(new Set<string>())
-  const failedRecognitionIdsRef = useRef<string[]>([])
-  const recognitionInFlightRef = useRef(false)
-  const runRecognitionRef = useRef<() => Promise<void>>(async () => undefined)
   const skipNextPersistRef = useRef(false)
 
   const applyBoard = useCallback((next: BoardState) => {
@@ -674,18 +605,7 @@ export default function Whiteboard() {
 
   useEffect(() => () => {
     if (renderFrameRef.current !== null) window.cancelAnimationFrame(renderFrameRef.current)
-    if (recognitionTimerRef.current !== null) window.clearTimeout(recognitionTimerRef.current)
-    if (noticeTimerRef.current !== null) window.clearTimeout(noticeTimerRef.current)
-    recognitionAbortRef.current?.abort()
   }, [])
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(TEXT_CONVERSION_KEY, String(textConversion))
-    } catch {
-      // The preference is optional when browser storage is unavailable.
-    }
-  }, [textConversion])
 
   useEffect(() => {
     if (skipNextPersistRef.current) {
@@ -775,6 +695,18 @@ export default function Whiteboard() {
     }))
   }, [commitBoard, selectedShapeIds])
 
+  const rotateSelectedShapes = useCallback((delta: number) => {
+    const ids = new Set(selectedShapeIds)
+    commitBoard(current => ({
+      ...current,
+      shapes: current.shapes.map(shape => {
+        if (!ids.has(shape.id)) return shape
+        const nextRotation = (shape.rotation ?? 0) + delta
+        return { ...shape, rotation: ((nextRotation + 180) % 360 + 360) % 360 - 180 }
+      }),
+    }))
+  }, [commitBoard, selectedShapeIds])
+
   const alignSelectedShapes = useCallback((alignment: ShapeAlignment) => {
     const ids = new Set(selectedShapeIds)
     commitBoard(current => ({ ...current, shapes: alignShapes(current.shapes, ids, alignment) }))
@@ -840,144 +772,6 @@ export default function Whiteboard() {
     }))
   }, [commitBoard])
 
-  const showRecognitionNotice = useCallback((notice: RecognitionNotice, duration?: number) => {
-    setRecognitionNotice(notice)
-    if (noticeTimerRef.current !== null) {
-      window.clearTimeout(noticeTimerRef.current)
-      noticeTimerRef.current = null
-    }
-    if (duration) {
-      noticeTimerRef.current = window.setTimeout(() => {
-        setRecognitionNotice(null)
-        noticeTimerRef.current = null
-      }, duration)
-    }
-  }, [])
-
-  const cancelRecognition = useCallback(() => {
-    if (recognitionTimerRef.current !== null) {
-      window.clearTimeout(recognitionTimerRef.current)
-      recognitionTimerRef.current = null
-    }
-    pendingRecognitionIdsRef.current.clear()
-    failedRecognitionIdsRef.current = []
-    recognitionAbortRef.current?.abort()
-    recognitionAbortRef.current = null
-  }, [])
-
-  const scheduleRecognition = useCallback((delay = 900) => {
-    if (recognitionTimerRef.current !== null) window.clearTimeout(recognitionTimerRef.current)
-    recognitionTimerRef.current = window.setTimeout(() => {
-      recognitionTimerRef.current = null
-      void runRecognitionRef.current()
-    }, delay)
-  }, [])
-
-  const processPendingRecognition = useCallback(async () => {
-    if (recognitionInFlightRef.current) {
-      scheduleRecognition(350)
-      return
-    }
-
-    const strokeIds = [...pendingRecognitionIdsRef.current]
-    pendingRecognitionIdsRef.current.clear()
-    if (!strokeIds.length) return
-
-    const idSet = new Set(strokeIds)
-    const current = stateRef.current
-    const strokes = current.strokes.filter(stroke => idSet.has(stroke.id))
-    const surface = surfaceRef.current
-    if (!strokes.length || !surface) return
-
-    const rect = surface.getBoundingClientRect()
-    const recognitionImage = createRecognitionImage(strokes, rect.width, rect.height)
-    if (!recognitionImage) return
-
-    recognitionInFlightRef.current = true
-    const controller = new AbortController()
-    recognitionAbortRef.current = controller
-    showRecognitionNotice({
-      kind: 'recognizing',
-      title: 'Lendo sua escrita…',
-      description: 'Os traços serão substituídos por texto alinhado.',
-    })
-
-    try {
-      const result = await recognizeHandwriting(recognitionImage.image, controller.signal)
-      if (controller.signal.aborted) return
-
-      const latest = stateRef.current
-      const allStrokesStillExist = strokeIds.every(id => latest.strokes.some(stroke => stroke.id === id))
-      if (!allStrokesStillExist) return
-
-      const textItem: TextItem = {
-        id: makeId('recognized-text'),
-        x: recognitionImage.bounds.left,
-        y: recognitionImage.bounds.top,
-        text: result.text,
-        source: 'recognized',
-        width: clamp(recognitionImage.bounds.right - recognitionImage.bounds.left, 0.02, 1),
-        height: clamp(recognitionImage.bounds.bottom - recognitionImage.bounds.top, 0.02, 1),
-        color: strokes[0]?.color || '#2b2a2d',
-      }
-      const next = {
-        ...latest,
-        strokes: latest.strokes.filter(stroke => !idSet.has(stroke.id)),
-        texts: [...latest.texts, textItem],
-      }
-      failedRecognitionIdsRef.current = []
-      pushHistory(latest)
-      applyBoard(next)
-      showRecognitionNotice({
-        kind: 'success',
-        title: 'Texto convertido',
-        description: result.confidence < 0.55
-          ? 'A leitura ficou editável. Confira palavras menos legíveis.'
-          : 'A escrita agora está reta, alinhada e editável.',
-      }, 2400)
-    } catch (error) {
-      if (controller.signal.aborted) return
-      failedRecognitionIdsRef.current = strokeIds.filter(id => (
-        stateRef.current.strokes.some(stroke => stroke.id === id)
-      ))
-      showRecognitionNotice({
-        kind: 'error',
-        title: 'Não consegui ler esse trecho',
-        description: error instanceof Error ? error.message : 'Os rabiscos foram mantidos no quadro.',
-        retryable: failedRecognitionIdsRef.current.length > 0,
-      })
-    } finally {
-      if (recognitionAbortRef.current === controller) recognitionAbortRef.current = null
-      recognitionInFlightRef.current = false
-      if (pendingRecognitionIdsRef.current.size) scheduleRecognition(650)
-    }
-  }, [applyBoard, pushHistory, scheduleRecognition, showRecognitionNotice])
-
-  useEffect(() => {
-    runRecognitionRef.current = processPendingRecognition
-  }, [processPendingRecognition])
-
-  const retryRecognition = useCallback(() => {
-    failedRecognitionIdsRef.current.forEach(id => pendingRecognitionIdsRef.current.add(id))
-    failedRecognitionIdsRef.current = []
-    scheduleRecognition(0)
-  }, [scheduleRecognition])
-
-  const toggleTextConversion = useCallback(() => {
-    const next = !textConversion
-    setTextConversion(next)
-    if (next) {
-      showRecognitionNotice({
-        kind: 'info',
-        title: 'Conversão em texto ativada',
-        description: 'Após uma pausa, apenas o trecho escrito é enviado para leitura e vira texto digitado.',
-      }, 4200)
-    } else {
-      cancelRecognition()
-      setRecognitionNotice(null)
-    }
-  }, [cancelRecognition, showRecognitionNotice, textConversion])
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
@@ -1015,11 +809,10 @@ export default function Whiteboard() {
       if (event.key.toLowerCase() === 'p') setTool('pen')
       if (event.key.toLowerCase() === 'f') setTool('shape')
       if (event.key.toLowerCase() === 'e') setTool('eraser')
-      if (event.key.toLowerCase() === 'c' && tool === 'pen') toggleTextConversion()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [deleteShapes, duplicateSelectedShapes, selectedShapeIds, toggleTextConversion, tool, undo])
+  }, [deleteShapes, duplicateSelectedShapes, selectedShapeIds, undo])
 
   const getPoint = useCallback((clientX: number, clientY: number): Point => {
     const rect = surfaceRef.current?.getBoundingClientRect()
@@ -1082,6 +875,7 @@ export default function Whiteboard() {
         y: point.y,
         width: 0.001,
         height: 0.001,
+        rotation: 0,
         fill: color.fill,
         stroke: color.stroke,
         strokeWidth: 2,
@@ -1098,7 +892,6 @@ export default function Whiteboard() {
         color: penColor,
         width: penWidth,
         points: [point],
-        smart: textConversion || undefined,
       }
       scheduleRender()
       return
@@ -1126,6 +919,28 @@ export default function Whiteboard() {
     if (draftShapeRef.current) {
       const start = draftShapeStartRef.current || { x: draftShapeRef.current.x, y: draftShapeRef.current.y }
       const point = getPoint(event.clientX, event.clientY)
+      if (draftShapeRef.current.kind === 'arrow' && surfaceRef.current) {
+        const rect = surfaceRef.current.getBoundingClientRect()
+        const deltaX = (point.x - start.x) * rect.width
+        const deltaY = (point.y - start.y) * rect.height
+        const distance = Math.hypot(deltaX, deltaY)
+        const width = Math.max(0.001, Math.min(0.95, distance / rect.width))
+        const height = SHAPE_DEFAULT_SIZE.arrow.height
+        const rotation = distance > 0.5
+          ? Math.atan2(deltaY, deltaX) * (180 / Math.PI)
+          : (draftShapeRef.current.rotation ?? 0)
+        const next = {
+          ...draftShapeRef.current,
+          x: start.x,
+          y: start.y - height / 2,
+          width,
+          height,
+          rotation,
+        }
+        draftShapeRef.current = next
+        setDraftShape(next)
+        return
+      }
       let width = Math.abs(point.x - start.x)
       let height = Math.abs(point.y - start.y)
       if ((draftShapeRef.current.kind === 'circle' || event.shiftKey) && surfaceRef.current) {
@@ -1204,15 +1019,9 @@ export default function Whiteboard() {
       setTool('select')
     }
     if (draftStrokeRef.current) {
-      const draft = draftStrokeRef.current
-      const rect = surfaceRef.current?.getBoundingClientRect()
-      const stroke = draft.smart && rect ? beautifyStroke(draft, rect.width, rect.height) : draft
+      const stroke = draftStrokeRef.current
       draftStrokeRef.current = null
       commitBoard(current => ({ ...current, strokes: [...current.strokes, stroke] }))
-      if (stroke.smart) {
-        pendingRecognitionIdsRef.current.add(stroke.id)
-        scheduleRecognition()
-      }
       scheduleRender()
     }
     if (eraserRef.current?.pointerId === event.pointerId) {
@@ -1271,8 +1080,6 @@ export default function Whiteboard() {
   }, [pushHistory])
 
   const confirmAction = () => {
-    cancelRecognition()
-    setRecognitionNotice(null)
     if (confirmation === 'clear') {
       commitBoard(current => (
         current.strokes.length || current.texts.length || current.shapes.length ? EMPTY_BOARD : current
@@ -1429,44 +1236,6 @@ export default function Whiteboard() {
         </div>
       )}
 
-      {recognitionNotice && (
-        <div
-          role={recognitionNotice.kind === 'error' ? 'alert' : 'status'}
-          aria-live="polite"
-          className="fixed right-4 top-20 flex max-w-[17rem] items-start gap-2.5 rounded-[14px] border border-[#ded9f1] bg-white/96 p-3 text-[#2b2a2d] shadow-[0_18px_42px_-24px_rgba(79,65,154,0.34)] backdrop-blur-md animate-slide-down sm:right-7 sm:top-7"
-          style={{ zIndex: 20 }}
-        >
-          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] ${
-            recognitionNotice.kind === 'error'
-              ? 'bg-[#faecec] text-[#b74242]'
-              : recognitionNotice.kind === 'success'
-                ? 'bg-[#e9f5ef] text-[#158064]'
-                : 'bg-[#ece9fb] text-[#5c4dc0]'
-          }`}>
-            {recognitionNotice.kind === 'error' ? (
-              <WarningCircle size={18} weight="fill" aria-hidden="true" />
-            ) : recognitionNotice.kind === 'success' ? (
-              <CheckCircle size={18} weight="fill" aria-hidden="true" />
-            ) : (
-              <MagicWand className={recognitionNotice.kind === 'recognizing' ? 'animate-pulse' : ''} size={17} weight="fill" aria-hidden="true" />
-            )}
-          </span>
-          <div>
-            <p className="text-[13px] font-semibold leading-4">{recognitionNotice.title}</p>
-            <p className="mt-1 text-[11px] leading-4 text-[#718097]">{recognitionNotice.description}</p>
-            {recognitionNotice.retryable && (
-              <button
-                type="button"
-                onClick={retryRecognition}
-                className="mt-2 text-[11px] font-semibold text-[#5546b6] transition hover:text-[#3e328f] active:translate-y-px"
-              >
-                Tentar novamente
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
       {tool === 'shape' && shapeMenuOpen && (
         <div
           role="group"
@@ -1504,7 +1273,9 @@ export default function Whiteboard() {
               />
             ))}
           </div>
-          <span className="hidden shrink-0 px-1 text-[10px] font-medium text-[#8995a6] sm:inline">Arraste no quadro</span>
+          <span className="hidden shrink-0 px-1 text-[10px] font-medium text-[#8995a6] sm:inline">
+            {shapeKind === 'arrow' ? 'Arraste na direção da ponta' : 'Arraste no quadro'}
+          </span>
         </div>
       )}
 
@@ -1543,6 +1314,13 @@ export default function Whiteboard() {
           </div>
           <span className="mx-0.5 h-6 w-px shrink-0 bg-[#e3e8ee]" aria-hidden="true" />
           <button type="button" aria-label="Alterar espessura da borda" title="Espessura da borda" onClick={cycleSelectedStrokeWidth} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8] active:scale-[0.94]"><BoundingBox size={18} weight="bold" /></button>
+          {selectedShapeIds.length === 1 && primarySelectedShape.kind === 'arrow' && (
+            <div className="flex shrink-0 items-center gap-0.5 rounded-[10px] bg-[#f1f3f8] px-0.5" aria-label="Ângulo da seta">
+              <button type="button" aria-label="Girar seta 15 graus para a esquerda" title="Girar 15° para a esquerda" onClick={() => rotateSelectedShapes(-15)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#607089] transition hover:bg-white active:scale-[0.94]"><ArrowCounterClockwise size={16} /></button>
+              <span className="min-w-[3.25rem] text-center text-[10px] font-semibold tabular-nums text-[#607089]" aria-live="polite">{Math.round(primarySelectedShape.rotation ?? 0)}°</span>
+              <button type="button" aria-label="Girar seta 15 graus para a direita" title="Girar 15° para a direita" onClick={() => rotateSelectedShapes(15)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#607089] transition hover:bg-white active:scale-[0.94]"><ArrowClockwise size={16} /></button>
+            </div>
+          )}
           <button type="button" aria-label="Duplicar seleção" title="Duplicar (Ctrl+D)" onClick={duplicateSelectedShapes} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8] active:scale-[0.94]"><Copy size={18} /></button>
           <button type="button" aria-label="Excluir seleção" title="Excluir" onClick={() => deleteShapes(selectedShapeIds)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#a65145] transition hover:bg-[#faece9] active:scale-[0.94]"><Trash size={18} /></button>
           {selectedShapeIds.length === 1 && primarySelectedShape.kind !== 'arrow' && (
@@ -1591,23 +1369,6 @@ export default function Whiteboard() {
               className="h-1 w-14 cursor-pointer accent-[#6d5bd0] sm:w-24"
             />
           </label>
-          <span className="h-5 w-px bg-[#e4e9ef]" aria-hidden="true" />
-          <button
-            type="button"
-            role="switch"
-            aria-checked={textConversion}
-            aria-label="Converter escrita em texto"
-            title="Converter escrita em texto (C)"
-            onClick={toggleTextConversion}
-            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[11px] border px-2 text-[12px] font-semibold transition duration-200 active:scale-[0.96] ${
-              textConversion
-                ? 'border-[#d9d3f1] bg-[#ece9fb] text-[#5546b6]'
-                : 'border-transparent text-[#68778c] hover:bg-[#f4f2fb] hover:text-[#5546b6]'
-            }`}
-          >
-            <MagicWand size={18} weight={textConversion ? 'fill' : 'regular'} aria-hidden="true" />
-            <span className="hidden xs:inline">Converter em texto</span>
-          </button>
         </div>
       )}
 

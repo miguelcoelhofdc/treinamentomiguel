@@ -26,8 +26,18 @@ function ShapeVisual({ shape }: { shape: ShapeItem }) {
   const borderWidth = Math.max(1, shape.strokeWidth)
 
   if (shape.kind === 'arrow') {
+    const rotation = shape.rotation ?? 0
     return (
-      <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="h-full w-full overflow-visible" aria-hidden="true">
+      <svg
+        viewBox="0 0 100 40"
+        preserveAspectRatio="none"
+        className="h-full w-full overflow-visible"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          transformOrigin: '0 50%',
+        }}
+        aria-hidden="true"
+      >
         <path
           d="M 3 20 L 82 20"
           fill="none"
