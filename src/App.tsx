@@ -15,6 +15,7 @@ const Plan = lazy(() => import('@/pages/Plan'))
 const Progress = lazy(() => import('@/pages/Progress'))
 const Guides = lazy(() => import('@/pages/Guides'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const Whiteboard = lazy(() => import('@/pages/Whiteboard'))
 const DevVisualizer = import.meta.env.DEV ? lazy(() => import('@/pages/DevVisualizer')) : null
 
 function ScrollToTop() {
@@ -86,6 +87,15 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
 }
 
 export default function App() {
+  const { pathname } = useLocation()
+  if (pathname.replace(/\/+$/, '') === '/quadro') {
+    return (
+      <Suspense fallback={<div className="min-h-[100dvh] bg-white" aria-label="Carregando quadro" aria-busy="true" />}>
+        <Whiteboard />
+      </Suspense>
+    )
+  }
+
   const profileId = getStoredProfileId()
   if (!profileId) return <Access />
   return <AuthenticatedApp profileId={profileId} />
