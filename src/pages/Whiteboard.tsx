@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import {
@@ -13,6 +14,7 @@ import {
   DotsSixVertical,
   Eraser,
   FilePlus,
+  MagicWand,
   PencilSimple,
   TextT,
   Trash,
@@ -32,6 +34,7 @@ interface Stroke {
   color: string
   width: number
   points: Point[]
+  smart?: boolean
 }
 
 interface TextItem {
@@ -50,9 +53,15 @@ interface BoardState {
 type Confirmation = 'clear' | 'new' | null
 
 const STORAGE_KEY = 'letalk-meeting-whiteboard-v1'
+const SMART_PEN_KEY = 'letalk-meeting-whiteboard-smart-pen-v1'
 const MAX_HISTORY = 50
 const EMPTY_BOARD: BoardState = { version: 1, strokes: [], texts: [] }
-const PEN_COLORS = ['#17223b', '#1769d1', '#158064', '#d04b4b']
+const PEN_COLORS = [
+  { value: '#2b2a2d', label: 'Grafite' },
+  { value: '#6d5bd0', label: 'Violeta' },
+  { value: '#158064', label: 'Verde' },
+  { value: '#d04b4b', label: 'Vermelho' },
+]
 
 function clamp(value: number, min = 0, max = 1) {
   return Math.min(max, Math.max(min, value))
@@ -92,6 +101,7 @@ function readStoredBoard(): BoardState {
         color: stroke.color.slice(0, 32),
         width: clamp(stroke.width, 1, 24),
         points,
+        smart: stroke.smart === true || undefined,
       }]
     })
 
@@ -106,6 +116,58 @@ function readStoredBoard(): BoardState {
   } catch {
     return EMPTY_BOARD
   }
+}
+
+function readSmartPenPreference() {
+  try {
+    return window.localStorage.getItem(SMART_PEN_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function pointDistanceInPixels(start: Point, end: Point, width: number, height: number) {
+  return Math.hypot((end.x - start.x) * width, (end.y - start.y) * height)
+}
+
+function beautifyStroke(stroke: Stroke, width: number, height: number): Stroke {
+  if (stroke.points.length < 3 || width <= 0 || height <= 0) return { ...stroke, smart: true }
+
+  const cleaned = [stroke.points[0]]
+  for (let index = 1; index < stroke.points.length - 1; index += 1) {
+    const point = stroke.points[index]
+    if (pointDistanceInPixels(cleaned[cleaned.length - 1], point, width, height) >= 0.9) cleaned.push(point)
+  }
+  const last = stroke.points[stroke.points.length - 1]
+  if (pointDistanceInPixels(cleaned[cleaned.length - 1], last, width, height) > 0.2) cleaned.push(last)
+  if (cleaned.length < 3) return { ...stroke, points: cleaned, smart: true }
+
+  const smoothPass = (points: Point[], strength: number) => points.map((point, index) => {
+    if (index === 0 || index === points.length - 1) return point
+    const previous = points[index - 1]
+    const next = points[index + 1]
+    const incomingX = (point.x - previous.x) * width
+    const incomingY = (point.y - previous.y) * height
+    const outgoingX = (next.x - point.x) * width
+    const outgoingY = (next.y - point.y) * height
+    const incomingLength = Math.hypot(incomingX, incomingY)
+    const outgoingLength = Math.hypot(outgoingX, outgoingY)
+    const direction = incomingLength && outgoingLength
+      ? (incomingX * outgoingX + incomingY * outgoingY) / (incomingLength * outgoingLength)
+      : 0
+    const cornerProtection = clamp((direction + 1) / 2, 0.18, 1)
+    const amount = strength * cornerProtection
+    const averageX = (previous.x + point.x * 2 + next.x) / 4
+    const averageY = (previous.y + point.y * 2 + next.y) / 4
+    return {
+      x: clamp(point.x + (averageX - point.x) * amount),
+      y: clamp(point.y + (averageY - point.y) * amount),
+    }
+  })
+
+  const firstPass = smoothPass(cleaned, 0.9)
+  const points = cleaned.length > 7 ? smoothPass(firstPass, 0.56) : firstPass
+  return { ...stroke, points, smart: true }
 }
 
 function drawStroke(context: CanvasRenderingContext2D, stroke: Stroke, width: number, height: number) {
@@ -127,15 +189,33 @@ function drawStroke(context: CanvasRenderingContext2D, stroke: Stroke, width: nu
 
   context.beginPath()
   context.moveTo(points[0].x * width, points[0].y * height)
-  for (let index = 1; index < points.length - 1; index += 1) {
-    const current = points[index]
-    const next = points[index + 1]
-    const midpointX = ((current.x + next.x) / 2) * width
-    const midpointY = ((current.y + next.y) / 2) * height
-    context.quadraticCurveTo(current.x * width, current.y * height, midpointX, midpointY)
+
+  if (stroke.smart && points.length > 2) {
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const before = points[Math.max(0, index - 1)]
+      const current = points[index]
+      const next = points[index + 1]
+      const after = points[Math.min(points.length - 1, index + 2)]
+      context.bezierCurveTo(
+        (current.x + (next.x - before.x) / 6) * width,
+        (current.y + (next.y - before.y) / 6) * height,
+        (next.x - (after.x - current.x) / 6) * width,
+        (next.y - (after.y - current.y) / 6) * height,
+        next.x * width,
+        next.y * height,
+      )
+    }
+  } else {
+    for (let index = 1; index < points.length - 1; index += 1) {
+      const current = points[index]
+      const next = points[index + 1]
+      const midpointX = ((current.x + next.x) / 2) * width
+      const midpointY = ((current.y + next.y) / 2) * height
+      context.quadraticCurveTo(current.x * width, current.y * height, midpointX, midpointY)
+    }
+    const last = points[points.length - 1]
+    context.lineTo(last.x * width, last.y * height)
   }
-  const last = points[points.length - 1]
-  context.lineTo(last.x * width, last.y * height)
   context.stroke()
 }
 
@@ -172,7 +252,7 @@ function ToolButton({ active = false, disabled = false, icon: IconComponent, lab
       disabled={disabled}
       onClick={onClick}
       className={`inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[11px] px-2.5 text-[13px] font-semibold transition duration-200 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
-        active ? 'bg-[#1769d1] text-white shadow-[0_8px_18px_-11px_rgba(23,105,209,0.75)]' : 'text-[#607089] hover:bg-[#f2f5f9] hover:text-[#17223b]'
+        active ? 'bg-[#6d5bd0] text-white shadow-[0_8px_18px_-11px_rgba(109,91,208,0.72)]' : 'text-[#607089] hover:bg-[#f5f2ff] hover:text-[#2b2a2d]'
       }`}
     >
       <IconComponent size={19} weight={active ? 'fill' : 'regular'} aria-hidden="true" />
@@ -291,6 +371,7 @@ function TextBlock({
       data-text-item
       className="group absolute flex items-start"
       onPointerDown={event => event.stopPropagation()}
+      onClick={event => event.stopPropagation()}
       style={{
         top: `${item.y * 100}%`,
         ...(anchorOnRight ? { right: `${(1 - item.x) * 100}%` } : { left: `${item.x * 100}%` }),
@@ -301,7 +382,7 @@ function TextBlock({
         aria-label="Mover texto"
         title="Arrastar para mover"
         onPointerDown={handleMoveStart}
-        className="absolute -left-8 top-0.5 flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-[#9ba8ba] opacity-0 transition duration-200 hover:bg-[#f1f4f8] hover:text-[#1769d1] active:cursor-grabbing group-hover:opacity-100 group-focus-within:opacity-100"
+        className="absolute -left-8 top-0.5 flex h-7 w-7 cursor-grab items-center justify-center rounded-lg text-[#9ba8ba] opacity-0 transition duration-200 hover:bg-[#f5f2ff] hover:text-[#6d5bd0] active:cursor-grabbing group-hover:opacity-100 group-focus-within:opacity-100"
       >
         <DotsSixVertical size={18} weight="bold" aria-hidden="true" />
       </button>
@@ -309,6 +390,7 @@ function TextBlock({
         ref={inputRef}
         rows={1}
         value={draft}
+        autoFocus={shouldFocus}
         aria-label="Texto do quadro"
         placeholder="Digite aqui…"
         spellCheck
@@ -318,7 +400,7 @@ function TextBlock({
           setDraft(event.target.value)
           onEditPreview(item.id, event.target.value)
         }}
-        className="block select-text resize-none overflow-hidden border-0 bg-transparent p-0 font-sans text-[clamp(1.2rem,1.65vw,1.65rem)] font-medium leading-[1.28] tracking-[-0.018em] text-[#17223b] outline-none placeholder:text-[#b5bfcc] focus:ring-0"
+        className="block select-text resize-none overflow-hidden border-0 bg-transparent p-0 font-sans text-[clamp(1.2rem,1.65vw,1.65rem)] font-medium leading-[1.28] tracking-[-0.018em] text-[#2b2a2d] outline-none placeholder:text-[#b5bfcc] focus:ring-0"
         style={{ width: desiredWidth, maxWidth: `min(520px, calc(${availableWidth}vw - 1rem))` }}
       />
     </div>
@@ -356,7 +438,7 @@ function ConfirmDialog({ kind, onCancel, onConfirm }: ConfirmDialogProps) {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#1769d1]">Confirmação</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#6d5bd0]">Confirmação</p>
             <h2 id="whiteboard-dialog-title" className="mt-2 text-[21px] font-semibold tracking-[-0.025em]">
               {isNew ? 'Iniciar um novo quadro?' : 'Limpar todo o quadro?'}
             </h2>
@@ -387,8 +469,11 @@ export default function Whiteboard() {
   const [board, setBoard] = useState<BoardState>(readStoredBoard)
   const [history, setHistory] = useState<BoardState[]>([])
   const [tool, setTool] = useState<Tool>('text')
-  const [penColor, setPenColor] = useState(PEN_COLORS[0])
+  const [penColor, setPenColor] = useState(PEN_COLORS[0].value)
   const [penWidth, setPenWidth] = useState(4)
+  const [smartPen, setSmartPen] = useState(readSmartPenPreference)
+  const [showSmartHint, setShowSmartHint] = useState(false)
+  const [isRefining, setIsRefining] = useState(false)
   const [pendingFocusId, setPendingFocusId] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<Confirmation>(null)
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement))
@@ -402,6 +487,8 @@ export default function Whiteboard() {
   const editOriginalRef = useRef(new Map<string, BoardState>())
   const moveOriginalRef = useRef(new Map<string, BoardState>())
   const renderFrameRef = useRef<number | null>(null)
+  const smartHintTimerRef = useRef<number | null>(null)
+  const refiningTimerRef = useRef<number | null>(null)
   const skipNextPersistRef = useRef(false)
 
   const applyBoard = useCallback((next: BoardState) => {
@@ -468,7 +555,17 @@ export default function Whiteboard() {
 
   useEffect(() => () => {
     if (renderFrameRef.current !== null) window.cancelAnimationFrame(renderFrameRef.current)
+    if (smartHintTimerRef.current !== null) window.clearTimeout(smartHintTimerRef.current)
+    if (refiningTimerRef.current !== null) window.clearTimeout(refiningTimerRef.current)
   }, [])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SMART_PEN_KEY, String(smartPen))
+    } catch {
+      // The preference is optional when browser storage is unavailable.
+    }
+  }, [smartPen])
 
   useEffect(() => {
     if (skipNextPersistRef.current) {
@@ -518,6 +615,22 @@ export default function Whiteboard() {
     })
   }, [applyBoard])
 
+  const toggleSmartPen = useCallback(() => {
+    const next = !smartPen
+    setSmartPen(next)
+    setShowSmartHint(next)
+    if (smartHintTimerRef.current !== null) {
+      window.clearTimeout(smartHintTimerRef.current)
+      smartHintTimerRef.current = null
+    }
+    if (next) {
+      smartHintTimerRef.current = window.setTimeout(() => {
+        setShowSmartHint(false)
+        smartHintTimerRef.current = null
+      }, 3200)
+    }
+  }, [smartPen])
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
@@ -531,10 +644,11 @@ export default function Whiteboard() {
       if (event.key.toLowerCase() === 't') setTool('text')
       if (event.key.toLowerCase() === 'p') setTool('pen')
       if (event.key.toLowerCase() === 'e') setTool('eraser')
+      if (event.key.toLowerCase() === 'b' && tool === 'pen') toggleSmartPen()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [undo])
+  }, [toggleSmartPen, tool, undo])
 
   const getPoint = useCallback((clientX: number, clientY: number): Point => {
     const rect = surfaceRef.current?.getBoundingClientRect()
@@ -573,27 +687,35 @@ export default function Whiteboard() {
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.button !== 0) return
+    if (tool === 'text') return
     const point = getPoint(event.clientX, event.clientY)
-
-    if (tool === 'text') {
-      const id = makeId('text')
-      const original = stateRef.current
-      editOriginalRef.current.set(id, original)
-      applyBoard({ ...original, texts: [...original.texts, { id, x: point.x, y: point.y, text: '' }] })
-      setPendingFocusId(id)
-      return
-    }
 
     event.currentTarget.setPointerCapture(event.pointerId)
     event.preventDefault()
     if (tool === 'pen') {
-      draftStrokeRef.current = { id: makeId('stroke'), color: penColor, width: penWidth, points: [point] }
+      draftStrokeRef.current = {
+        id: makeId('stroke'),
+        color: penColor,
+        width: penWidth,
+        points: [point],
+        smart: smartPen || undefined,
+      }
       scheduleRender()
       return
     }
 
     eraserRef.current = { pointerId: event.pointerId, original: stateRef.current, removed: new Set() }
     eraseAt(point)
+  }
+
+  const handleSurfaceClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (tool !== 'text') return
+    const id = makeId('text')
+    const original = stateRef.current
+    const point = getPoint(event.clientX, event.clientY)
+    editOriginalRef.current.set(id, original)
+    applyBoard({ ...original, texts: [...original.texts, { id, x: point.x, y: point.y, text: '' }] })
+    setPendingFocusId(id)
   }
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -614,9 +736,19 @@ export default function Whiteboard() {
 
   const finishPointerAction = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (draftStrokeRef.current) {
-      const stroke = draftStrokeRef.current
+      const draft = draftStrokeRef.current
+      const rect = surfaceRef.current?.getBoundingClientRect()
+      const stroke = draft.smart && rect ? beautifyStroke(draft, rect.width, rect.height) : draft
       draftStrokeRef.current = null
       commitBoard(current => ({ ...current, strokes: [...current.strokes, stroke] }))
+      if (stroke.smart) {
+        setIsRefining(true)
+        if (refiningTimerRef.current !== null) window.clearTimeout(refiningTimerRef.current)
+        refiningTimerRef.current = window.setTimeout(() => {
+          setIsRefining(false)
+          refiningTimerRef.current = null
+        }, 520)
+      }
       scheduleRender()
     }
     if (eraserRef.current?.pointerId === event.pointerId) {
@@ -702,14 +834,20 @@ export default function Whiteboard() {
   const cursorClass = tool === 'text' ? 'cursor-text' : 'cursor-crosshair'
 
   return (
-    <main ref={pageRef} className="fixed inset-0 isolate overflow-hidden bg-white font-sans text-[#17223b]" style={{ colorScheme: 'light' }}>
+    <main ref={pageRef} className="fixed inset-0 isolate overflow-hidden bg-[#fffdfa] font-sans text-[#2b2a2d]" style={{ colorScheme: 'light' }}>
       <h1 className="sr-only">Quadro de reunião Letalk</h1>
-      <p className="sr-only">Use Texto para adicionar anotações, Caneta para desenhar e Borracha para remover rabiscos.</p>
+      <p className="sr-only">Use Texto para adicionar anotações, Caneta para desenhar, Escrita bonita para suavizar os traços e Borracha para remover rabiscos.</p>
 
       <div
         ref={surfaceRef}
         className={`absolute inset-0 touch-none select-none bg-white ${cursorClass}`}
+        style={{
+          backgroundColor: '#fffdfa',
+          backgroundImage: 'radial-gradient(circle, rgba(109, 91, 208, 0.12) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
         onPointerDown={handlePointerDown}
+        onClick={handleSurfaceClick}
         onPointerMove={handlePointerMove}
         onPointerUp={finishPointerAction}
         onPointerCancel={finishPointerAction}
@@ -738,30 +876,46 @@ export default function Whiteboard() {
       <img
         src="/letalk-logo.svg"
         alt="Letalk"
-        className="pointer-events-none absolute bottom-[calc(5.8rem+env(safe-area-inset-bottom))] right-5 w-[74px] text-[#17223b] opacity-25 sm:bottom-6 sm:right-7 sm:w-[82px]"
+        className="pointer-events-none absolute left-5 top-5 w-[124px] text-[#2b2a2d] opacity-90 sm:left-8 sm:top-7 sm:w-[154px]"
       />
+
+      {showSmartHint && tool === 'pen' && (
+        <div
+          role="status"
+          className="pointer-events-none fixed right-4 top-20 flex max-w-[15rem] items-start gap-2.5 rounded-[14px] border border-[#ded9f1] bg-white/96 p-3 text-[#2b2a2d] shadow-[0_18px_42px_-24px_rgba(79,65,154,0.34)] backdrop-blur-md animate-slide-down sm:right-7 sm:top-7"
+          style={{ zIndex: 20 }}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#ece9fb] text-[#5c4dc0]">
+            <MagicWand size={17} weight="fill" aria-hidden="true" />
+          </span>
+          <span>
+            <span className="block text-[13px] font-semibold leading-4">Escrita bonita ativada</span>
+            <span className="mt-1 block text-[11px] leading-4 text-[#718097]">Solte a caneta para corrigir tremidos e uniformizar o traço.</span>
+          </span>
+        </div>
+      )}
 
       {tool === 'pen' && (
         <div
           role="group"
           aria-label="Opções da caneta"
-          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-[15px] border border-[#dfe5ed] bg-white/96 px-3 py-2 shadow-[0_16px_38px_-20px_rgba(23,34,59,0.34)] backdrop-blur-md"
+          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom))] left-1/2 flex max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center gap-2 rounded-[15px] border border-[#e1dff0] bg-white/96 px-2.5 py-2 shadow-[0_16px_38px_-20px_rgba(79,65,154,0.18)] backdrop-blur-md sm:gap-3 sm:px-3"
           style={{ zIndex: 20 }}
         >
-          <div className="flex items-center gap-1.5" aria-label="Cor do traço">
+          <div className="flex items-center gap-1 sm:gap-1.5" aria-label="Cor do traço">
             {PEN_COLORS.map(color => (
               <button
-                key={color}
+                key={color.value}
                 type="button"
-                aria-label={`Usar cor ${color}`}
-                aria-pressed={penColor === color}
-                onClick={() => setPenColor(color)}
-                className={`h-6 w-6 rounded-full border-2 transition active:scale-[0.92] ${penColor === color ? 'border-white ring-2 ring-[#1769d1]' : 'border-white ring-1 ring-[#d8dee7]'}`}
-                style={{ backgroundColor: color }}
+                aria-label={`Usar ${color.label}`}
+                aria-pressed={penColor === color.value}
+                onClick={() => setPenColor(color.value)}
+                className={`h-5 w-5 rounded-full border-2 transition active:scale-[0.92] sm:h-6 sm:w-6 ${penColor === color.value ? 'border-white ring-2 ring-[#6d5bd0]' : 'border-white ring-1 ring-[#d8dee7]'}`}
+                style={{ backgroundColor: color.value }}
               />
             ))}
-            <label className="relative h-6 w-6 cursor-pointer overflow-hidden rounded-full border-2 border-white bg-[conic-gradient(#e45151,#e6b445,#4ca56d,#398bd4,#7c5ac7,#e45151)] ring-1 ring-[#d8dee7]" title="Escolher outra cor">
-              <span className="sr-only">Escolher outra cor</span>
+            <label className="relative h-5 w-5 cursor-pointer overflow-hidden rounded-full border-2 border-white bg-[conic-gradient(#e45151,#e6b445,#4ca56d,#398bd4,#7c5ac7,#e45151)] ring-1 ring-[#d8dee7] sm:h-6 sm:w-6" title="Escolher outra cor">
+              <span className="sr-only">Escolher cor personalizada</span>
               <input type="color" value={penColor} onChange={event => setPenColor(event.target.value)} className="absolute inset-0 cursor-pointer opacity-0" />
             </label>
           </div>
@@ -778,9 +932,27 @@ export default function Whiteboard() {
               step="1"
               value={penWidth}
               onChange={event => setPenWidth(Number(event.target.value))}
-              className="h-1 w-24 cursor-pointer accent-[#1769d1]"
+              className="h-1 w-14 cursor-pointer accent-[#6d5bd0] sm:w-24"
             />
           </label>
+          <span className="h-5 w-px bg-[#e4e9ef]" aria-hidden="true" />
+          <button
+            type="button"
+            role="switch"
+            aria-checked={smartPen}
+            aria-label="Escrita bonita"
+            title="Escrita bonita (B)"
+            onClick={toggleSmartPen}
+            className={`inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[11px] border px-2 text-[12px] font-semibold transition duration-200 active:scale-[0.96] ${
+              smartPen
+                ? 'border-[#d9d3f1] bg-[#ece9fb] text-[#5546b6]'
+                : 'border-transparent text-[#68778c] hover:bg-[#f4f2fb] hover:text-[#5546b6]'
+            }`}
+          >
+            <MagicWand className={isRefining ? 'animate-pulse' : ''} size={18} weight={smartPen ? 'fill' : 'regular'} aria-hidden="true" />
+            <span className="hidden xs:inline">Escrita bonita</span>
+            {isRefining && <span className="sr-only" role="status">Traço aprimorado</span>}
+          </button>
         </div>
       )}
 
