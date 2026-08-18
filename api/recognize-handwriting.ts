@@ -207,7 +207,7 @@ async function callRecognitionProvider(image: string, config: ProviderConfig, re
   }
 }
 
-export default async function handler(request: Request): Promise<Response> {
+async function handleRecognitionRequest(request: Request): Promise<Response> {
   const config = getProviderConfig()
 
   if (request.method === 'GET') {
@@ -270,4 +270,8 @@ export default async function handler(request: Request): Promise<Response> {
   } catch {
     return json({ error: 'O reconhecimento retornou uma resposta inválida.' }, 502)
   }
+}
+
+export default {
+  fetch: handleRecognitionRequest,
 }

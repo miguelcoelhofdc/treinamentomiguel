@@ -1,6 +1,13 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "node node_modules/vite/bin/vite.js build",
   "outputDirectory": "dist",
   "framework": null,
+  "functions": {
+    "api/recognize-handwriting.ts": {
+      "maxDuration": 30,
+      "supportsCancellation": true
+    }
+  },
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

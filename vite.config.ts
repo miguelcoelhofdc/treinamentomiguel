@@ -26,7 +26,7 @@ function handwritingApiDevPlugin(): Plugin {
             headers,
             body: method === 'GET' || method === 'HEAD' ? undefined : Buffer.concat(chunks),
           })
-          const webResponse = await recognizeHandwriting(webRequest)
+          const webResponse = await recognizeHandwriting.fetch(webRequest)
           response.statusCode = webResponse.status
           webResponse.headers.forEach((value, key) => response.setHeader(key, value))
           response.end(Buffer.from(await webResponse.arrayBuffer()))
