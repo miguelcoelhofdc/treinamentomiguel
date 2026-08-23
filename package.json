@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test src/lib/*.test.mjs",
     "preview": "vite preview",
     "seed": "node scripts/seed.mjs"
   },

@@ -6,6 +6,7 @@ import {
   type RefObject,
 } from 'react'
 import type { ShapeItem } from '@/lib/whiteboardShapes'
+import { isPenBarrelEvent, isPenEraserEvent } from '@/lib/whiteboardInk'
 
 interface ShapeLayerProps {
   shapes: ShapeItem[]
@@ -122,6 +123,8 @@ export function ShapeLayer({
     mode: 'move' | 'resize',
     shape: ShapeItem,
   ) => {
+    const nativeEvent = event.nativeEvent as PointerEvent
+    if (isPenBarrelEvent(nativeEvent) || isPenEraserEvent(nativeEvent)) return
     event.preventDefault()
     event.stopPropagation()
     if (erasing) {
@@ -194,7 +197,7 @@ export function ShapeLayer({
         return (
           <div
             key={shape.id}
-            className={`absolute ${interactive || erasing ? 'pointer-events-auto' : 'pointer-events-none'} ${erasing ? 'cursor-cell' : interactive ? 'cursor-move' : ''}`}
+            className={`absolute ${interactive ? 'pointer-events-auto cursor-move' : 'pointer-events-none'} ${erasing ? 'cursor-cell' : ''}`}
             style={{
               left: `${shape.x * 100}%`,
               top: `${shape.y * 100}%`,

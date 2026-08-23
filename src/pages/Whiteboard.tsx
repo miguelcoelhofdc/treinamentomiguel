@@ -50,21 +50,17 @@ import {
   type ShapeKind,
   type ShapeLayout,
 } from '@/lib/whiteboardShapes'
+import {
+  drawInkStroke,
+  isPenBarrelEvent,
+  isPenEraserEvent,
+  pointToInkSegmentDistance,
+  type InkPoint as Point,
+  type InkStroke as Stroke,
+} from '@/lib/whiteboardInk'
+import { getWhiteboardShortcut } from '@/lib/whiteboardShortcuts'
 
 type Tool = 'select' | 'text' | 'pen' | 'shape' | 'eraser'
-
-interface Point {
-  x: number
-  y: number
-}
-
-interface Stroke {
-  id: string
-  color: string
-  width: number
-  points: Point[]
-  smart?: boolean
-}
 
 interface TextItem {
   id: string
@@ -133,7 +129,20 @@ function readStoredBoard(): BoardState {
       const points = stroke.points.flatMap<Point>(point => {
         if (!isRecord(point) || typeof point.x !== 'number' || typeof point.y !== 'number'
           || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return []
-        return [{ x: clamp(point.x), y: clamp(point.y) }]
+        return [{
+          x: clamp(point.x),
+          y: clamp(point.y),
+          pressure: typeof point.pressure === 'number' && Number.isFinite(point.pressure)
+            ? clamp(point.pressure)
+            : undefined,
+          tiltX: typeof point.tiltX === 'number' && Number.isFinite(point.tiltX)
+            ? clamp(point.tiltX, -90, 90)
+            : undefined,
+          tiltY: typeof point.tiltY === 'number' && Number.isFinite(point.tiltY)
+            ? clamp(point.tiltY, -90, 90)
+            : undefined,
+          time: typeof point.time === 'number' && Number.isFinite(point.time) ? point.time : undefined,
+        }]
       })
 
       if (!points.length) return []
@@ -142,6 +151,9 @@ function readStoredBoard(): BoardState {
         color: stroke.color.slice(0, 32),
         width: clamp(stroke.width, 1, 24),
         points,
+        pointerType: stroke.pointerType === 'pen' || stroke.pointerType === 'touch' || stroke.pointerType === 'mouse'
+          ? stroke.pointerType
+          : undefined,
         smart: stroke.smart === true || undefined,
       }]
     })
@@ -190,69 +202,6 @@ function readStoredBoard(): BoardState {
   } catch {
     return EMPTY_BOARD
   }
-}
-
-function drawStroke(context: CanvasRenderingContext2D, stroke: Stroke, width: number, height: number) {
-  const points = stroke.points
-  if (!points.length) return
-
-  context.strokeStyle = stroke.color
-  context.fillStyle = stroke.color
-  context.lineWidth = stroke.width
-  context.lineCap = 'round'
-  context.lineJoin = 'round'
-
-  if (points.length === 1) {
-    context.beginPath()
-    context.arc(points[0].x * width, points[0].y * height, stroke.width / 2, 0, Math.PI * 2)
-    context.fill()
-    return
-  }
-
-  context.beginPath()
-  context.moveTo(points[0].x * width, points[0].y * height)
-
-  if (stroke.smart && points.length > 2) {
-    for (let index = 0; index < points.length - 1; index += 1) {
-      const before = points[Math.max(0, index - 1)]
-      const current = points[index]
-      const next = points[index + 1]
-      const after = points[Math.min(points.length - 1, index + 2)]
-      context.bezierCurveTo(
-        (current.x + (next.x - before.x) / 6) * width,
-        (current.y + (next.y - before.y) / 6) * height,
-        (next.x - (after.x - current.x) / 6) * width,
-        (next.y - (after.y - current.y) / 6) * height,
-        next.x * width,
-        next.y * height,
-      )
-    }
-  } else {
-    for (let index = 1; index < points.length - 1; index += 1) {
-      const current = points[index]
-      const next = points[index + 1]
-      const midpointX = ((current.x + next.x) / 2) * width
-      const midpointY = ((current.y + next.y) / 2) * height
-      context.quadraticCurveTo(current.x * width, current.y * height, midpointX, midpointY)
-    }
-    const last = points[points.length - 1]
-    context.lineTo(last.x * width, last.y * height)
-  }
-  context.stroke()
-}
-
-function pointToSegmentDistance(point: Point, start: Point, end: Point, width: number, height: number) {
-  const px = point.x * width
-  const py = point.y * height
-  const ax = start.x * width
-  const ay = start.y * height
-  const bx = end.x * width
-  const by = end.y * height
-  const dx = bx - ax
-  const dy = by - ay
-  if (dx === 0 && dy === 0) return Math.hypot(px - ax, py - ay)
-  const amount = clamp(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))
-  return Math.hypot(px - (ax + amount * dx), py - (ay + amount * dy))
 }
 
 interface ToolButtonProps {
@@ -507,6 +456,7 @@ function ConfirmDialog({ kind, onCancel, onConfirm }: ConfirmDialogProps) {
 export default function Whiteboard() {
   const [board, setBoard] = useState<BoardState>(readStoredBoard)
   const [history, setHistory] = useState<BoardState[]>([])
+  const [future, setFuture] = useState<BoardState[]>([])
   const [tool, setTool] = useState<Tool>('select')
   const [penColor, setPenColor] = useState(PEN_COLORS[0].value)
   const [penWidth, setPenWidth] = useState(4)
@@ -524,16 +474,21 @@ export default function Whiteboard() {
   const pageRef = useRef<HTMLElement>(null)
   const surfaceRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const draftCanvasRef = useRef<HTMLCanvasElement>(null)
+  const penCursorRef = useRef<HTMLDivElement>(null)
   const stateRef = useRef(board)
   const draftStrokeRef = useRef<Stroke | null>(null)
+  const strokePointerIdRef = useRef<number | null>(null)
   const draftShapeRef = useRef<ShapeItem | null>(null)
+  const draftShapePointerIdRef = useRef<number | null>(null)
   const draftShapeStartRef = useRef<Point | null>(null)
   const selectionGestureRef = useRef<{ pointerId: number; start: Point; additive: boolean } | null>(null)
   const shapeTransformOriginalRef = useRef<BoardState | null>(null)
   const eraserRef = useRef<{ pointerId: number; original: BoardState; removed: Set<string> } | null>(null)
   const editOriginalRef = useRef(new Map<string, BoardState>())
   const moveOriginalRef = useRef(new Map<string, BoardState>())
-  const renderFrameRef = useRef<number | null>(null)
+  const draftRenderFrameRef = useRef<number | null>(null)
+  const suppressClickRef = useRef(false)
   const skipNextPersistRef = useRef(false)
 
   const applyBoard = useCallback((next: BoardState) => {
@@ -543,6 +498,7 @@ export default function Whiteboard() {
 
   const pushHistory = useCallback((snapshot: BoardState) => {
     setHistory(current => [...current.slice(-(MAX_HISTORY - 1)), snapshot])
+    setFuture([])
   }, [])
 
   const commitBoard = useCallback((createNext: (current: BoardState) => BoardState) => {
@@ -553,10 +509,9 @@ export default function Whiteboard() {
     applyBoard(next)
   }, [applyBoard, pushHistory])
 
-  const renderCanvas = useCallback(() => {
-    const canvas = canvasRef.current
+  const prepareCanvas = useCallback((canvas: HTMLCanvasElement) => {
     const surface = surfaceRef.current
-    if (!canvas || !surface) return
+    if (!surface) return null
     const rect = surface.getBoundingClientRect()
     const ratio = Math.min(window.devicePixelRatio || 1, 2)
     const targetWidth = Math.max(1, Math.round(rect.width * ratio))
@@ -566,20 +521,37 @@ export default function Whiteboard() {
       canvas.height = targetHeight
     }
     const context = canvas.getContext('2d')
-    if (!context) return
+    if (!context) return null
     context.setTransform(ratio, 0, 0, ratio, 0, 0)
     context.clearRect(0, 0, rect.width, rect.height)
-    stateRef.current.strokes.forEach(stroke => drawStroke(context, stroke, rect.width, rect.height))
-    if (draftStrokeRef.current) drawStroke(context, draftStrokeRef.current, rect.width, rect.height)
+    return { context, rect }
   }, [])
 
-  const scheduleRender = useCallback(() => {
-    if (renderFrameRef.current !== null) return
-    renderFrameRef.current = window.requestAnimationFrame(() => {
-      renderFrameRef.current = null
-      renderCanvas()
+  const renderCanvas = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const prepared = prepareCanvas(canvas)
+    if (!prepared) return
+    stateRef.current.strokes.forEach(stroke => (
+      drawInkStroke(prepared.context, stroke, prepared.rect.width, prepared.rect.height)
+    ))
+  }, [prepareCanvas])
+
+  const renderDraftCanvas = useCallback(() => {
+    const canvas = draftCanvasRef.current
+    if (!canvas) return
+    const prepared = prepareCanvas(canvas)
+    if (!prepared || !draftStrokeRef.current) return
+    drawInkStroke(prepared.context, draftStrokeRef.current, prepared.rect.width, prepared.rect.height)
+  }, [prepareCanvas])
+
+  const scheduleDraftRender = useCallback(() => {
+    if (draftRenderFrameRef.current !== null) return
+    draftRenderFrameRef.current = window.requestAnimationFrame(() => {
+      draftRenderFrameRef.current = null
+      renderDraftCanvas()
     })
-  }, [renderCanvas])
+  }, [renderDraftCanvas])
 
   useEffect(() => {
     stateRef.current = board
@@ -597,14 +569,18 @@ export default function Whiteboard() {
   useEffect(() => {
     const surface = surfaceRef.current
     if (!surface) return
-    const observer = new ResizeObserver(renderCanvas)
+    const observer = new ResizeObserver(() => {
+      renderCanvas()
+      renderDraftCanvas()
+    })
     observer.observe(surface)
     renderCanvas()
+    renderDraftCanvas()
     return () => observer.disconnect()
-  }, [renderCanvas])
+  }, [renderCanvas, renderDraftCanvas])
 
   useEffect(() => () => {
-    if (renderFrameRef.current !== null) window.cancelAnimationFrame(renderFrameRef.current)
+    if (draftRenderFrameRef.current !== null) window.cancelAnimationFrame(draftRenderFrameRef.current)
   }, [])
 
   useEffect(() => {
@@ -650,6 +626,16 @@ export default function Whiteboard() {
   const undo = useCallback(() => {
     setHistory(current => {
       if (!current.length) return current
+      setFuture(next => [...next.slice(-(MAX_HISTORY - 1)), stateRef.current])
+      applyBoard(current[current.length - 1])
+      return current.slice(0, -1)
+    })
+  }, [applyBoard])
+
+  const redo = useCallback(() => {
+    setFuture(current => {
+      if (!current.length) return current
+      setHistory(previous => [...previous.slice(-(MAX_HISTORY - 1)), stateRef.current])
       applyBoard(current[current.length - 1])
       return current.slice(0, -1)
     })
@@ -776,11 +762,9 @@ export default function Whiteboard() {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null
       const isEditing = target?.matches('textarea, input, [contenteditable="true"]')
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !isEditing) {
-        event.preventDefault()
-        undo()
-        return
-      }
+      const shortcut = getWhiteboardShortcut(event)
+      if (!isEditing && shortcut === 'undo') { event.preventDefault(); undo(); return }
+      if (!isEditing && shortcut === 'redo') { event.preventDefault(); redo(); return }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a' && !isEditing) {
         event.preventDefault()
         setTool('select')
@@ -804,15 +788,23 @@ export default function Whiteboard() {
         setMoreMenuOpen(false)
         return
       }
-      if (event.key.toLowerCase() === 'v') setTool('select')
-      if (event.key.toLowerCase() === 't') setTool('text')
-      if (event.key.toLowerCase() === 'p') setTool('pen')
-      if (event.key.toLowerCase() === 'f') setTool('shape')
-      if (event.key.toLowerCase() === 'e') setTool('eraser')
+      if (shortcut === 'select') setTool('select')
+      if (shortcut === 'text') setTool('text')
+      if (shortcut === 'pen') setTool('pen')
+      if (shortcut === 'shape') setTool('shape')
+      if (shortcut === 'eraser') setTool('eraser')
+      if (shortcut === 'decrease-width') {
+        event.preventDefault()
+        setPenWidth(current => clamp(current - 1, 2, 16))
+      }
+      if (shortcut === 'increase-width') {
+        event.preventDefault()
+        setPenWidth(current => clamp(current + 1, 2, 16))
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [deleteShapes, duplicateSelectedShapes, selectedShapeIds, undo])
+  }, [deleteShapes, duplicateSelectedShapes, redo, selectedShapeIds, undo])
 
   const getPoint = useCallback((clientX: number, clientY: number): Point => {
     const rect = surfaceRef.current?.getBoundingClientRect()
@@ -821,6 +813,41 @@ export default function Whiteboard() {
       x: clamp((clientX - rect.left) / rect.width),
       y: clamp((clientY - rect.top) / rect.height),
     }
+  }, [])
+
+  const getInkPoint = useCallback((event: PointerEvent): Point => ({
+    ...getPoint(event.clientX, event.clientY),
+    pressure: event.pointerType === 'pen' ? clamp(event.pressure) : undefined,
+    tiltX: event.pointerType === 'pen' ? clamp(event.tiltX, -90, 90) : undefined,
+    tiltY: event.pointerType === 'pen' ? clamp(event.tiltY, -90, 90) : undefined,
+    time: Math.round(event.timeStamp),
+  }), [getPoint])
+
+  const updatePointerCursor = useCallback((event: PointerEvent) => {
+    const surface = surfaceRef.current
+    const cursor = penCursorRef.current
+    if (!surface || !cursor) return
+    if (event.pointerType !== 'pen') {
+      surface.style.cursor = ''
+      cursor.style.opacity = '0'
+      return
+    }
+    const rect = surface.getBoundingClientRect()
+    const erasing = tool === 'eraser' || isPenEraserEvent(event) || isPenBarrelEvent(event)
+    const size = erasing ? 30 : Math.max(5, penWidth)
+    surface.style.cursor = 'none'
+    cursor.style.width = `${size}px`
+    cursor.style.height = `${size}px`
+    cursor.style.borderColor = erasing ? '#a65145' : penColor
+    cursor.style.backgroundColor = erasing ? 'rgba(166, 81, 69, 0.08)' : penColor
+    cursor.style.opacity = event.clientX >= rect.left && event.clientX <= rect.right
+      && event.clientY >= rect.top && event.clientY <= rect.bottom ? '1' : '0'
+    cursor.style.transform = `translate3d(${event.clientX - rect.left - size / 2}px, ${event.clientY - rect.top - size / 2}px, 0)`
+  }, [penColor, penWidth, tool])
+
+  const hidePenCursor = useCallback(() => {
+    if (penCursorRef.current) penCursorRef.current.style.opacity = '0'
+    if (surfaceRef.current) surfaceRef.current.style.cursor = ''
   }, [])
 
   const eraseAt = useCallback((point: Point) => {
@@ -834,11 +861,19 @@ export default function Whiteboard() {
     for (const stroke of stateRef.current.strokes) {
       if (gesture.removed.has(stroke.id)) continue
       const hit = stroke.points.length === 1
-        ? pointToSegmentDistance(point, stroke.points[0], stroke.points[0], rect.width, rect.height) <= eraserRadius + stroke.width / 2
+        ? pointToInkSegmentDistance(point, stroke.points[0], stroke.points[0], rect.width, rect.height) <= eraserRadius + stroke.width / 2
         : stroke.points.slice(1).some((current, index) => (
-          pointToSegmentDistance(point, stroke.points[index], current, rect.width, rect.height) <= eraserRadius + stroke.width / 2
+          pointToInkSegmentDistance(point, stroke.points[index], current, rect.width, rect.height) <= eraserRadius + stroke.width / 2
         ))
       if (hit) removedNow.push(stroke.id)
+    }
+
+    for (const shape of stateRef.current.shapes) {
+      if (gesture.removed.has(shape.id)) continue
+      if (point.x >= shape.x && point.x <= shape.x + shape.width
+        && point.y >= shape.y && point.y <= shape.y + shape.height) {
+        removedNow.push(shape.id)
+      }
     }
 
     if (!removedNow.length) return
@@ -846,27 +881,35 @@ export default function Whiteboard() {
     applyBoard({
       ...stateRef.current,
       strokes: stateRef.current.strokes.filter(stroke => !gesture.removed.has(stroke.id)),
+      shapes: stateRef.current.shapes.filter(shape => !gesture.removed.has(shape.id)),
     })
   }, [applyBoard])
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return
-    if (tool === 'text') return
-    const point = getPoint(event.clientX, event.clientY)
+    const nativeEvent = event.nativeEvent as PointerEvent
+    const temporaryEraser = isPenEraserEvent(nativeEvent) || isPenBarrelEvent(nativeEvent)
+    if (event.button !== 0 && !temporaryEraser) return
+    const activeTool: Tool = temporaryEraser ? 'eraser' : tool
+    if (temporaryEraser) {
+      suppressClickRef.current = true
+      window.setTimeout(() => { suppressClickRef.current = false }, 0)
+    }
+    if (activeTool === 'text') return
+    const point = getInkPoint(nativeEvent)
 
-    event.currentTarget.setPointerCapture(event.pointerId)
+    try { event.currentTarget.setPointerCapture(event.pointerId) } catch { /* Pointer may have ended. */ }
     event.preventDefault()
     setShapeMenuOpen(false)
     setMoreMenuOpen(false)
 
-    if (tool === 'select') {
+    if (activeTool === 'select') {
       selectionGestureRef.current = { pointerId: event.pointerId, start: point, additive: event.shiftKey }
       setSelectionRect({ start: point, current: point })
       if (!event.shiftKey) setSelectedShapeIds([])
       return
     }
 
-    if (tool === 'shape') {
+    if (activeTool === 'shape') {
       const color = SHAPE_PALETTE[shapeColorIndex]
       const shape: ShapeItem = {
         id: makeId(`shape-${shapeKind}`),
@@ -881,19 +924,22 @@ export default function Whiteboard() {
         strokeWidth: 2,
       }
       draftShapeRef.current = shape
+      draftShapePointerIdRef.current = event.pointerId
       draftShapeStartRef.current = point
       setDraftShape(shape)
       return
     }
 
-    if (tool === 'pen') {
+    if (activeTool === 'pen') {
       draftStrokeRef.current = {
         id: makeId('stroke'),
         color: penColor,
         width: penWidth,
         points: [point],
+        pointerType: event.pointerType === 'pen' || event.pointerType === 'touch' ? event.pointerType : 'mouse',
       }
-      scheduleRender()
+      strokePointerIdRef.current = event.pointerId
+      scheduleDraftRender()
       return
     }
 
@@ -902,6 +948,7 @@ export default function Whiteboard() {
   }
 
   const handleSurfaceClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (suppressClickRef.current) { suppressClickRef.current = false; return }
     if (tool !== 'text') return
     const id = makeId('text')
     const original = stateRef.current
@@ -912,11 +959,12 @@ export default function Whiteboard() {
   }
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    updatePointerCursor(event.nativeEvent as PointerEvent)
     if (selectionGestureRef.current?.pointerId === event.pointerId) {
       setSelectionRect({ start: selectionGestureRef.current.start, current: getPoint(event.clientX, event.clientY) })
       return
     }
-    if (draftShapeRef.current) {
+    if (draftShapeRef.current && draftShapePointerIdRef.current === event.pointerId) {
       const start = draftShapeStartRef.current || { x: draftShapeRef.current.x, y: draftShapeRef.current.y }
       const point = getPoint(event.clientX, event.clientY)
       if (draftShapeRef.current.kind === 'arrow' && surfaceRef.current) {
@@ -960,19 +1008,24 @@ export default function Whiteboard() {
       setDraftShape(next)
       return
     }
-    if (draftStrokeRef.current) {
+    if (draftStrokeRef.current && strokePointerIdRef.current === event.pointerId) {
       const nativeEvent = event.nativeEvent as PointerEvent
       const coalescedEvents = nativeEvent.getCoalescedEvents?.()
       const events = coalescedEvents?.length ? coalescedEvents : [nativeEvent]
       for (const pointerEvent of events) {
-        const point = getPoint(pointerEvent.clientX, pointerEvent.clientY)
+        const point = getInkPoint(pointerEvent)
         const last = draftStrokeRef.current.points[draftStrokeRef.current.points.length - 1]
         if (Math.hypot(point.x - last.x, point.y - last.y) > 0.0008) draftStrokeRef.current.points.push(point)
       }
-      scheduleRender()
+      scheduleDraftRender()
       return
     }
-    if (eraserRef.current?.pointerId === event.pointerId) eraseAt(getPoint(event.clientX, event.clientY))
+    if (eraserRef.current?.pointerId === event.pointerId) {
+      const nativeEvent = event.nativeEvent as PointerEvent
+      const coalescedEvents = nativeEvent.getCoalescedEvents?.()
+      const events = coalescedEvents?.length ? coalescedEvents : [nativeEvent]
+      events.forEach(pointerEvent => eraseAt(getPoint(pointerEvent.clientX, pointerEvent.clientY)))
+    }
   }
 
   const finishPointerAction = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -995,7 +1048,7 @@ export default function Whiteboard() {
         }
       }
     }
-    if (draftShapeRef.current) {
+    if (draftShapeRef.current && draftShapePointerIdRef.current === event.pointerId) {
       let shape = draftShapeRef.current
       const surface = surfaceRef.current
       if (surface) {
@@ -1012,23 +1065,34 @@ export default function Whiteboard() {
         }
       }
       draftShapeRef.current = null
+      draftShapePointerIdRef.current = null
       draftShapeStartRef.current = null
       setDraftShape(null)
       commitBoard(current => ({ ...current, shapes: [...current.shapes, shape] }))
       setSelectedShapeIds([shape.id])
       setTool('select')
     }
-    if (draftStrokeRef.current) {
+    if (draftStrokeRef.current && strokePointerIdRef.current === event.pointerId) {
+      const finalPoint = getInkPoint(event.nativeEvent as PointerEvent)
+      const lastPoint = draftStrokeRef.current.points[draftStrokeRef.current.points.length - 1]
+      if (Math.hypot(finalPoint.x - lastPoint.x, finalPoint.y - lastPoint.y) > 0.0002) {
+        draftStrokeRef.current.points.push(finalPoint)
+      }
       const stroke = draftStrokeRef.current
       draftStrokeRef.current = null
+      strokePointerIdRef.current = null
       commitBoard(current => ({ ...current, strokes: [...current.strokes, stroke] }))
-      scheduleRender()
+      renderDraftCanvas()
     }
     if (eraserRef.current?.pointerId === event.pointerId) {
       const gesture = eraserRef.current
       eraserRef.current = null
       if (gesture.removed.size) pushHistory(gesture.original)
     }
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      try { event.currentTarget.releasePointerCapture(event.pointerId) } catch { /* Already released. */ }
+    }
+    updatePointerCursor(event.nativeEvent as PointerEvent)
   }
 
   const beginTextEdit = useCallback((id: string) => {
@@ -1088,6 +1152,7 @@ export default function Whiteboard() {
       skipNextPersistRef.current = true
       applyBoard(EMPTY_BOARD)
       setHistory([])
+      setFuture([])
       setSelectedShapeIds([])
       editOriginalRef.current.clear()
       moveOriginalRef.current.clear()
@@ -1130,9 +1195,15 @@ export default function Whiteboard() {
         }}
         onPointerDown={handlePointerDown}
         onClick={handleSurfaceClick}
+        onPointerEnter={event => updatePointerCursor(event.nativeEvent as PointerEvent)}
         onPointerMove={handlePointerMove}
         onPointerUp={finishPointerAction}
-        onPointerCancel={finishPointerAction}
+        onPointerCancel={event => { finishPointerAction(event); hidePenCursor() }}
+        onPointerLeave={hidePenCursor}
+        onLostPointerCapture={finishPointerAction}
+        onContextMenu={event => {
+          if ((event.nativeEvent as PointerEvent).pointerType === 'pen') event.preventDefault()
+        }}
       >
         <ShapeLayer
           shapes={draftShape ? [...board.shapes, draftShape] : board.shapes}
@@ -1149,6 +1220,13 @@ export default function Whiteboard() {
           onLabelCommit={commitShapeLabel}
         />
         <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
+        <canvas ref={draftCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
+        <div
+          ref={penCursorRef}
+          className="pointer-events-none absolute left-0 top-0 rounded-full border opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.75)]"
+          style={{ zIndex: 12, willChange: 'transform', transition: 'opacity 80ms ease' }}
+          aria-hidden="true"
+        />
         {selectionRect && (
           <span
             className="pointer-events-none absolute border border-[#4f5e9b] bg-[#e7ecfb]/45"
@@ -1362,13 +1440,16 @@ export default function Whiteboard() {
             <input
               type="range"
               min="2"
-              max="12"
+              max="16"
               step="1"
               value={penWidth}
               onChange={event => setPenWidth(Number(event.target.value))}
               className="h-1 w-14 cursor-pointer accent-[#6d5bd0] sm:w-24"
             />
           </label>
+          <span className="hidden border-l border-[#e4e9ef] pl-3 text-[10px] font-medium text-[#8995a6] lg:inline">
+            Pressão ativa · botão lateral apaga · [ ] ajustam
+          </span>
         </div>
       )}
 
@@ -1401,7 +1482,8 @@ export default function Whiteboard() {
         <ToolButton icon={BoundingBox} label="Formas (F)" active={tool === 'shape'} showLabel onClick={() => { setTool('shape'); setSelectedShapeIds([]); setShapeMenuOpen(true); setMoreMenuOpen(false) }} />
         <ToolButton icon={Eraser} label="Borracha (E)" active={tool === 'eraser'} showLabel onClick={() => { setTool('eraser'); setSelectedShapeIds([]); setShapeMenuOpen(false); setMoreMenuOpen(false) }} />
         <span className="mx-1 h-6 w-px shrink-0 bg-[#e3e8ee]" aria-hidden="true" />
-        <ToolButton icon={ArrowCounterClockwise} label="Desfazer" disabled={!history.length} onClick={undo} />
+          <ToolButton icon={ArrowCounterClockwise} label="Desfazer (Ctrl+Z)" disabled={!history.length} onClick={undo} />
+          <ToolButton icon={ArrowClockwise} label="Refazer (Ctrl+Shift+Z)" disabled={!future.length} onClick={redo} />
         <ToolButton icon={DotsThree} label="Mais ações" active={moreMenuOpen} onClick={() => setMoreMenuOpen(open => !open)} />
       </div>
 

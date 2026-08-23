@@ -1,4 +1,5 @@
 import { Barbell } from '@phosphor-icons/react'
+import type { CSSProperties } from 'react'
 import ExerciseCard from '@/components/ExerciseCard'
 import type { Exercise, PhaseId } from '@/types'
 
@@ -34,7 +35,7 @@ export default function ExerciseList({
       </div>
       <div className="list-surface divide-y divide-line">
         {exercises.map((exercise, index) => (
-          <div key={exercise.id} className="reveal-item" style={{ '--index': index }}>
+          <div key={exercise.id} className="reveal-item" style={{ '--index': index } as CSSProperties}>
             <ExerciseCard
               exercise={exercise}
               phase={phase}
