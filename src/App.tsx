@@ -15,6 +15,7 @@ const Plan = lazy(() => import('@/pages/Plan'))
 const Progress = lazy(() => import('@/pages/Progress'))
 const Guides = lazy(() => import('@/pages/Guides'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const Goals = lazy(() => import('@/pages/Goals'))
 const Whiteboard = lazy(() => import('@/pages/Whiteboard'))
 const DevVisualizer = import.meta.env.DEV ? lazy(() => import('@/pages/DevVisualizer')) : null
 
@@ -65,6 +66,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
             element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} />}
           />
           <Route path="/guias" element={<Guides routineType={settings.routineType} />} />
+          <Route path="/metas" element={<Goals />} />
           <Route
             path="/ajustes"
             element={(

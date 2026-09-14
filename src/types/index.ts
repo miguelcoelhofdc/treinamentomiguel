@@ -220,6 +220,31 @@ export interface ExerciseCheck {
   done: boolean
 }
 
+export interface Sale {
+  id?: number
+  monthKey: string // YYYY-MM
+  date: string // YYYY-MM-DD
+  email: string
+  planAmount: number
+  setupAmount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CommissionTier {
+  id: string
+  upToPercent: number | null
+  commissionPercent: number
+}
+
+export interface MonthlySalesConfig {
+  monthKey: string // YYYY-MM
+  goalAmount: number
+  setupCommissionPercent: number
+  tiers: CommissionTier[]
+  updatedAt: string
+}
+
 export interface TrainingDay {
   status: 'notStarted' | 'active' | 'completed'
   date: string
