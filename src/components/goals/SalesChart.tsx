@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import {
   Bar,
-  BarChart,
   CartesianGrid,
+  ComposedChart,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,27 +23,33 @@ interface TooltipPayload {
   color?: string
 }
 
-function SalesTooltip({ active, payload, label }: {
-  active?: boolean
-  payload?: TooltipPayload[]
-  label?: string
-}) {
-  if (!active || !payload?.length) return null
+const labels: Record<string, string> = {
+  planos: 'Planos no dia',
+  setup: 'Setup no dia',
+  acumulado: 'Planos acumulados',
+}
 
+function SalesTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) {
+  if (!active || !payload?.length) return null
   return (
-    <div className="rounded-[14px] border border-line bg-surface px-3 py-2 shadow-card">
-      <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-ink-muted">Dia {label}</p>
-      {payload.map((item) => (
-        <div key={item.dataKey} className="mt-1.5 flex items-center justify-between gap-5 text-[12px]">
-          <span className="flex items-center gap-1.5 text-ink-muted">
-            <span className="h-2 w-2 rounded-full" style={{ background: item.color }} />
-            {item.dataKey === 'planos' ? 'Planos' : 'Setup'}
-          </span>
-          <span className="font-semibold tabular-nums text-ink">{currencyFormatter.format(item.value ?? 0)}</span>
-        </div>
-      ))}
+    <div className="min-w-[210px] rounded-[10px] border border-[#dce4df] bg-white px-3.5 py-3 shadow-[0_16px_40px_-24px_rgba(24,34,30,0.35)]">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.09em] text-[#748078]">Dia {label}</p>
+      <div className="mt-2 space-y-1.5">
+        {payload.map((item) => (
+          <div key={item.dataKey} className="flex items-center justify-between gap-5 text-[11px]">
+            <span className="flex items-center gap-2 text-[#65736c]"><span className="h-2 w-2 rounded-full" style={{ background: item.color }} />{labels[item.dataKey ?? ''] ?? item.dataKey}</span>
+            <span className="font-semibold tabular-nums text-[#18221e]">{currencyFormatter.format(item.value ?? 0)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
+}
+
+function compactCurrency(value: number) {
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mi`
+  if (Math.abs(value) >= 1_000) return `${(value / 1_000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })} mil`
+  return String(value)
 }
 
 export default function SalesChart({ sales }: Props) {
@@ -55,46 +62,39 @@ export default function SalesChart({ sales }: Props) {
       current.setup += sale.setupAmount
       byDay.set(day, current)
     })
-    return Array.from(byDay.values()).sort((a, b) => a.day.localeCompare(b.day))
+
+    let runningPlanTotal = 0
+    return Array.from(byDay.values())
+      .sort((a, b) => a.day.localeCompare(b.day))
+      .map((entry) => {
+        runningPlanTotal += entry.planos
+        return { ...entry, acumulado: runningPlanTotal }
+      })
   }, [sales])
 
   if (data.length === 0) {
     return (
-      <div className="flex min-h-[220px] flex-col items-start justify-center px-5 py-8 sm:px-8">
-        <span className="icon-tile mb-4" aria-hidden="true">
-          <ChartBar size={22} weight="duotone" />
-        </span>
-        <p className="text-body-md text-ink">O gráfico começa na primeira venda</p>
-        <p className="mt-1 max-w-[34ch] text-[13px] leading-5 text-ink-muted">
-          Os valores de planos e setup serão agrupados por dia neste mês.
-        </p>
+      <div className="flex min-h-[280px] flex-col items-start justify-center px-5 py-8 sm:px-6">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#327355]"><ChartBar size={22} weight="duotone" /></span>
+        <p className="mt-4 text-[15px] font-semibold">O gráfico começa na primeira venda</p>
+        <p className="mt-1 max-w-[38ch] text-[12px] leading-5 text-[#718078]">Planos, setups e o acumulado serão organizados por dia.</p>
       </div>
     )
   }
 
   return (
-    <div className="h-[250px] w-full px-1 pb-1 pt-4 sm:px-3" aria-label="Vendas diárias de planos e setup">
+    <div className="h-[300px] w-full px-1 pb-3 pt-5 sm:px-4" aria-label="Vendas diárias e total acumulado de planos">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 6, right: 4, left: -18, bottom: 0 }} barCategoryGap="24%">
-          <CartesianGrid vertical={false} stroke="hsl(var(--color-line))" strokeDasharray="3 5" />
-          <XAxis
-            dataKey="day"
-            axisLine={false}
-            tickLine={false}
-            tick={{ fill: 'hsl(var(--color-ink-muted))', fontSize: 11, fontWeight: 600 }}
-            dy={8}
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            width={54}
-            tick={{ fill: 'hsl(var(--color-ink-muted))', fontSize: 10, fontWeight: 600 }}
-            tickFormatter={(value: number) => value >= 1000 ? `${Math.round(value / 1000)}k` : String(value)}
-          />
-          <Tooltip content={<SalesTooltip />} cursor={{ fill: 'hsl(var(--color-accent-soft))' }} />
-          <Bar dataKey="planos" name="Planos" stackId="sales" fill="hsl(var(--color-accent))" radius={[0, 0, 4, 4]} />
-          <Bar dataKey="setup" name="Setup" stackId="sales" fill="hsl(var(--color-ink-muted))" radius={[5, 5, 0, 0]} />
-        </BarChart>
+        <ComposedChart data={data} margin={{ top: 8, right: 8, left: -14, bottom: 0 }} barCategoryGap="28%">
+          <CartesianGrid vertical={false} stroke="#e5eae7" strokeDasharray="3 5" />
+          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#748078', fontSize: 10, fontWeight: 600 }} dy={8} />
+          <YAxis yAxisId="daily" axisLine={false} tickLine={false} width={58} tick={{ fill: '#849088', fontSize: 9, fontWeight: 600 }} tickFormatter={compactCurrency} />
+          <YAxis yAxisId="total" orientation="right" axisLine={false} tickLine={false} width={54} tick={{ fill: '#849088', fontSize: 9, fontWeight: 600 }} tickFormatter={compactCurrency} />
+          <Tooltip content={<SalesTooltip />} cursor={{ fill: '#f1f5f2' }} />
+          <Bar yAxisId="daily" dataKey="planos" name="Planos" stackId="sales" fill="#327355" radius={[0, 0, 4, 4]} />
+          <Bar yAxisId="daily" dataKey="setup" name="Setup" stackId="sales" fill="#a9b8b0" radius={[5, 5, 0, 0]} />
+          <Line yAxisId="total" type="monotone" dataKey="acumulado" name="Acumulado" stroke="#1d2924" strokeWidth={2.5} dot={{ r: 3, fill: '#ffffff', stroke: '#1d2924', strokeWidth: 2 }} activeDot={{ r: 5 }} />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   )

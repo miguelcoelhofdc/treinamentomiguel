@@ -1,31 +1,37 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ArrowClockwise,
   CaretLeft,
   CaretRight,
+  ChartBar,
   CurrencyDollar,
+  Database,
   GearSix,
   NotePencil,
   Plus,
   Receipt,
+  SlidersHorizontal,
+  SquaresFour,
   Target,
   Trash,
   TrendUp,
   WarningCircle,
   X,
+  type Icon,
 } from '@phosphor-icons/react'
 import CommissionSettingsForm from '@/components/goals/CommissionSettingsForm'
 import SaleForm from '@/components/goals/SaleForm'
 import SalesChart from '@/components/goals/SalesChart'
-import PageHeader from '@/components/ui/PageHeader'
 import {
   deleteSale,
   getMonthlySalesConfig,
   getSalesForMonth,
+  initializeGoalsDatabase,
+  isGoalsRemoteStorageAvailable,
   saveMonthlySalesConfig,
   saveSale,
-} from '@/db'
+} from '@/db/goals'
 import {
   calculateSalesSummary,
   currencyFormatter,
@@ -37,42 +43,106 @@ import {
 } from '@/lib/sales'
 import type { MonthlySalesConfig, Sale } from '@/types'
 
-const revealStyle = (index: number) => ({ '--index': index } as CSSProperties)
+type SectionId = 'overview' | 'sales' | 'settings'
+
+const navigation: { id: SectionId; label: string; icon: Icon }[] = [
+  { id: 'overview', label: 'Visão geral', icon: SquaresFour },
+  { id: 'sales', label: 'Vendas', icon: Receipt },
+  { id: 'settings', label: 'Configurações', icon: SlidersHorizontal },
+]
 
 function formatDate(date: string) {
-  const [, month, day] = date.split('-')
-  return day && month ? `${day}/${month}` : date
+  const [year, month, day] = date.split('-')
+  return day && month && year ? `${day}/${month}/${year}` : date
 }
 
 function GoalsLoading() {
   return (
-    <div className="page-content" aria-label="Carregando metas" aria-busy="true">
-      <PageHeader eyebrow="Vendas mensais" title="Metas" description="Organizando seus resultados do mês." />
-      <div className="space-y-5">
-        <div className="skeleton h-12 w-full rounded-[16px]" />
-        <div className="skeleton h-72 w-full rounded-[28px]" />
-        <div className="grid grid-cols-2 gap-4 border-y border-line py-5">
-          <div className="skeleton h-14" />
-          <div className="skeleton h-14" />
+    <main className="min-h-[100dvh] bg-[#f6f7f6] font-sans text-[#18221e]" aria-label="Carregando painel de metas" aria-busy="true">
+      <div className="hidden h-[100dvh] w-[216px] border-r border-[#e2e7e4] bg-[#fbfcfb] lg:fixed lg:inset-y-0 lg:left-0 lg:block" />
+      <div className="mx-auto max-w-[1320px] px-4 py-6 sm:px-6 lg:ml-[216px] lg:px-8 lg:py-8">
+        <div className="animate-pulse space-y-5">
+          <div className="h-11 w-60 rounded-xl bg-[#e3e8e5]" />
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)]">
+            <div className="h-64 rounded-2xl bg-white" />
+            <div className="h-64 rounded-2xl bg-white" />
+          </div>
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr)_minmax(310px,0.65fr)]">
+            <div className="h-80 rounded-2xl bg-white" />
+            <div className="h-80 rounded-2xl bg-white" />
+          </div>
         </div>
-        <div className="skeleton h-64 w-full rounded-[22px]" />
       </div>
-    </div>
+    </main>
   )
 }
 
-function Metric({ label, value, detail, icon: Icon }: {
-  label: string
-  value: string
-  detail?: string
-  icon: typeof Receipt
+function Sidebar({ active, onNavigate, synced }: {
+  active: SectionId
+  onNavigate: (section: SectionId) => void
+  synced: boolean
 }) {
   return (
-    <div className="min-w-0 p-4 sm:p-5">
-      <Icon size={19} weight="duotone" className="mb-3 text-accent" aria-hidden="true" />
-      <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-ink-muted">{label}</p>
-      <p className="metric-number mt-1.5 break-words text-[22px] leading-tight text-ink">{value}</p>
-      {detail && <p className="mt-1 text-[11px] leading-4 text-ink-muted">{detail}</p>}
+    <aside className="fixed inset-y-0 left-0 hidden w-[216px] flex-col border-r border-[#e2e7e4] bg-[#fbfcfb] px-3 py-5 text-[#18221e] lg:flex" aria-label="Navegação do painel de metas">
+      <div className="flex items-center gap-3 px-2.5">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e5f1e9] text-[#246348]">
+          <Target size={21} weight="duotone" />
+        </span>
+        <div>
+          <p className="text-[16px] font-semibold tracking-[-0.02em]">Metas</p>
+          <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#819087]">Painel comercial</p>
+        </div>
+      </div>
+
+      <nav className="mt-8 space-y-1">
+        {navigation.map(({ id, label, icon: IconComponent }) => {
+          const isActive = active === id
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onNavigate(id)}
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold transition-colors active:scale-[0.99] ${
+                isActive ? 'bg-[#e8f1eb] text-[#1f5d43]' : 'text-[#66736c] hover:bg-[#f0f3f1] hover:text-[#26322d]'
+              }`}
+            >
+              <IconComponent size={18} weight={isActive ? 'fill' : 'regular'} />
+              {label}
+            </button>
+          )
+        })}
+      </nav>
+
+      <div className="mt-auto rounded-xl border border-[#e2e7e4] bg-[#f6f8f6] p-3.5">
+        <div className="flex items-center gap-2 text-[#536159]">
+          <Database size={17} weight="duotone" />
+          <span className="text-[12px] font-semibold">{synced ? 'Sincronização ativa' : 'Cache local'}</span>
+        </div>
+        <p className="mt-2 text-[11px] leading-4 text-[#7b8780]">
+          {synced
+            ? 'Dados disponíveis em qualquer navegador.'
+            : 'O armazenamento central está indisponível.'}
+        </p>
+      </div>
+    </aside>
+  )
+}
+
+function CompactMetric({ label, value, icon: IconComponent, tone = 'light' }: {
+  label: string
+  value: string
+  icon: Icon
+  tone?: 'light' | 'dark'
+}) {
+  const dark = tone === 'dark'
+  return (
+    <div className={`p-5 text-[#18221e] sm:px-6 ${dark ? 'bg-[#f3f7f4]' : 'bg-white'}`}>
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-[11px] font-semibold text-[#6d7972]">{label}</p>
+        <IconComponent size={18} weight="duotone" className="text-[#327355]" />
+      </div>
+      <p className={`mt-2 break-words text-[23px] font-semibold leading-none tracking-[-0.035em] tabular-nums ${dark ? 'text-[#1f5d43]' : ''}`}>{value}</p>
     </div>
   )
 }
@@ -83,24 +153,71 @@ export default function Goals() {
   const [config, setConfig] = useState<MonthlySalesConfig | undefined>()
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [formSale, setFormSale] = useState<Sale | null | undefined>(undefined)
   const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null)
   const [showSettings, setShowSettings] = useState(false)
-  const [actionError, setActionError] = useState<string | null>(null)
+  const [activeSection, setActiveSection] = useState<SectionId>('overview')
+  const [remoteStorageActive, setRemoteStorageActive] = useState(false)
+
+  useEffect(() => {
+    const previousTitle = document.title
+    const hadDarkTheme = document.documentElement.classList.contains('dark')
+    const previousBackground = document.body.style.background
+    document.title = 'Metas | Painel comercial'
+    document.documentElement.classList.remove('dark')
+    document.body.style.background = '#f6f7f6'
+
+    return () => {
+      document.title = previousTitle
+      document.body.style.background = previousBackground
+      if (hadDarkTheme) document.documentElement.classList.add('dark')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!showSettings && !saleToDelete) return
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (saleToDelete) setSaleToDelete(null)
+      else setShowSettings(false)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [saleToDelete, showSettings])
+
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-goals-section]'))
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+      const id = visible?.target.getAttribute('data-goals-section')
+      if (id === 'overview' || id === 'sales') setActiveSection(id)
+    }, { rootMargin: '-16% 0px -62% 0px', threshold: [0.05, 0.25, 0.5] })
+
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [loading])
 
   const loadMonth = useCallback(async (selectedMonth: string, showSkeleton = false) => {
     if (showSkeleton) setLoading(true)
     setLoadError(null)
     setActionError(null)
-
     try {
+      await initializeGoalsDatabase()
+      setRemoteStorageActive(isGoalsRemoteStorageAvailable())
       const [monthSales, monthConfig] = await Promise.all([
         getSalesForMonth(selectedMonth),
         getMonthlySalesConfig(selectedMonth),
       ])
       setSales(monthSales)
       setConfig(monthConfig)
-      setShowSettings(!monthConfig)
     } catch {
       setLoadError('Não foi possível carregar os dados deste mês.')
     } finally {
@@ -113,10 +230,19 @@ export default function Goals() {
   }, [loadMonth, monthKey])
 
   const summary = useMemo(() => calculateSalesSummary(sales, config), [sales, config])
-  const progressWidth = `${Math.min(100, Math.max(0, summary.attainmentPercent))}%`
+  const progressScale = Math.min(1, Math.max(0, summary.attainmentPercent / 100))
   const currentTierCopy = summary.currentTier && config
     ? tierLabel(summary.currentTier, config.tiers)
-    : 'Nenhuma faixa configurada'
+    : 'Configure as faixas para calcular a comissão dos planos.'
+
+  const handleNavigate = (section: SectionId) => {
+    if (section === 'settings') {
+      setShowSettings(true)
+      return
+    }
+    setActiveSection(section)
+    document.querySelector(`[data-goals-section="${section}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const handleSaleSave = async (sale: Sale) => {
     await saveSale(sale)
@@ -145,255 +271,205 @@ export default function Goals() {
 
   if (loading) return <GoalsLoading />
 
+  const displayedSection = showSettings ? 'settings' : activeSection
+
   return (
-    <div className="page-content page-enter">
-      <PageHeader
-        eyebrow="Vendas mensais"
-        title="Metas"
-        description="Acompanhe vendas e comissões mês a mês."
-        action={(
-          <span className="icon-tile" aria-hidden="true">
-            <Target size={23} weight="duotone" />
-          </span>
-        )}
-      />
+    <main className="goals-shell min-h-[100dvh] bg-[#f6f7f6] font-sans text-[#18221e]" style={{ colorScheme: 'light' }}>
+      <Sidebar active={displayedSection} onNavigate={handleNavigate} synced={remoteStorageActive} />
 
-      <section className="reveal-item mb-5" style={revealStyle(0)} aria-label="Selecionar período">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-[18px] border border-line/90 bg-surface p-1.5 shadow-card">
-          <button type="button" className="btn-icon" aria-label="Mês anterior" onClick={() => setMonthKey(shiftMonth(monthKey, -1))}>
-            <CaretLeft size={20} weight="bold" />
-          </button>
-          <label className="relative min-w-0 cursor-pointer rounded-[13px] px-2 py-2 text-center hover:bg-surface-raised">
-            <span className="block truncate text-[15px] font-semibold text-ink">{formatMonth(monthKey)}</span>
-            <span className="mt-0.5 block text-[10px] font-bold uppercase tracking-[0.13em] text-ink-muted">Alterar mês</span>
-            <input type="month" value={monthKey} onChange={(event) => event.target.value && setMonthKey(event.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label="Selecionar mês e ano" />
-          </label>
-          <button type="button" className="btn-icon" aria-label="Próximo mês" onClick={() => setMonthKey(shiftMonth(monthKey, 1))}>
-            <CaretRight size={20} weight="bold" />
-          </button>
-        </div>
-      </section>
-
-      {loadError && (
-        <div className="mb-5 flex items-start gap-3 rounded-[18px] border border-red-200 bg-red-50 p-4 text-red-900 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200" role="alert">
-          <WarningCircle size={21} weight="duotone" className="mt-0.5 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-semibold">Dados indisponíveis</p>
-            <p className="mt-1 text-[13px] leading-5 opacity-80">{loadError}</p>
-          </div>
-          <button type="button" onClick={() => void loadMonth(monthKey, true)} className="btn-icon -mr-2 -mt-2" aria-label="Tentar novamente">
-            <ArrowClockwise size={19} weight="bold" />
-          </button>
-        </div>
-      )}
-
-      {actionError && (
-        <p className="mb-5 rounded-[16px] border border-red-200 bg-red-50 p-3.5 text-[13px] font-medium text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200" role="alert">
-          {actionError}
-        </p>
-      )}
-
-      <section className="hero-surface reveal-item p-5 sm:p-6" style={revealStyle(1)} aria-labelledby="monthly-result-title">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full border border-white/10" />
-        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full border border-white/10" />
-
-        <div className="relative grid grid-cols-1 gap-7 sm:grid-cols-[1.25fr_0.75fr] sm:items-end">
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-white/55">Total vendido em planos</p>
-            <h2 id="monthly-result-title" className="mt-3 break-words text-[38px] font-semibold leading-none tracking-[-0.05em] text-white tabular-nums sm:text-[44px]">
-              {currencyFormatter.format(summary.planTotal)}
-            </h2>
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-white transition-transform duration-500" style={{ width: progressWidth }} />
-            </div>
-            <div className="mt-2.5 flex items-center justify-between gap-3 text-[12px] font-semibold">
-              <span className="text-white/75">{percentFormatter.format(summary.attainmentPercent)}% da meta</span>
-              <span className="text-white/45">Meta {summary.goalAmount > 0 ? currencyFormatter.format(summary.goalAmount) : 'não definida'}</span>
+      <div className="min-h-[100dvh] lg:ml-[216px]">
+        <div className="mx-auto max-w-[1320px] px-4 pb-12 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-14 lg:pt-8">
+          <div className="mb-6 flex items-center gap-3 lg:hidden">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e5f1e9] text-[#246348]">
+              <Target size={21} weight="duotone" />
+            </span>
+            <div>
+              <p className="text-[16px] font-semibold tracking-[-0.02em]">Metas</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7b8780]">Painel comercial</p>
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-5 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/45">Comissão prevista total</p>
-            <p className="mt-2 text-[27px] font-semibold leading-none tracking-[-0.04em] text-white tabular-nums">
-              {currencyFormatter.format(summary.totalCommission)}
-            </p>
-            <p className="mt-3 text-[12px] leading-4 text-white/55">{currentTierCopy}</p>
-          </div>
-        </div>
+          <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#748078]">Visão geral</p>
+              <h1 className="mt-1.5 text-[30px] font-semibold leading-tight tracking-[-0.035em] sm:text-[34px]">Resultado mensal</h1>
+              <p className="mt-1.5 text-[14px] leading-5 text-[#6d7972]">Acompanhe vendas, atingimento e comissão prevista.</p>
+            </div>
 
-        <div className="relative mt-6 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 pt-4">
-          <div className="pr-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">Falta para a meta</p>
-            <p className="mt-1 text-[16px] font-semibold text-white tabular-nums">
-              {summary.goalAmount > 0 ? currencyFormatter.format(summary.remainingAmount) : '—'}
-            </p>
-          </div>
-          <div className="pl-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">Vendas registradas</p>
-            <p className="mt-1 text-[16px] font-semibold text-white tabular-nums">{sales.length}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="reveal-item mt-6 overflow-hidden rounded-[22px] border border-line/90 bg-surface" style={revealStyle(2)} aria-label="Resumo financeiro">
-        <div className="grid grid-cols-2 divide-x divide-line border-b border-line">
-          <Metric label="Setup vendido" value={currencyFormatter.format(summary.setupTotal)} icon={Receipt} />
-          <Metric label="Faturamento total" value={currencyFormatter.format(summary.revenueTotal)} icon={CurrencyDollar} />
-        </div>
-        <div className="grid grid-cols-2 divide-x divide-line">
-          <Metric
-            label="Comissão planos"
-            value={currencyFormatter.format(summary.planCommission)}
-            detail={`${percentFormatter.format(summary.planCommissionPercent)}% da faixa atual`}
-            icon={TrendUp}
-          />
-          <Metric
-            label="Comissão setups"
-            value={currencyFormatter.format(summary.setupCommission)}
-            detail={`${percentFormatter.format(summary.setupCommissionPercent)}% sobre setups`}
-            icon={Receipt}
-          />
-        </div>
-      </section>
-
-      <section className="reveal-item mt-8" style={revealStyle(3)} aria-labelledby="sales-chart-title">
-        <div className="section-heading">
-          <div>
-            <h2 id="sales-chart-title">Evolução das vendas</h2>
-            <p>Planos e setups agrupados por dia.</p>
-          </div>
-          <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.09em] text-ink-muted" aria-hidden="true">
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-accent" />Planos</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-ink-muted" />Setup</span>
-          </div>
-        </div>
-        <div className="mt-4 overflow-hidden rounded-[22px] border border-line/85 bg-surface">
-          <SalesChart sales={sales} />
-        </div>
-      </section>
-
-      <section className="reveal-item mt-9" style={revealStyle(4)} aria-labelledby="sales-list-title">
-        <div className="section-heading mb-4">
-          <div>
-            <h2 id="sales-list-title">Vendas do mês</h2>
-            <p>{sales.length === 0 ? 'Nenhum registro até agora.' : `${sales.length} ${sales.length === 1 ? 'venda registrada' : 'vendas registradas'}.`}</p>
-          </div>
-          <button type="button" onClick={() => setFormSale(null)} className="btn-primary shrink-0 px-4">
-            <Plus size={18} weight="bold" />
-            <span className="hidden xs:inline">Nova venda</span>
-            <span className="xs:hidden">Nova</span>
-          </button>
-        </div>
-
-        {sales.length === 0 ? (
-          <div className="list-surface flex min-h-[190px] flex-col items-start justify-center p-5 sm:p-7">
-            <span className="icon-tile mb-4" aria-hidden="true"><Receipt size={22} weight="duotone" /></span>
-            <p className="text-body-md text-ink">Cadastre a primeira venda de {formatMonth(monthKey)}</p>
-            <p className="mt-1 max-w-[38ch] text-[13px] leading-5 text-ink-muted">Você só precisa informar data, e-mail e os valores de plano e setup.</p>
-          </div>
-        ) : (
-          <div className="list-surface overflow-x-auto">
-            <table className="w-full min-w-[42rem] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-line bg-surface-raised/70 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-muted">
-                  <th className="px-4 py-3.5 sm:px-5">Data</th>
-                  <th className="px-4 py-3.5">E-mail</th>
-                  <th className="px-4 py-3.5 text-right">Plano</th>
-                  <th className="px-4 py-3.5 text-right">Setup</th>
-                  <th className="px-4 py-3.5 text-right sm:px-5">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line/80">
-                {sales.map((sale) => (
-                  <tr key={sale.id} className="transition-colors hover:bg-surface-raised/55">
-                    <td className="whitespace-nowrap px-4 py-4 text-[13px] font-semibold tabular-nums text-ink-soft sm:px-5">{formatDate(sale.date)}</td>
-                    <td className="max-w-[15rem] truncate px-4 py-4 text-[13px] font-medium text-ink">{sale.email}</td>
-                    <td className="whitespace-nowrap px-4 py-4 text-right text-[13px] font-semibold tabular-nums text-ink">{currencyFormatter.format(sale.planAmount)}</td>
-                    <td className="whitespace-nowrap px-4 py-4 text-right text-[13px] font-semibold tabular-nums text-ink-soft">{currencyFormatter.format(sale.setupAmount)}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right sm:px-5">
-                      <button type="button" className="btn-icon h-9 w-9" aria-label={`Editar venda de ${sale.email}`} onClick={() => setFormSale(sale)}>
-                        <NotePencil size={17} weight="bold" />
-                      </button>
-                      <button type="button" className="btn-icon h-9 w-9 text-red-600 dark:text-red-300" aria-label={`Excluir venda de ${sale.email}`} onClick={() => setSaleToDelete(sale)}>
-                        <Trash size={17} weight="bold" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <section className="reveal-item mt-9" style={revealStyle(5)} aria-labelledby="commission-settings-title">
-        <div className="section-heading mb-4">
-          <div>
-            <h2 id="commission-settings-title">Configuração do mês</h2>
-            <p>Meta, faixas dos planos e percentual de setup.</p>
-          </div>
-          <button type="button" onClick={() => setShowSettings((visible) => !visible)} className="btn-ghost -mr-2 shrink-0 text-accent-strong" aria-expanded={showSettings} aria-controls="commission-settings-form">
-            {showSettings ? <X size={17} weight="bold" /> : <GearSix size={17} weight="bold" />}
-            {showSettings ? 'Fechar' : 'Editar'}
-          </button>
-        </div>
-
-        {showSettings ? (
-          <div id="commission-settings-form">
-            <CommissionSettingsForm monthKey={monthKey} config={config} onSave={handleConfigSave} />
-          </div>
-        ) : (
-          <div className="list-surface divide-y divide-line/80">
-            <div className="grid grid-cols-2 divide-x divide-line/80">
-              <div className="p-4 sm:p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">Meta de planos</p>
-                <p className="metric-number mt-1.5 text-[20px]">{currencyFormatter.format(summary.goalAmount)}</p>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <div className="col-span-2 grid min-w-[230px] grid-cols-[42px_minmax(0,1fr)_42px] items-center rounded-[10px] border border-[#dce3df] bg-white p-0.5 sm:col-span-1">
+                <button type="button" onClick={() => setMonthKey(shiftMonth(monthKey, -1))} className="flex h-10 items-center justify-center rounded-lg text-[#748078] transition-colors hover:bg-[#f1f4f2] active:scale-[0.98]" aria-label="Mês anterior">
+                  <CaretLeft size={18} weight="bold" />
+                </button>
+                <label className="relative min-w-0 cursor-pointer text-center">
+                  <span className="block truncate text-[13px] font-semibold">{formatMonth(monthKey)}</span>
+                  <input type="month" value={monthKey} onChange={(event) => event.target.value && setMonthKey(event.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label="Selecionar mês e ano" />
+                </label>
+                <button type="button" onClick={() => setMonthKey(shiftMonth(monthKey, 1))} className="flex h-10 items-center justify-center rounded-lg text-[#748078] transition-colors hover:bg-[#f1f4f2] active:scale-[0.98]" aria-label="Próximo mês">
+                  <CaretRight size={18} weight="bold" />
+                </button>
               </div>
-              <div className="p-4 sm:p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">Comissão setup</p>
-                <p className="metric-number mt-1.5 text-[20px]">{percentFormatter.format(summary.setupCommissionPercent)}%</p>
-              </div>
+              <button type="button" onClick={() => setShowSettings(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#dce3df] bg-white px-4 text-[13px] font-semibold transition-colors hover:bg-[#f1f4f2] active:scale-[0.99]">
+                <GearSix size={18} weight="bold" />
+                Configurar mês
+              </button>
+              <button type="button" onClick={() => setFormSale(null)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99]">
+                <Plus size={18} weight="bold" />
+                Nova venda
+              </button>
             </div>
-            <div className="p-4 sm:p-5">
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">Faixas dos planos</p>
-              <div className="space-y-2">
-                {config?.tiers.map((tier) => (
-                  <div key={tier.id} className={`flex items-center justify-between gap-4 rounded-[14px] px-3.5 py-3 ${summary.currentTier?.id === tier.id ? 'bg-accent-soft text-accent-strong' : 'bg-surface-raised text-ink-soft'}`}>
-                    <span className="text-[12px] font-semibold">{tierLabel(tier, config.tiers)}</span>
-                    {summary.currentTier?.id === tier.id && <span className="badge-fase shrink-0">Atual</span>}
+          </header>
+
+          {loadError && (
+            <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#e5bdb7] bg-[#fff2f0] p-4 text-[#8e3e34]" role="alert">
+              <WarningCircle size={21} weight="duotone" className="mt-0.5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-semibold">Dados indisponíveis</p>
+                <p className="mt-1 text-[13px] leading-5 opacity-80">{loadError}</p>
+              </div>
+              <button type="button" onClick={() => void loadMonth(monthKey, true)} className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-[#f7ded9]" aria-label="Tentar novamente">
+                <ArrowClockwise size={18} weight="bold" />
+              </button>
+            </div>
+          )}
+
+          {actionError && <p className="mt-5 rounded-xl border border-[#e5bdb7] bg-[#fff2f0] p-3.5 text-[13px] font-medium text-[#8e3e34]" role="alert">{actionError}</p>}
+
+          <section id="overview" data-goals-section="overview" className="scroll-mt-8 pt-6" aria-labelledby="overview-title">
+            <h2 id="overview-title" className="sr-only">Visão geral do mês</h2>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(290px,0.72fr)]">
+              <div className="overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white p-5 sm:p-6">
+                <div>
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="text-[11px] font-semibold text-[#6d7972]">Vendas de planos</p>
+                      <p className="mt-2.5 break-words text-[36px] font-semibold leading-none tracking-[-0.045em] tabular-nums sm:text-[42px]">{currencyFormatter.format(summary.planTotal)}</p>
+                      <p className="mt-2 text-[13px] text-[#718078]">de {summary.goalAmount > 0 ? currencyFormatter.format(summary.goalAmount) : 'uma meta ainda não definida'}</p>
+                    </div>
+                    <span className="inline-flex min-h-8 items-center rounded-lg border border-[#d5e7dc] bg-[#edf5f0] px-2.5 text-[12px] font-semibold text-[#246348]">{percentFormatter.format(summary.attainmentPercent)}%</span>
                   </div>
-                ))}
+
+                  <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#e8edea]">
+                    <div className="h-full origin-left rounded-full bg-[#327355] transition-transform duration-500" style={{ transform: `scaleX(${progressScale})` }} />
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-3 divide-x divide-[#e1e7e3] border-t border-[#e1e7e3] pt-4">
+                    <div className="pr-3 sm:pr-4"><p className="text-[10px] font-semibold leading-4 text-[#7a8780] sm:text-[11px]">Meta mensal</p><p className="mt-1.5 break-words text-[15px] font-semibold tracking-[-0.02em] tabular-nums sm:text-[17px]">{summary.goalAmount > 0 ? currencyFormatter.format(summary.goalAmount) : '—'}</p></div>
+                    <div className="px-3 sm:px-4"><p className="text-[10px] font-semibold leading-4 text-[#7a8780] sm:text-[11px]">Falta alcançar</p><p className="mt-1.5 break-words text-[15px] font-semibold tracking-[-0.02em] tabular-nums sm:text-[17px]">{summary.goalAmount > 0 ? currencyFormatter.format(summary.remainingAmount) : '—'}</p></div>
+                    <div className="pl-3 sm:pl-4"><p className="text-[10px] font-semibold leading-4 text-[#7a8780] sm:text-[11px]">Vendas registradas</p><p className="mt-1.5 text-[15px] font-semibold tracking-[-0.02em] tabular-nums sm:text-[17px]">{sales.length}</p></div>
+                  </div>
+
+                  {!config && (
+                    <button type="button" onClick={() => setShowSettings(true)} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-[#eef4f0] px-3.5 text-[12px] font-semibold text-[#246348] transition-colors hover:bg-[#dfece4] active:scale-[0.99]">
+                      <SlidersHorizontal size={16} weight="bold" />Definir meta e comissões
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="divide-y divide-[#e2e7e4] overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
+                <CompactMetric label="Comissão prevista" value={currencyFormatter.format(summary.totalCommission)} icon={TrendUp} tone="dark" />
+                <CompactMetric label="Setup vendido" value={currencyFormatter.format(summary.setupTotal)} icon={Receipt} />
+                <CompactMetric label="Faturamento total" value={currencyFormatter.format(summary.revenueTotal)} icon={CurrencyDollar} />
               </div>
             </div>
-          </div>
-        )}
-      </section>
 
-      {formSale !== undefined && (
-        <SaleForm monthKey={monthKey} sale={formSale ?? undefined} onCancel={() => setFormSale(undefined)} onSave={handleSaleSave} />
-      )}
+            <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.48fr)_minmax(310px,0.62fr)]">
+              <div className="overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
+                <div className="flex flex-col gap-3 border-b border-[#e4e9e6] px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+                  <div><p className="text-[11px] font-semibold text-[#78867e]">Desempenho diário</p><h3 className="mt-1 text-[19px] font-semibold tracking-[-0.02em]">Evolução das vendas</h3></div>
+                  <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#7a8780]" aria-hidden="true">
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#327355]" />Planos</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#a9b8b0]" />Setup</span>
+                    <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 bg-[#1d2924]" />Acumulado</span>
+                  </div>
+                </div>
+                <SalesChart sales={sales} />
+              </div>
+
+              <div className="rounded-2xl border border-[#dfe4e1] bg-white p-5 sm:p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div><p className="text-[11px] font-semibold text-[#78867e]">Comissões</p><h3 className="mt-1 text-[19px] font-semibold tracking-[-0.02em]">Previsão do mês</h3></div>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[#e8f2ec] text-[#327355]"><ChartBar size={19} weight="duotone" /></span>
+                </div>
+                <div className="mt-5 rounded-xl border border-[#dce9e1] bg-[#f3f7f4] p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.09em] text-[#5f786a]">Faixa atual</p><p className="mt-1.5 text-[13px] font-medium leading-5 text-[#244c38]">{currentTierCopy}</p></div>
+                <dl className="mt-4 divide-y divide-[#e5eae7]">
+                  <div className="flex items-end justify-between gap-4 py-4"><dt><p className="text-[13px] font-semibold">Planos</p><p className="mt-1 text-[11px] text-[#7a8780]">{percentFormatter.format(summary.planCommissionPercent)}% da faixa</p></dt><dd className="text-[17px] font-semibold tracking-[-0.02em] tabular-nums">{currencyFormatter.format(summary.planCommission)}</dd></div>
+                  <div className="flex items-end justify-between gap-4 py-4"><dt><p className="text-[13px] font-semibold">Setups</p><p className="mt-1 text-[11px] text-[#7a8780]">{percentFormatter.format(summary.setupCommissionPercent)}% fixo</p></dt><dd className="text-[17px] font-semibold tracking-[-0.02em] tabular-nums">{currencyFormatter.format(summary.setupCommission)}</dd></div>
+                </dl>
+                <div className="mt-1 flex items-end justify-between gap-4 border-t-2 border-[#1d2924] pt-5"><p className="text-[12px] font-bold uppercase tracking-[0.12em]">Total previsto</p><p className="text-[22px] font-semibold tracking-[-0.035em] tabular-nums">{currencyFormatter.format(summary.totalCommission)}</p></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="sales" data-goals-section="sales" className="scroll-mt-8 pt-9" aria-labelledby="sales-title">
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <div><p className="text-[11px] font-semibold text-[#78867e]">Registros</p><h2 id="sales-title" className="mt-1 text-[23px] font-semibold tracking-[-0.025em]">Vendas do mês</h2><p className="mt-1 text-[13px] text-[#718078]">{sales.length === 0 ? 'Nenhuma venda cadastrada.' : `${sales.length} ${sales.length === 1 ? 'venda cadastrada' : 'vendas cadastradas'}.`}</p></div>
+              <button type="button" onClick={() => setFormSale(null)} className="hidden min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] sm:inline-flex"><Plus size={17} weight="bold" />Nova venda</button>
+            </div>
+
+            {sales.length === 0 ? (
+              <div className="flex min-h-[220px] flex-col items-start justify-center rounded-2xl border border-dashed border-[#cbd7d0] bg-white p-6">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#327355]"><Receipt size={22} weight="duotone" /></span>
+                <p className="mt-4 text-[16px] font-semibold">Comece pela primeira venda de {formatMonth(monthKey)}</p>
+                <p className="mt-1 max-w-[42ch] text-[13px] leading-5 text-[#718078]">Registre data, e-mail e os valores de plano e setup para alimentar o painel.</p>
+                <button type="button" onClick={() => setFormSale(null)} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white active:scale-[0.99]"><Plus size={17} weight="bold" />Cadastrar venda</button>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="w-full min-w-[720px] border-collapse text-left">
+                    <thead><tr className="border-b border-[#e1e7e3] bg-[#f7f9f7] text-[10px] font-bold uppercase tracking-[0.13em] text-[#748078]"><th className="px-5 py-4">Data</th><th className="px-5 py-4">Cliente</th><th className="px-5 py-4 text-right">Plano</th><th className="px-5 py-4 text-right">Setup</th><th className="px-5 py-4 text-right">Ações</th></tr></thead>
+                    <tbody className="divide-y divide-[#e7ebe8]">
+                      {sales.map((sale) => (
+                        <tr key={sale.id} className="transition-colors hover:bg-[#f7f9f7]">
+                          <td className="whitespace-nowrap px-5 py-4 text-[13px] font-semibold tabular-nums text-[#65736c]">{formatDate(sale.date)}</td>
+                          <td className="max-w-[280px] truncate px-5 py-4 text-[13px] font-semibold">{sale.email}</td>
+                          <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-semibold tabular-nums">{currencyFormatter.format(sale.planAmount)}</td>
+                          <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-medium tabular-nums text-[#65736c]">{currencyFormatter.format(sale.setupAmount)}</td>
+                          <td className="whitespace-nowrap px-5 py-3 text-right"><button type="button" onClick={() => setFormSale(sale)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#627168] transition-colors hover:bg-[#edf2ef]" aria-label={`Editar venda de ${sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43] transition-colors hover:bg-[#fff0ed]" aria-label={`Excluir venda de ${sale.email}`}><Trash size={17} weight="bold" /></button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="divide-y divide-[#e4e9e6] md:hidden">
+                  {sales.map((sale) => (
+                    <article key={sale.id} className="p-4">
+                      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-[14px] font-semibold">{sale.email}</p><p className="mt-1 text-[11px] font-medium tabular-nums text-[#748078]">{formatDate(sale.date)}</p></div><div className="flex shrink-0"><button type="button" onClick={() => setFormSale(sale)} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#627168]" aria-label={`Editar venda de ${sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43]" aria-label={`Excluir venda de ${sale.email}`}><Trash size={17} weight="bold" /></button></div></div>
+                      <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#f4f7f5] p-3"><div><p className="text-[10px] font-semibold text-[#7a8780]">Plano</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(sale.planAmount)}</p></div><div><p className="text-[10px] font-semibold text-[#7a8780]">Setup</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(sale.setupAmount)}</p></div></div>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      {showSettings && createPortal((
+        <div className="fixed inset-0" style={{ zIndex: 60 }}>
+          <button type="button" className="absolute inset-0 bg-[#18221e]/42" onClick={() => setShowSettings(false)} aria-label="Fechar configurações" />
+          <aside className="goals-drawer absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl bg-[#f8faf8] shadow-[-18px_0_60px_-32px_rgba(24,34,30,0.48)] md:inset-y-0 md:left-auto md:right-0 md:h-[100dvh] md:max-h-none md:w-[460px] md:rounded-none" role="dialog" aria-modal="true" aria-labelledby="goals-settings-title">
+            <div className="flex items-start justify-between gap-4 border-b border-[#dfe6e1] bg-white px-5 py-5 sm:px-6"><div><p className="text-[11px] font-semibold text-[#748078]">{formatMonth(monthKey)}</p><h2 id="goals-settings-title" className="mt-1 text-[22px] font-semibold tracking-[-0.025em]">Configuração do mês</h2></div><button type="button" onClick={() => setShowSettings(false)} className="flex h-10 w-10 items-center justify-center rounded-[10px] text-[#65736c] transition-colors hover:bg-[#edf2ef] active:scale-[0.98]" aria-label="Fechar"><X size={20} weight="bold" /></button></div>
+            <div className="min-h-0 flex-1 overflow-y-auto"><CommissionSettingsForm monthKey={monthKey} config={config} onSave={handleConfigSave} /></div>
+          </aside>
+        </div>
+      ), document.body)}
+
+      {formSale !== undefined && <SaleForm monthKey={monthKey} sale={formSale ?? undefined} onCancel={() => setFormSale(undefined)} onSave={handleSaleSave} />}
 
       {saleToDelete && createPortal((
-        <>
-          <button type="button" className="sheet-overlay" aria-label="Cancelar exclusão" onClick={() => setSaleToDelete(null)} />
-          <div className="modal-center" role="dialog" aria-modal="true" aria-labelledby="delete-sale-title">
-            <div className="modal-card p-5 sm:p-6">
-              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-[14px] bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300" aria-hidden="true">
-                <Trash size={21} weight="duotone" />
-              </span>
-              <h2 id="delete-sale-title" className="text-[21px] font-semibold tracking-[-0.02em] text-ink">Excluir esta venda?</h2>
-              <p className="mt-2 text-[13px] leading-5 text-ink-muted">O registro de {saleToDelete.email} será removido de {formatMonth(monthKey)}.</p>
-              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <button type="button" onClick={() => void handleDelete()} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-red-600 px-5 py-3 text-[15px] font-semibold text-white transition duration-200 hover:bg-red-700 active:translate-y-px active:scale-[0.985]">
-                  <Trash size={18} weight="bold" />
-                  Excluir venda
-                </button>
-                <button type="button" onClick={() => setSaleToDelete(null)} className="btn-secondary">Cancelar</button>
-              </div>
-            </div>
+        <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 70 }} role="dialog" aria-modal="true" aria-labelledby="delete-sale-title">
+          <button type="button" className="absolute inset-0 bg-[#18221e]/46" onClick={() => setSaleToDelete(null)} aria-label="Cancelar exclusão" />
+          <div className="goals-modal relative w-full max-w-[410px] rounded-2xl border border-[#dce4df] bg-white p-5 shadow-[0_24px_70px_-28px_rgba(24,34,30,0.6)] sm:p-6">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0ed] text-[#a84f43]"><Trash size={21} weight="duotone" /></span>
+            <h2 id="delete-sale-title" className="mt-4 text-[21px] font-semibold tracking-[-0.025em]">Excluir esta venda?</h2>
+            <p className="mt-2 text-[13px] leading-5 text-[#718078]">O registro de {saleToDelete.email} será removido de {formatMonth(monthKey)}.</p>
+            <div className="mt-6 grid grid-cols-2 gap-2.5"><button type="button" onClick={() => setSaleToDelete(null)} className="min-h-11 rounded-[10px] border border-[#dce4df] text-[13px] font-semibold transition-colors hover:bg-[#f1f5f2] active:scale-[0.99]">Cancelar</button><button type="button" onClick={() => void handleDelete()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#a84f43] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#8f4036] active:scale-[0.99]"><Trash size={17} weight="bold" />Excluir</button></div>
           </div>
-        </>
+        </div>
       ), document.body)}
-    </div>
+    </main>
   )
 }

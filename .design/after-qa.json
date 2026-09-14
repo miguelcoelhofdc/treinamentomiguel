@@ -1,0 +1,41 @@
+{
+  "target": "http://127.0.0.1:4173/metas",
+  "desktop": {
+    "title": "Metas | Painel comercial",
+    "url": "http://127.0.0.1:4173/metas",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "bodyTextLength": 983,
+    "bodyTextSample": "Metas PAINEL COMERCIAL Visão geral Vendas Configurações Cache local O armazenamento central está indisponível. VISÃO GERAL Resultado mensal Acompanhe vendas, atingimento e comissão prevista. Setembro de 2026 Configurar mês Nova venda Visão ",
+    "horizontalScroll": false,
+    "scrollWidth": 1435,
+    "textOverflow": [],
+    "smallButtons": [],
+    "blockingFixed": [],
+    "hasMain": true,
+    "screenshotPath": "C:\\Users\\Miguel Coelho\\Desktop\\treinamentomiguel\\.design\\screenshots\\after-desktop.png",
+    "screenshotBytes": 92748,
+    "blankRisk": false
+  },
+  "mobile": {
+    "title": "Metas | Painel comercial",
+    "url": "http://127.0.0.1:4173/metas",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "bodyTextLength": 884,
+    "bodyTextSample": "Metas PAINEL COMERCIAL VISÃO GERAL Resultado mensal Acompanhe vendas, atingimento e comissão prevista. Setembro de 2026 Configurar mês Nova venda Visão geral do mês Vendas de planos R$ 0,00 de uma meta ainda não definida 0% Meta mensal — Fa",
+    "horizontalScroll": false,
+    "scrollWidth": 390,
+    "textOverflow": [],
+    "smallButtons": [],
+    "blockingFixed": [],
+    "hasMain": true,
+    "screenshotPath": "C:\\Users\\Miguel Coelho\\Desktop\\treinamentomiguel\\.design\\screenshots\\after-mobile.png",
+    "screenshotBytes": 39320,
+    "blankRisk": false
+  }
+}

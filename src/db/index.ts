@@ -1,13 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type {
-  AppSettings,
-  DailyLog,
-  ExerciseCheck,
-  MonthlySalesConfig,
-  RunningLog,
-  Sale,
-  StrengthLog,
-} from '@/types'
+import type { DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck } from '@/types'
 import { ACCESS_PROFILES, getStoredProfileId } from '@/lib/auth'
 
 class TrainingDB extends Dexie {
@@ -16,8 +8,6 @@ class TrainingDB extends Dexie {
   strengthLogs!: Table<StrengthLog>
   settings!: Table<AppSettings>
   exerciseChecks!: Table<ExerciseCheck>
-  sales!: Table<Sale>
-  monthlySalesConfigs!: Table<MonthlySalesConfig>
 
   constructor(databaseName: string) {
     super(databaseName)
@@ -34,8 +24,6 @@ class TrainingDB extends Dexie {
       strengthLogs:       '++id, date, exercise',
       settings:           '++id, key',
       exerciseChecks:     '++id, date, exerciseId, [date+exerciseId]',
-      sales:              '++id, monthKey, date, email',
-      monthlySalesConfigs:'&monthKey',
     })
   }
 }
@@ -147,30 +135,4 @@ export async function getMonthConsistency(yearMonth: string): Promise<number> {
   const done = logs.filter(l => l.workoutDone).length
   const total = logs.length
   return total === 0 ? 0 : Math.round((done / total) * 100)
-}
-
-// Monthly sales helpers
-export async function getSalesForMonth(monthKey: string): Promise<Sale[]> {
-  const sales = await db.sales.where('monthKey').equals(monthKey).toArray()
-  return sales.sort((a, b) => b.date.localeCompare(a.date) || (b.id ?? 0) - (a.id ?? 0))
-}
-
-export async function saveSale(sale: Sale): Promise<void> {
-  if (sale.id != null) {
-    await db.sales.put(sale)
-    return
-  }
-  await db.sales.add(sale)
-}
-
-export async function deleteSale(id: number): Promise<void> {
-  await db.sales.delete(id)
-}
-
-export async function getMonthlySalesConfig(monthKey: string): Promise<MonthlySalesConfig | undefined> {
-  return db.monthlySalesConfigs.get(monthKey)
-}
-
-export async function saveMonthlySalesConfig(config: MonthlySalesConfig): Promise<void> {
-  await db.monthlySalesConfigs.put(config)
 }

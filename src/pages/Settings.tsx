@@ -33,9 +33,7 @@ import type {
   AppSettings,
   DailyLog,
   ExerciseCheck,
-  MonthlySalesConfig,
   RunningLog,
-  Sale,
   StrengthLog,
 } from '@/types'
 
@@ -69,8 +67,6 @@ interface BackupPayload {
   strength: StrengthLog[]
   settings: AppSettings[]
   exerciseChecks: ExerciseCheck[]
-  sales: Sale[]
-  monthlySalesConfigs: MonthlySalesConfig[]
 }
 
 type Feedback = { message: string; type: 'success' | 'error' }
@@ -83,7 +79,7 @@ type ProfileDraft = {
 }
 type ProfileField = keyof ProfileDraft
 
-const BACKUP_FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks', 'sales', 'monthlySalesConfigs'] as const
+const BACKUP_FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks'] as const
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -137,35 +133,6 @@ function isExerciseCheck(value: unknown): value is ExerciseCheck {
     && typeof value.done === 'boolean'
 }
 
-function isSale(value: unknown): value is Sale {
-  return isRecord(value)
-    && typeof value.monthKey === 'string'
-    && typeof value.date === 'string'
-    && typeof value.email === 'string'
-    && typeof value.planAmount === 'number'
-    && Number.isFinite(value.planAmount)
-    && typeof value.setupAmount === 'number'
-    && Number.isFinite(value.setupAmount)
-    && typeof value.createdAt === 'string'
-    && typeof value.updatedAt === 'string'
-}
-
-function isMonthlySalesConfig(value: unknown): value is MonthlySalesConfig {
-  return isRecord(value)
-    && typeof value.monthKey === 'string'
-    && typeof value.goalAmount === 'number'
-    && Number.isFinite(value.goalAmount)
-    && typeof value.setupCommissionPercent === 'number'
-    && Number.isFinite(value.setupCommissionPercent)
-    && typeof value.updatedAt === 'string'
-    && Array.isArray(value.tiers)
-    && value.tiers.every((tier) => isRecord(tier)
-      && typeof tier.id === 'string'
-      && (tier.upToPercent == null || (typeof tier.upToPercent === 'number' && Number.isFinite(tier.upToPercent)))
-      && typeof tier.commissionPercent === 'number'
-      && Number.isFinite(tier.commissionPercent))
-}
-
 function parseBackup(raw: string): BackupPayload {
   const parsed: unknown = JSON.parse(raw)
   if (!isRecord(parsed)) throw new Error('Formato de backup inválido.')
@@ -188,17 +155,13 @@ function parseBackup(raw: string): BackupPayload {
     strength: (parsed.strength ?? []) as StrengthLog[],
     settings: (parsed.settings ?? []) as AppSettings[],
     exerciseChecks: (parsed.exerciseChecks ?? []) as ExerciseCheck[],
-    sales: (parsed.sales ?? []) as Sale[],
-    monthlySalesConfigs: (parsed.monthlySalesConfigs ?? []) as MonthlySalesConfig[],
   }
 
   if (!payload.daily.every(isDailyLog)
     || !payload.running.every(isRunningLog)
     || !payload.strength.every(isStrengthLog)
     || !payload.settings.every(isAppSetting)
-    || !payload.exerciseChecks.every(isExerciseCheck)
-    || !payload.sales.every(isSale)
-    || !payload.monthlySalesConfigs.every(isMonthlySalesConfig)) {
+    || !payload.exerciseChecks.every(isExerciseCheck)) {
     throw new Error('Há registros corrompidos ou incompatíveis no backup.')
   }
 
@@ -217,8 +180,6 @@ function recordCount(payload: BackupPayload): number {
     + payload.strength.length
     + payload.settings.length
     + payload.exerciseChecks.length
-    + payload.sales.length
-    + payload.monthlySalesConfigs.length
 }
 
 function SettingsSection({
@@ -355,26 +316,22 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
   const handleExport = async () => {
     setBusy('export')
     try {
-      const [daily, running, strength, storedSettings, exerciseChecks, sales, monthlySalesConfigs] = await Promise.all([
+      const [daily, running, strength, storedSettings, exerciseChecks] = await Promise.all([
         db.dailyLogs.toArray(),
         db.runningLogs.toArray(),
         db.strengthLogs.toArray(),
         db.settings.toArray(),
         db.exerciseChecks.toArray(),
-        db.sales.toArray(),
-        db.monthlySalesConfigs.toArray(),
       ])
       const payload: BackupPayload = {
         kind: `treino-${profileId}-backup`,
-        schemaVersion: 2,
+        schemaVersion: 1,
         exportedAt: new Date().toISOString(),
         daily,
         running,
         strength,
         settings: storedSettings,
         exerciseChecks,
-        sales,
-        monthlySalesConfigs,
       }
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -432,7 +389,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
 
       await db.transaction(
         'rw',
-        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.sales, db.monthlySalesConfigs],
+        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks],
         async () => {
           for (const importedLog of payload.daily) {
             const log = stripId(importedLog)
@@ -506,17 +463,6 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             if (duplicateIds.length > 0) await db.exerciseChecks.bulkDelete(duplicateIds)
           }
 
-          for (const importedSale of payload.sales) {
-            const sale = stripId(importedSale)
-            const existing = (await db.sales.where('monthKey').equals(sale.monthKey).toArray())
-              .find(item => item.createdAt === sale.createdAt)
-            if (existing?.id != null) await db.sales.update(existing.id, sale)
-            else await db.sales.add(sale)
-          }
-
-          for (const importedConfig of payload.monthlySalesConfigs) {
-            await db.monthlySalesConfigs.put(importedConfig)
-          }
         },
       )
 
@@ -844,7 +790,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             <div>
               <p className="text-[14px] font-semibold text-ink">Backup completo</p>
               <p className="mt-1 text-[12px] leading-5 text-ink-muted">
-                Inclui perfil, preferências, treinos, vendas, metas e configurações de comissão.
+                Inclui perfil, preferências, check-ins, corridas, força e marcações de exercícios.
               </p>
             </div>
           </div>

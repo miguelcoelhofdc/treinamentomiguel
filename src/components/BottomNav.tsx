@@ -5,7 +5,6 @@ import {
   CalendarDots,
   ChartLineUp,
   GearSix,
-  Target,
   type Icon,
 } from '@phosphor-icons/react'
 
@@ -20,7 +19,6 @@ const tabs: TabItem[] = [
   { to: '/plano', icon: CalendarDots, label: 'Plano' },
   { to: '/progresso', icon: ChartLineUp, label: 'Progresso' },
   { to: '/', icon: Barbell, label: 'Hoje', primary: true },
-  { to: '/metas', icon: Target, label: 'Metas' },
   { to: '/guias', icon: BookOpenText, label: 'Guias' },
   { to: '/ajustes', icon: GearSix, label: 'Ajustes' },
 ]
@@ -33,7 +31,7 @@ export default function BottomNav() {
     >
       <nav
         aria-label="Navegação principal"
-        className="pointer-events-auto mx-auto grid max-w-[37rem] grid-cols-6 items-end rounded-[22px] border border-white/70 bg-surface/92 px-1.5 pb-1.5 pt-2 shadow-nav backdrop-blur-xl dark:border-white/10"
+        className="pointer-events-auto mx-auto grid max-w-[31rem] grid-cols-5 items-end rounded-[22px] border border-white/70 bg-surface/92 px-1.5 pb-1.5 pt-2 shadow-nav backdrop-blur-xl dark:border-white/10"
       >
         {tabs.map(({ to, icon: Icon, label, primary }) => (
           <NavLink

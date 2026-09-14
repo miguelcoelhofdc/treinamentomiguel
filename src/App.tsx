@@ -66,7 +66,6 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
             element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} />}
           />
           <Route path="/guias" element={<Guides routineType={settings.routineType} />} />
-          <Route path="/metas" element={<Goals />} />
           <Route
             path="/ajustes"
             element={(
@@ -90,10 +89,20 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
 
 export default function App() {
   const { pathname } = useLocation()
-  if (pathname.replace(/\/+$/, '') === '/quadro') {
+  const standalonePath = pathname.replace(/\/+$/, '')
+
+  if (standalonePath === '/quadro') {
     return (
       <Suspense fallback={<div className="min-h-[100dvh] bg-white" aria-label="Carregando quadro" aria-busy="true" />}>
         <Whiteboard />
+      </Suspense>
+    )
+  }
+
+  if (standalonePath === '/metas') {
+    return (
+      <Suspense fallback={<div className="min-h-[100dvh] bg-[#f3f6f4]" aria-label="Carregando painel de metas" aria-busy="true" />}>
+        <Goals />
       </Suspense>
     )
   }
