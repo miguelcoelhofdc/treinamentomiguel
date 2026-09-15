@@ -28,7 +28,7 @@ class GoalsDB extends Dexie {
 
 export const goalsDb = new GoalsDB()
 let initializationPromise: Promise<void> | null = null
-let remoteStorageAvailable = false
+let remoteStorageStatus: 'unknown' | 'available' | 'unavailable' = 'unknown'
 
 function migrationWasAttempted() {
   try {
@@ -152,7 +152,7 @@ async function synchronizeWithRemote(): Promise<void> {
   }
 
   await replaceLocalSnapshot(remote)
-  remoteStorageAvailable = true
+  remoteStorageStatus = 'available'
 }
 
 export async function initializeGoalsDatabase(): Promise<void> {
@@ -164,24 +164,27 @@ export async function initializeGoalsDatabase(): Promise<void> {
   }
   await initializationPromise
 
+  if (remoteStorageStatus === 'unavailable') return
+
   try {
     await synchronizeWithRemote()
   } catch {
-    remoteStorageAvailable = false
-    // Vite's local development server has no Vercel Functions. IndexedDB remains
-    // available there as a development cache; production writes require the API.
+    remoteStorageStatus = 'unavailable'
+    // IndexedDB is the durable fallback whenever the central store is unavailable.
+    // A later page load retries the API and imports local data if the store is empty.
   }
 }
 
 async function applyRemoteMutation(operation: Record<string, unknown>): Promise<GoalsSnapshot | null> {
+  if (remoteStorageStatus === 'unavailable') return null
+
   try {
     const snapshot = await callGoalsApi(operation)
-    remoteStorageAvailable = true
+    remoteStorageStatus = 'available'
     await replaceLocalSnapshot(snapshot)
     return snapshot
-  } catch (error) {
-    remoteStorageAvailable = false
-    if (!import.meta.env.DEV) throw error
+  } catch {
+    remoteStorageStatus = 'unavailable'
     return null
   }
 }
@@ -217,5 +220,5 @@ export async function saveMonthlySalesConfig(config: MonthlySalesConfig): Promis
 }
 
 export function isGoalsRemoteStorageAvailable(): boolean {
-  return remoteStorageAvailable
+  return remoteStorageStatus === 'available'
 }

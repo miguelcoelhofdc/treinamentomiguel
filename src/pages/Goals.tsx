@@ -122,7 +122,7 @@ function Sidebar({ active, onNavigate, synced }: {
         <p className="mt-2 text-[11px] leading-4 text-[#7b8780]">
           {synced
             ? 'Dados disponíveis em qualquer navegador.'
-            : 'O armazenamento central está indisponível.'}
+            : 'Dados salvos com segurança neste dispositivo.'}
         </p>
       </div>
     </aside>
