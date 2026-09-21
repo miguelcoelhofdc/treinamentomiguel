@@ -37,8 +37,8 @@ interface GoalsSnapshot {
 }
 
 interface GoalsStorage {
-  read: () => Promise<GoalsSnapshot>
-  write: (snapshot: GoalsSnapshot) => Promise<void>
+  read: (request: Request) => Promise<GoalsSnapshot>
+  write: (snapshot: GoalsSnapshot, request: Request) => Promise<void>
 }
 
 const emptySnapshot = (): GoalsSnapshot => ({
@@ -55,10 +55,14 @@ function json(payload: unknown, status = 200) {
   })
 }
 
-function storageIsConfigured() {
+function getOidcToken(request: Request) {
+  return request.headers.get('x-vercel-oidc-token') || process.env.VERCEL_OIDC_TOKEN
+}
+
+function storageIsConfigured(request: Request) {
   return Boolean(
     process.env.BLOB_READ_WRITE_TOKEN
-    || (process.env.VERCEL_OIDC_TOKEN && process.env.BLOB_STORE_ID),
+    || (getOidcToken(request) && process.env.BLOB_STORE_ID),
   )
 }
 
@@ -131,8 +135,12 @@ function isSnapshotData(value: unknown): value is Pick<GoalsSnapshot, 'sales' | 
   )
 }
 
-async function readSnapshot(): Promise<GoalsSnapshot> {
-  const result = await get(DATA_PATH, { access: 'private', useCache: false })
+async function readSnapshot(request: Request): Promise<GoalsSnapshot> {
+  const result = await get(DATA_PATH, {
+    access: 'private',
+    useCache: false,
+    oidcToken: getOidcToken(request),
+  })
   if (!result?.stream) return emptySnapshot()
 
   const payload: unknown = await new Response(result.stream).json()
@@ -147,7 +155,7 @@ async function readSnapshot(): Promise<GoalsSnapshot> {
   }
 }
 
-async function writeSnapshot(snapshot: GoalsSnapshot): Promise<void> {
+async function writeSnapshot(snapshot: GoalsSnapshot, request: Request): Promise<void> {
   snapshot.updatedAt = new Date().toISOString()
   await put(DATA_PATH, JSON.stringify(snapshot), {
     access: 'private',
@@ -155,23 +163,24 @@ async function writeSnapshot(snapshot: GoalsSnapshot): Promise<void> {
     allowOverwrite: true,
     contentType: 'application/json',
     cacheControlMaxAge: 60,
+    oidcToken: getOidcToken(request),
   })
 }
 
 export function createGoalsHandler(
   storage: GoalsStorage,
-  isConfigured: () => boolean = storageIsConfigured,
+  isConfigured: (request: Request) => boolean = storageIsConfigured,
 ) {
   return async function handleRequest(request: Request): Promise<Response> {
     if (request.method !== 'GET' && request.method !== 'POST') {
       return json({ error: 'Método não permitido.' }, 405)
     }
-    if (!isConfigured()) {
+    if (!isConfigured(request)) {
       return json({ error: 'O armazenamento de Metas ainda não foi configurado.', code: 'STORAGE_NOT_CONFIGURED' }, 503)
     }
 
     try {
-      const snapshot = await storage.read()
+      const snapshot = await storage.read(request)
       if (request.method === 'GET') return json(snapshot)
 
       const body: unknown = await request.json().catch(() => null)
@@ -211,7 +220,7 @@ export function createGoalsHandler(
         return json({ error: 'Limite de armazenamento atingido.' }, 413)
       }
 
-      await storage.write(snapshot)
+      await storage.write(snapshot, request)
       return json(snapshot)
     } catch (error) {
       console.error('Goals storage request failed', error instanceof Error ? error.message : 'unknown')
