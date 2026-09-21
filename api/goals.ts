@@ -8,6 +8,7 @@ interface Sale {
   id?: number
   monthKey: string
   date: string
+  customerName?: string
   email: string
   planAmount: number
   setupAmount: number
@@ -85,6 +86,11 @@ function isSale(value: unknown): value is Sale {
     (sale.id == null || (Number.isSafeInteger(sale.id) && sale.id > 0))
     && isMonthKey(sale.monthKey)
     && isIsoDate(sale.date)
+    && (sale.customerName == null || (
+      typeof sale.customerName === 'string'
+      && sale.customerName.trim().length > 0
+      && sale.customerName.length <= 160
+    ))
     && typeof sale.email === 'string'
     && sale.email.length > 2
     && sale.email.length <= 320

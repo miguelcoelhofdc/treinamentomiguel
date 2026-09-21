@@ -11,7 +11,7 @@ interface Props {
   onSave: (sale: Sale) => Promise<void>
 }
 
-type Errors = Partial<Record<'date' | 'email' | 'planAmount' | 'setupAmount' | 'form', string>>
+type Errors = Partial<Record<'date' | 'customerName' | 'email' | 'planAmount' | 'setupAmount' | 'form', string>>
 
 const inputClass = 'min-h-11 w-full rounded-[10px] border border-[#d8e1db] bg-white px-3.5 py-2.5 text-[15px] font-semibold text-[#18221e] placeholder:font-normal placeholder:text-[#9aa59f] transition focus:border-[#327355] focus:outline-none focus:ring-4 focus:ring-[#327355]/10'
 const labelClass = 'mb-2 block text-[12px] font-semibold text-[#526159]'
@@ -25,6 +25,7 @@ function parseMoney(value: string) {
 
 export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
   const [date, setDate] = useState(sale?.date ?? defaultDateForMonth(monthKey))
+  const [customerName, setCustomerName] = useState(sale?.customerName ?? '')
   const [email, setEmail] = useState(sale?.email ?? '')
   const [planAmount, setPlanAmount] = useState(sale ? String(sale.planAmount) : '')
   const [setupAmount, setSetupAmount] = useState(sale ? String(sale.setupAmount) : '')
@@ -51,6 +52,7 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
     const parsedSetup = parseMoney(setupAmount)
 
     if (!date || !date.startsWith(`${monthKey}-`)) nextErrors.date = 'Escolha uma data dentro do mês selecionado.'
+    if (!customerName.trim()) nextErrors.customerName = 'Informe o nome do cliente.'
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) nextErrors.email = 'Informe um e-mail válido.'
     if (!Number.isFinite(parsedPlan) || parsedPlan < 0) nextErrors.planAmount = 'Informe um valor válido, igual ou maior que zero.'
     if (!Number.isFinite(parsedSetup) || parsedSetup < 0) nextErrors.setupAmount = 'Informe um valor válido, igual ou maior que zero.'
@@ -66,6 +68,7 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
         ...sale,
         monthKey,
         date,
+        customerName: customerName.trim(),
         email: email.trim().toLowerCase(),
         planAmount: parsedPlan,
         setupAmount: parsedSetup,
@@ -100,8 +103,13 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
               {errors.date && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.date}</p>}
             </div>
             <div>
+              <label className={labelClass} htmlFor="sale-customer-name">Nome do cliente</label>
+              <input id="sale-customer-name" type="text" className={inputClass} placeholder="Nome do cliente" value={customerName} onChange={(event) => setCustomerName(event.target.value)} aria-invalid={Boolean(errors.customerName)} autoComplete="name" autoFocus />
+              {errors.customerName && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.customerName}</p>}
+            </div>
+            <div className="sm:col-span-2">
               <label className={labelClass} htmlFor="sale-email">E-mail</label>
-              <input id="sale-email" type="email" className={inputClass} placeholder="cliente@empresa.com" value={email} onChange={(event) => setEmail(event.target.value)} aria-invalid={Boolean(errors.email)} autoComplete="email" autoFocus />
+              <input id="sale-email" type="email" className={inputClass} placeholder="cliente@empresa.com" value={email} onChange={(event) => setEmail(event.target.value)} aria-invalid={Boolean(errors.email)} autoComplete="email" />
               {errors.email && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.email}</p>}
             </div>
             <div>

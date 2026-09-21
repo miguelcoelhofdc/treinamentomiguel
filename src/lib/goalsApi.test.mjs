@@ -48,6 +48,7 @@ describe('goals API', () => {
     const sale = {
       monthKey: '2026-09',
       date: '2026-09-21',
+      customerName: 'Cliente Teste',
       email: 'cliente@example.com',
       planAmount: 1200,
       setupAmount: 300,
@@ -66,6 +67,7 @@ describe('goals API', () => {
     assert.equal(saleResponse.status, 200)
     const createdSale = (await saleResponse.json()).sales[0]
     assert.ok(Number.isSafeInteger(createdSale.id))
+    assert.equal(createdSale.customerName, 'Cliente Teste')
 
     const configResponse = await post(handler, { operation: 'saveConfig', config })
     assert.equal(configResponse.status, 200)

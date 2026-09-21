@@ -224,6 +224,7 @@ export interface Sale {
   id?: number
   monthKey: string // YYYY-MM
   date: string // YYYY-MM-DD
+  customerName?: string
   email: string
   planAmount: number
   setupAmount: number
