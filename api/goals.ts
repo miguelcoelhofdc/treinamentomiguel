@@ -36,6 +36,11 @@ interface GoalsSnapshot {
   updatedAt: string
 }
 
+interface GoalsStorage {
+  read: () => Promise<GoalsSnapshot>
+  write: (snapshot: GoalsSnapshot) => Promise<void>
+}
+
 const emptySnapshot = (): GoalsSnapshot => ({
   version: 1,
   sales: [],
@@ -153,68 +158,75 @@ async function writeSnapshot(snapshot: GoalsSnapshot): Promise<void> {
   })
 }
 
-async function handleRequest(request: Request): Promise<Response> {
-  if (request.method !== 'GET' && request.method !== 'POST') {
-    return json({ error: 'Método não permitido.' }, 405)
-  }
-  if (!storageIsConfigured()) {
-    return json({ error: 'O armazenamento de Metas ainda não foi configurado.', code: 'STORAGE_NOT_CONFIGURED' }, 503)
-  }
-
-  try {
-    const snapshot = await readSnapshot()
-    if (request.method === 'GET') return json(snapshot)
-
-    const body: unknown = await request.json().catch(() => null)
-    if (!body || typeof body !== 'object' || !('operation' in body)) {
-      return json({ error: 'Requisição inválida.' }, 400)
+export function createGoalsHandler(
+  storage: GoalsStorage,
+  isConfigured: () => boolean = storageIsConfigured,
+) {
+  return async function handleRequest(request: Request): Promise<Response> {
+    if (request.method !== 'GET' && request.method !== 'POST') {
+      return json({ error: 'Método não permitido.' }, 405)
+    }
+    if (!isConfigured()) {
+      return json({ error: 'O armazenamento de Metas ainda não foi configurado.', code: 'STORAGE_NOT_CONFIGURED' }, 503)
     }
 
-    const operation = (body as { operation?: unknown }).operation
-    if (operation === 'importIfEmpty') {
-      if (!isSnapshotData(body)) return json({ error: 'Dados de migração inválidos.' }, 400)
-      if (snapshot.sales.length === 0 && snapshot.monthlySalesConfigs.length === 0) {
-        snapshot.sales = body.sales
-        snapshot.monthlySalesConfigs = body.monthlySalesConfigs
-      }
-    } else if (operation === 'saveSale') {
-      const sale = (body as { sale?: unknown }).sale
-      if (!isSale(sale)) return json({ error: 'Venda inválida.' }, 400)
+    try {
+      const snapshot = await storage.read()
+      if (request.method === 'GET') return json(snapshot)
 
-      const nextSale = { ...sale }
-      if (nextSale.id == null) {
-        nextSale.id = Math.max(Date.now(), ...snapshot.sales.map((item) => item.id ?? 0)) + 1
-        snapshot.sales.push(nextSale)
+      const body: unknown = await request.json().catch(() => null)
+      if (!body || typeof body !== 'object' || !('operation' in body)) {
+        return json({ error: 'Requisição inválida.' }, 400)
+      }
+
+      const operation = (body as { operation?: unknown }).operation
+      if (operation === 'saveSale') {
+        const sale = (body as { sale?: unknown }).sale
+        if (!isSale(sale)) return json({ error: 'Venda inválida.' }, 400)
+
+        const nextSale = { ...sale }
+        if (nextSale.id == null) {
+          nextSale.id = Math.max(Date.now(), ...snapshot.sales.map((item) => item.id ?? 0)) + 1
+          snapshot.sales.push(nextSale)
+        } else {
+          const index = snapshot.sales.findIndex((item) => item.id === nextSale.id)
+          if (index >= 0) snapshot.sales[index] = nextSale
+          else snapshot.sales.push(nextSale)
+        }
+      } else if (operation === 'deleteSale') {
+        const id = (body as { id?: unknown }).id
+        if (!Number.isSafeInteger(id) || (id as number) <= 0) return json({ error: 'Venda inválida.' }, 400)
+        snapshot.sales = snapshot.sales.filter((sale) => sale.id !== id)
+      } else if (operation === 'saveConfig') {
+        const config = (body as { config?: unknown }).config
+        if (!isMonthlyConfig(config)) return json({ error: 'Configuração inválida.' }, 400)
+        const index = snapshot.monthlySalesConfigs.findIndex((item) => item.monthKey === config.monthKey)
+        if (index >= 0) snapshot.monthlySalesConfigs[index] = config
+        else snapshot.monthlySalesConfigs.push(config)
       } else {
-        const index = snapshot.sales.findIndex((item) => item.id === nextSale.id)
-        if (index >= 0) snapshot.sales[index] = nextSale
-        else snapshot.sales.push(nextSale)
+        return json({ error: 'Operação desconhecida.' }, 400)
       }
-    } else if (operation === 'deleteSale') {
-      const id = (body as { id?: unknown }).id
-      if (!Number.isSafeInteger(id) || (id as number) <= 0) return json({ error: 'Venda inválida.' }, 400)
-      snapshot.sales = snapshot.sales.filter((sale) => sale.id !== id)
-    } else if (operation === 'saveConfig') {
-      const config = (body as { config?: unknown }).config
-      if (!isMonthlyConfig(config)) return json({ error: 'Configuração inválida.' }, 400)
-      const index = snapshot.monthlySalesConfigs.findIndex((item) => item.monthKey === config.monthKey)
-      if (index >= 0) snapshot.monthlySalesConfigs[index] = config
-      else snapshot.monthlySalesConfigs.push(config)
-    } else {
-      return json({ error: 'Operação desconhecida.' }, 400)
-    }
 
-    if (snapshot.sales.length > MAX_SALES || snapshot.monthlySalesConfigs.length > MAX_CONFIGS) {
-      return json({ error: 'Limite de armazenamento atingido.' }, 413)
-    }
+      if (snapshot.sales.length > MAX_SALES || snapshot.monthlySalesConfigs.length > MAX_CONFIGS) {
+        return json({ error: 'Limite de armazenamento atingido.' }, 413)
+      }
 
-    await writeSnapshot(snapshot)
-    return json(snapshot)
-  } catch (error) {
-    console.error('Goals storage request failed', error instanceof Error ? error.message : 'unknown')
-    return json({ error: 'Não foi possível acessar o armazenamento de Metas.' }, 500)
+      await storage.write(snapshot)
+      return json(snapshot)
+    } catch (error) {
+      console.error('Goals storage request failed', error instanceof Error ? error.message : 'unknown')
+      return json({
+        error: 'Não foi possível acessar o armazenamento de Metas.',
+        code: 'STORAGE_REQUEST_FAILED',
+      }, 500)
+    }
   }
 }
+
+const handleRequest = createGoalsHandler({
+  read: readSnapshot,
+  write: writeSnapshot,
+})
 
 export default {
   fetch: handleRequest,

@@ -25,12 +25,13 @@ import SaleForm from '@/components/goals/SaleForm'
 import SalesChart from '@/components/goals/SalesChart'
 import {
   deleteSale,
+  getGoalsStorageState,
   getMonthlySalesConfig,
   getSalesForMonth,
   initializeGoalsDatabase,
-  isGoalsRemoteStorageAvailable,
   saveMonthlySalesConfig,
   saveSale,
+  type GoalsStorageState,
 } from '@/db/goals'
 import {
   calculateSalesSummary,
@@ -56,6 +57,15 @@ function formatDate(date: string) {
   return day && month && year ? `${day}/${month}/${year}` : date
 }
 
+function formatSyncTime(date: string) {
+  const parsed = new Date(date)
+  if (Number.isNaN(parsed.getTime())) return 'horário desconhecido'
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(parsed)
+}
+
 function GoalsLoading() {
   return (
     <main className="min-h-[100dvh] bg-[#f6f7f6] font-sans text-[#18221e]" aria-label="Carregando painel de metas" aria-busy="true">
@@ -77,11 +87,13 @@ function GoalsLoading() {
   )
 }
 
-function Sidebar({ active, onNavigate, synced }: {
+function Sidebar({ active, onNavigate, storageState }: {
   active: SectionId
   onNavigate: (section: SectionId) => void
-  synced: boolean
+  storageState: GoalsStorageState
 }) {
+  const synced = storageState.status === 'synced'
+  const cached = storageState.status === 'cached'
   return (
     <aside className="fixed inset-y-0 left-0 hidden w-[216px] flex-col border-r border-[#e2e7e4] bg-[#fbfcfb] px-3 py-5 text-[#18221e] lg:flex" aria-label="Navegação do painel de metas">
       <div className="flex items-center gap-3 px-2.5">
@@ -97,13 +109,15 @@ function Sidebar({ active, onNavigate, synced }: {
       <nav className="mt-8 space-y-1">
         {navigation.map(({ id, label, icon: IconComponent }) => {
           const isActive = active === id
+          const disabled = id === 'settings' && !synced
           return (
             <button
               key={id}
               type="button"
               onClick={() => onNavigate(id)}
+              disabled={disabled}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold transition-colors active:scale-[0.99] ${
+              className={`flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 ${
                 isActive ? 'bg-[#e8f1eb] text-[#1f5d43]' : 'text-[#66736c] hover:bg-[#f0f3f1] hover:text-[#26322d]'
               }`}
             >
@@ -117,12 +131,16 @@ function Sidebar({ active, onNavigate, synced }: {
       <div className="mt-auto rounded-xl border border-[#e2e7e4] bg-[#f6f8f6] p-3.5">
         <div className="flex items-center gap-2 text-[#536159]">
           <Database size={17} weight="duotone" />
-          <span className="text-[12px] font-semibold">{synced ? 'Sincronização ativa' : 'Cache local'}</span>
+          <span className="text-[12px] font-semibold">
+            {synced ? 'Sincronização ativa' : cached ? 'Consulta offline' : 'Dados indisponíveis'}
+          </span>
         </div>
         <p className="mt-2 text-[11px] leading-4 text-[#7b8780]">
           {synced
             ? 'Dados disponíveis em qualquer navegador.'
-            : 'Dados salvos com segurança neste dispositivo.'}
+            : cached
+              ? `Última sincronização: ${formatSyncTime(storageState.updatedAt)}.`
+              : 'Nenhuma cópia sincronizada disponível.'}
         </p>
       </div>
     </aside>
@@ -158,7 +176,10 @@ export default function Goals() {
   const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [activeSection, setActiveSection] = useState<SectionId>('overview')
-  const [remoteStorageActive, setRemoteStorageActive] = useState(false)
+  const [storageState, setStorageState] = useState<GoalsStorageState>({
+    status: 'unavailable',
+    updatedAt: null,
+  })
 
   useEffect(() => {
     const previousTitle = document.title
@@ -210,15 +231,19 @@ export default function Goals() {
     setLoadError(null)
     setActionError(null)
     try {
-      await initializeGoalsDatabase()
-      setRemoteStorageActive(isGoalsRemoteStorageAvailable())
+      const nextStorageState = await initializeGoalsDatabase()
+      setStorageState(nextStorageState)
       const [monthSales, monthConfig] = await Promise.all([
         getSalesForMonth(selectedMonth),
         getMonthlySalesConfig(selectedMonth),
       ])
       setSales(monthSales)
       setConfig(monthConfig)
+      if (nextStorageState.status === 'unavailable') {
+        setLoadError('A nuvem está indisponível e este dispositivo ainda não possui uma cópia sincronizada.')
+      }
     } catch {
+      setStorageState({ status: 'unavailable', updatedAt: null })
       setLoadError('Não foi possível carregar os dados deste mês.')
     } finally {
       setLoading(false)
@@ -229,14 +254,22 @@ export default function Goals() {
     void loadMonth(monthKey, true)
   }, [loadMonth, monthKey])
 
+  useEffect(() => {
+    const handleFocus = () => void loadMonth(monthKey)
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [loadMonth, monthKey])
+
   const summary = useMemo(() => calculateSalesSummary(sales, config), [sales, config])
   const progressScale = Math.min(1, Math.max(0, summary.attainmentPercent / 100))
   const currentTierCopy = summary.currentTier && config
     ? tierLabel(summary.currentTier, config.tiers)
     : 'Configure as faixas para calcular a comissão dos planos.'
+  const canMutate = storageState.status === 'synced'
 
   const handleNavigate = (section: SectionId) => {
     if (section === 'settings') {
+      if (!canMutate) return
       setShowSettings(true)
       return
     }
@@ -245,15 +278,26 @@ export default function Goals() {
   }
 
   const handleSaleSave = async (sale: Sale) => {
-    await saveSale(sale)
-    setFormSale(undefined)
-    await loadMonth(monthKey)
+    try {
+      await saveSale(sale)
+      setFormSale(undefined)
+      await loadMonth(monthKey)
+    } catch (error) {
+      setStorageState(getGoalsStorageState())
+      throw error
+    }
   }
 
   const handleConfigSave = async (nextConfig: MonthlySalesConfig) => {
-    await saveMonthlySalesConfig(nextConfig)
-    setConfig(nextConfig)
-    setShowSettings(false)
+    try {
+      await saveMonthlySalesConfig(nextConfig)
+      setConfig(nextConfig)
+      setShowSettings(false)
+      await loadMonth(monthKey)
+    } catch (error) {
+      setStorageState(getGoalsStorageState())
+      throw error
+    }
   }
 
   const handleDelete = async () => {
@@ -264,8 +308,8 @@ export default function Goals() {
       setSaleToDelete(null)
       await loadMonth(monthKey)
     } catch {
+      setStorageState(getGoalsStorageState())
       setActionError('Não foi possível excluir esta venda. Tente novamente.')
-      setSaleToDelete(null)
     }
   }
 
@@ -275,7 +319,7 @@ export default function Goals() {
 
   return (
     <main className="goals-shell min-h-[100dvh] bg-[#f6f7f6] font-sans text-[#18221e]" style={{ colorScheme: 'light' }}>
-      <Sidebar active={displayedSection} onNavigate={handleNavigate} synced={remoteStorageActive} />
+      <Sidebar active={displayedSection} onNavigate={handleNavigate} storageState={storageState} />
 
       <div className="min-h-[100dvh] lg:ml-[216px]">
         <div className="mx-auto max-w-[1320px] px-4 pb-12 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pb-14 lg:pt-8">
@@ -309,11 +353,11 @@ export default function Goals() {
                   <CaretRight size={18} weight="bold" />
                 </button>
               </div>
-              <button type="button" onClick={() => setShowSettings(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#dce3df] bg-white px-4 text-[13px] font-semibold transition-colors hover:bg-[#f1f4f2] active:scale-[0.99]">
+              <button type="button" onClick={() => setShowSettings(true)} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#dce3df] bg-white px-4 text-[13px] font-semibold transition-colors hover:bg-[#f1f4f2] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
                 <GearSix size={18} weight="bold" />
                 Configurar mês
               </button>
-              <button type="button" onClick={() => setFormSale(null)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99]">
+              <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
                 <Plus size={18} weight="bold" />
                 Nova venda
               </button>
@@ -328,6 +372,21 @@ export default function Goals() {
                 <p className="mt-1 text-[13px] leading-5 opacity-80">{loadError}</p>
               </div>
               <button type="button" onClick={() => void loadMonth(monthKey, true)} className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-[#f7ded9]" aria-label="Tentar novamente">
+                <ArrowClockwise size={18} weight="bold" />
+              </button>
+            </div>
+          )}
+
+          {storageState.status === 'cached' && (
+            <div className="mt-5 flex items-start gap-3 rounded-xl border border-[#e5d3a5] bg-[#fff9e9] p-4 text-[#775d20]" role="status">
+              <WarningCircle size={21} weight="duotone" className="mt-0.5 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[14px] font-semibold">Consulta offline</p>
+                <p className="mt-1 text-[13px] leading-5 opacity-80">
+                  Exibindo a cópia de {formatSyncTime(storageState.updatedAt)}. Alterações ficam desativadas até a nuvem voltar.
+                </p>
+              </div>
+              <button type="button" onClick={() => void loadMonth(monthKey, true)} className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-[#f5e9c7]" aria-label="Tentar sincronizar novamente">
                 <ArrowClockwise size={18} weight="bold" />
               </button>
             </div>
@@ -360,7 +419,7 @@ export default function Goals() {
                   </div>
 
                   {!config && (
-                    <button type="button" onClick={() => setShowSettings(true)} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-[#eef4f0] px-3.5 text-[12px] font-semibold text-[#246348] transition-colors hover:bg-[#dfece4] active:scale-[0.99]">
+                    <button type="button" onClick={() => setShowSettings(true)} disabled={!canMutate} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-[#eef4f0] px-3.5 text-[12px] font-semibold text-[#246348] transition-colors hover:bg-[#dfece4] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
                       <SlidersHorizontal size={16} weight="bold" />Definir meta e comissões
                     </button>
                   )}
@@ -405,7 +464,7 @@ export default function Goals() {
           <section id="sales" data-goals-section="sales" className="scroll-mt-8 pt-9" aria-labelledby="sales-title">
             <div className="mb-4 flex items-end justify-between gap-4">
               <div><p className="text-[11px] font-semibold text-[#78867e]">Registros</p><h2 id="sales-title" className="mt-1 text-[23px] font-semibold tracking-[-0.025em]">Vendas do mês</h2><p className="mt-1 text-[13px] text-[#718078]">{sales.length === 0 ? 'Nenhuma venda cadastrada.' : `${sales.length} ${sales.length === 1 ? 'venda cadastrada' : 'vendas cadastradas'}.`}</p></div>
-              <button type="button" onClick={() => setFormSale(null)} className="hidden min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] sm:inline-flex"><Plus size={17} weight="bold" />Nova venda</button>
+              <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="hidden min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex"><Plus size={17} weight="bold" />Nova venda</button>
             </div>
 
             {sales.length === 0 ? (
@@ -413,7 +472,7 @@ export default function Goals() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#327355]"><Receipt size={22} weight="duotone" /></span>
                 <p className="mt-4 text-[16px] font-semibold">Comece pela primeira venda de {formatMonth(monthKey)}</p>
                 <p className="mt-1 max-w-[42ch] text-[13px] leading-5 text-[#718078]">Registre data, e-mail e os valores de plano e setup para alimentar o painel.</p>
-                <button type="button" onClick={() => setFormSale(null)} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white active:scale-[0.99]"><Plus size={17} weight="bold" />Cadastrar venda</button>
+                <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"><Plus size={17} weight="bold" />Cadastrar venda</button>
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
@@ -427,7 +486,7 @@ export default function Goals() {
                           <td className="max-w-[280px] truncate px-5 py-4 text-[13px] font-semibold">{sale.email}</td>
                           <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-semibold tabular-nums">{currencyFormatter.format(sale.planAmount)}</td>
                           <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-medium tabular-nums text-[#65736c]">{currencyFormatter.format(sale.setupAmount)}</td>
-                          <td className="whitespace-nowrap px-5 py-3 text-right"><button type="button" onClick={() => setFormSale(sale)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#627168] transition-colors hover:bg-[#edf2ef]" aria-label={`Editar venda de ${sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43] transition-colors hover:bg-[#fff0ed]" aria-label={`Excluir venda de ${sale.email}`}><Trash size={17} weight="bold" /></button></td>
+                          <td className="whitespace-nowrap px-5 py-3 text-right"><button type="button" onClick={() => setFormSale(sale)} disabled={!canMutate} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#627168] transition-colors hover:bg-[#edf2ef] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Editar venda de ${sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} disabled={!canMutate} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43] transition-colors hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Excluir venda de ${sale.email}`}><Trash size={17} weight="bold" /></button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -436,7 +495,7 @@ export default function Goals() {
                 <div className="divide-y divide-[#e4e9e6] md:hidden">
                   {sales.map((sale) => (
                     <article key={sale.id} className="p-4">
-                      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-[14px] font-semibold">{sale.email}</p><p className="mt-1 text-[11px] font-medium tabular-nums text-[#748078]">{formatDate(sale.date)}</p></div><div className="flex shrink-0"><button type="button" onClick={() => setFormSale(sale)} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#627168]" aria-label={`Editar venda de ${sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43]" aria-label={`Excluir venda de ${sale.email}`}><Trash size={17} weight="bold" /></button></div></div>
+                      <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-[14px] font-semibold">{sale.email}</p><p className="mt-1 text-[11px] font-medium tabular-nums text-[#748078]">{formatDate(sale.date)}</p></div><div className="flex shrink-0"><button type="button" onClick={() => setFormSale(sale)} disabled={!canMutate} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#627168] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Editar venda de ${sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} disabled={!canMutate} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Excluir venda de ${sale.email}`}><Trash size={17} weight="bold" /></button></div></div>
                       <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#f4f7f5] p-3"><div><p className="text-[10px] font-semibold text-[#7a8780]">Plano</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(sale.planAmount)}</p></div><div><p className="text-[10px] font-semibold text-[#7a8780]">Setup</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(sale.setupAmount)}</p></div></div>
                     </article>
                   ))}
@@ -466,6 +525,7 @@ export default function Goals() {
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff0ed] text-[#a84f43]"><Trash size={21} weight="duotone" /></span>
             <h2 id="delete-sale-title" className="mt-4 text-[21px] font-semibold tracking-[-0.025em]">Excluir esta venda?</h2>
             <p className="mt-2 text-[13px] leading-5 text-[#718078]">O registro de {saleToDelete.email} será removido de {formatMonth(monthKey)}.</p>
+            {actionError && <p className="mt-4 rounded-[10px] bg-[#fff0ed] px-3 py-2.5 text-[12px] font-semibold text-[#9a463b]" role="alert">{actionError}</p>}
             <div className="mt-6 grid grid-cols-2 gap-2.5"><button type="button" onClick={() => setSaleToDelete(null)} className="min-h-11 rounded-[10px] border border-[#dce4df] text-[13px] font-semibold transition-colors hover:bg-[#f1f5f2] active:scale-[0.99]">Cancelar</button><button type="button" onClick={() => void handleDelete()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#a84f43] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#8f4036] active:scale-[0.99]"><Trash size={17} weight="bold" />Excluir</button></div>
           </div>
         </div>

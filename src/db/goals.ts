@@ -1,9 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import type { MonthlySalesConfig, Sale } from '@/types'
 
-const DATABASE_NAME = 'metas-dashboard'
-const LEGACY_DATABASE_NAME = 'treinamento-miguel'
-const MIGRATION_MARKER = 'metas-dashboard:legacy-migration-v1'
+const DATABASE_NAME = 'metas-dashboard-cloud-v1'
 const API_PATH = '/api/goals'
 
 interface GoalsSnapshot {
@@ -13,77 +11,35 @@ interface GoalsSnapshot {
   updatedAt: string
 }
 
+interface GoalsCacheMetadata {
+  key: 'snapshot'
+  updatedAt: string
+}
+
+export type GoalsStorageState =
+  | { status: 'synced'; updatedAt: string }
+  | { status: 'cached'; updatedAt: string }
+  | { status: 'unavailable'; updatedAt: null }
+
 class GoalsDB extends Dexie {
   sales!: Table<Sale>
   monthlySalesConfigs!: Table<MonthlySalesConfig>
+  metadata!: Table<GoalsCacheMetadata>
 
   constructor() {
     super(DATABASE_NAME)
     this.version(1).stores({
       sales: '++id, monthKey, date, email',
       monthlySalesConfigs: '&monthKey',
+      metadata: '&key',
     })
   }
 }
 
 export const goalsDb = new GoalsDB()
-let initializationPromise: Promise<void> | null = null
-let remoteStorageStatus: 'unknown' | 'available' | 'unavailable' = 'unknown'
-
-function migrationWasAttempted() {
-  try {
-    return window.localStorage.getItem(MIGRATION_MARKER) === 'done'
-  } catch {
-    return false
-  }
-}
-
-function markMigrationAsAttempted() {
-  try {
-    window.localStorage.setItem(MIGRATION_MARKER, 'done')
-  } catch {
-    // Database contents still prevent duplicate imports if localStorage is unavailable.
-  }
-}
-
-async function migrateLegacyBrowserDatabase(): Promise<void> {
-  if (migrationWasAttempted()) return
-
-  const [salesCount, configCount] = await Promise.all([
-    goalsDb.sales.count(),
-    goalsDb.monthlySalesConfigs.count(),
-  ])
-
-  if (salesCount > 0 || configCount > 0) {
-    markMigrationAsAttempted()
-    return
-  }
-
-  if (!(await Dexie.exists(LEGACY_DATABASE_NAME))) {
-    markMigrationAsAttempted()
-    return
-  }
-
-  const legacyDb = new Dexie(LEGACY_DATABASE_NAME)
-  try {
-    await legacyDb.open()
-    const tableNames = new Set(legacyDb.tables.map((table) => table.name))
-    const legacySales = tableNames.has('sales')
-      ? await legacyDb.table<Sale>('sales').toArray()
-      : []
-    const legacyConfigs = tableNames.has('monthlySalesConfigs')
-      ? await legacyDb.table<MonthlySalesConfig>('monthlySalesConfigs').toArray()
-      : []
-
-    await goalsDb.transaction('rw', [goalsDb.sales, goalsDb.monthlySalesConfigs], async () => {
-      if (legacySales.length > 0) await goalsDb.sales.bulkPut(legacySales)
-      if (legacyConfigs.length > 0) await goalsDb.monthlySalesConfigs.bulkPut(legacyConfigs)
-    })
-    markMigrationAsAttempted()
-  } finally {
-    legacyDb.close()
-  }
-}
+let openingPromise: Promise<void> | null = null
+let synchronizationPromise: Promise<GoalsStorageState> | null = null
+let storageState: GoalsStorageState = { status: 'unavailable', updatedAt: null }
 
 function isSnapshot(value: unknown): value is GoalsSnapshot {
   if (!value || typeof value !== 'object') return false
@@ -112,80 +68,65 @@ async function callGoalsApi(body?: Record<string, unknown>): Promise<GoalsSnapsh
   return payload
 }
 
-async function getLocalSnapshot(): Promise<GoalsSnapshot> {
-  const [sales, monthlySalesConfigs] = await Promise.all([
-    goalsDb.sales.toArray(),
-    goalsDb.monthlySalesConfigs.toArray(),
-  ])
-  return {
-    version: 1,
-    sales,
-    monthlySalesConfigs,
-    updatedAt: new Date().toISOString(),
+async function openGoalsDatabase(): Promise<void> {
+  if (!openingPromise) {
+    openingPromise = goalsDb.open().then(() => undefined)
   }
+  await openingPromise
 }
 
 async function replaceLocalSnapshot(snapshot: GoalsSnapshot): Promise<void> {
-  await goalsDb.transaction('rw', [goalsDb.sales, goalsDb.monthlySalesConfigs], async () => {
-    await Promise.all([goalsDb.sales.clear(), goalsDb.monthlySalesConfigs.clear()])
-    if (snapshot.sales.length > 0) await goalsDb.sales.bulkPut(snapshot.sales)
-    if (snapshot.monthlySalesConfigs.length > 0) {
-      await goalsDb.monthlySalesConfigs.bulkPut(snapshot.monthlySalesConfigs)
-    }
-  })
+  await goalsDb.transaction(
+    'rw',
+    [goalsDb.sales, goalsDb.monthlySalesConfigs, goalsDb.metadata],
+    async () => {
+      await Promise.all([goalsDb.sales.clear(), goalsDb.monthlySalesConfigs.clear()])
+      if (snapshot.sales.length > 0) await goalsDb.sales.bulkPut(snapshot.sales)
+      if (snapshot.monthlySalesConfigs.length > 0) {
+        await goalsDb.monthlySalesConfigs.bulkPut(snapshot.monthlySalesConfigs)
+      }
+      await goalsDb.metadata.put({ key: 'snapshot', updatedAt: snapshot.updatedAt })
+    },
+  )
 }
 
-async function synchronizeWithRemote(): Promise<void> {
-  const local = await getLocalSnapshot()
-  let remote = await callGoalsApi()
+async function getFallbackState(): Promise<GoalsStorageState> {
+  const metadata = await goalsDb.metadata.get('snapshot')
+  return metadata
+    ? { status: 'cached', updatedAt: metadata.updatedAt }
+    : { status: 'unavailable', updatedAt: null }
+}
 
-  if (
-    remote.sales.length === 0
-    && remote.monthlySalesConfigs.length === 0
-    && (local.sales.length > 0 || local.monthlySalesConfigs.length > 0)
-  ) {
-    remote = await callGoalsApi({
-      operation: 'importIfEmpty',
-      sales: local.sales,
-      monthlySalesConfigs: local.monthlySalesConfigs,
+async function synchronizeWithRemote(): Promise<GoalsStorageState> {
+  try {
+    const snapshot = await callGoalsApi()
+    await replaceLocalSnapshot(snapshot)
+    storageState = { status: 'synced', updatedAt: snapshot.updatedAt }
+  } catch {
+    storageState = await getFallbackState()
+  }
+  return storageState
+}
+
+export async function initializeGoalsDatabase(): Promise<GoalsStorageState> {
+  await openGoalsDatabase()
+  if (!synchronizationPromise) {
+    synchronizationPromise = synchronizeWithRemote().finally(() => {
+      synchronizationPromise = null
     })
   }
-
-  await replaceLocalSnapshot(remote)
-  remoteStorageStatus = 'available'
+  return synchronizationPromise
 }
 
-export async function initializeGoalsDatabase(): Promise<void> {
-  if (!initializationPromise) {
-    initializationPromise = (async () => {
-      await goalsDb.open()
-      await migrateLegacyBrowserDatabase()
-    })()
-  }
-  await initializationPromise
-
-  if (remoteStorageStatus === 'unavailable') return
-
-  try {
-    await synchronizeWithRemote()
-  } catch {
-    remoteStorageStatus = 'unavailable'
-    // IndexedDB is the durable fallback whenever the central store is unavailable.
-    // A later page load retries the API and imports local data if the store is empty.
-  }
-}
-
-async function applyRemoteMutation(operation: Record<string, unknown>): Promise<GoalsSnapshot | null> {
-  if (remoteStorageStatus === 'unavailable') return null
-
+async function applyRemoteMutation(operation: Record<string, unknown>): Promise<void> {
+  await openGoalsDatabase()
   try {
     const snapshot = await callGoalsApi(operation)
-    remoteStorageStatus = 'available'
     await replaceLocalSnapshot(snapshot)
-    return snapshot
-  } catch {
-    remoteStorageStatus = 'unavailable'
-    return null
+    storageState = { status: 'synced', updatedAt: snapshot.updatedAt }
+  } catch (error) {
+    storageState = await getFallbackState()
+    throw error
   }
 }
 
@@ -195,19 +136,11 @@ export async function getSalesForMonth(monthKey: string): Promise<Sale[]> {
 }
 
 export async function saveSale(sale: Sale): Promise<void> {
-  const remote = await applyRemoteMutation({ operation: 'saveSale', sale })
-  if (remote) return
-
-  if (sale.id != null) {
-    await goalsDb.sales.put(sale)
-    return
-  }
-  await goalsDb.sales.add(sale)
+  await applyRemoteMutation({ operation: 'saveSale', sale })
 }
 
 export async function deleteSale(id: number): Promise<void> {
-  const remote = await applyRemoteMutation({ operation: 'deleteSale', id })
-  if (!remote) await goalsDb.sales.delete(id)
+  await applyRemoteMutation({ operation: 'deleteSale', id })
 }
 
 export async function getMonthlySalesConfig(monthKey: string): Promise<MonthlySalesConfig | undefined> {
@@ -215,10 +148,9 @@ export async function getMonthlySalesConfig(monthKey: string): Promise<MonthlySa
 }
 
 export async function saveMonthlySalesConfig(config: MonthlySalesConfig): Promise<void> {
-  const remote = await applyRemoteMutation({ operation: 'saveConfig', config })
-  if (!remote) await goalsDb.monthlySalesConfigs.put(config)
+  await applyRemoteMutation({ operation: 'saveConfig', config })
 }
 
-export function isGoalsRemoteStorageAvailable(): boolean {
-  return remoteStorageStatus === 'available'
+export function getGoalsStorageState(): GoalsStorageState {
+  return storageState
 }
