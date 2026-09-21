@@ -226,7 +226,10 @@ export interface Sale {
   date: string // YYYY-MM-DD
   customerName?: string
   email: string
-  planAmount: number
+  commissionMrr: number
+  farolMrr?: number
+  /** Campo legado, aceito apenas durante a migração dos dados existentes. */
+  planAmount?: number
   setupAmount: number
   createdAt: string
   updatedAt: string
@@ -242,6 +245,8 @@ export interface MonthlySalesConfig {
   monthKey: string // YYYY-MM
   goalAmount: number
   setupCommissionPercent: number
+  weeklyBonusPercent: number
+  tierMode?: 'fixed-company-bands'
   tiers: CommissionTier[]
   updatedAt: string
 }

@@ -5,7 +5,7 @@ const DATABASE_NAME = 'metas-dashboard-cloud-v1'
 const API_PATH = '/api/goals'
 
 interface GoalsSnapshot {
-  version: 1
+  version: 2
   sales: Sale[]
   monthlySalesConfigs: MonthlySalesConfig[]
   updatedAt: string
@@ -45,7 +45,7 @@ function isSnapshot(value: unknown): value is GoalsSnapshot {
   if (!value || typeof value !== 'object') return false
   const snapshot = value as Partial<GoalsSnapshot>
   return (
-    snapshot.version === 1
+    snapshot.version === 2
     && Array.isArray(snapshot.sales)
     && Array.isArray(snapshot.monthlySalesConfigs)
     && typeof snapshot.updatedAt === 'string'
@@ -132,7 +132,12 @@ async function applyRemoteMutation(operation: Record<string, unknown>): Promise<
 
 export async function getSalesForMonth(monthKey: string): Promise<Sale[]> {
   const sales = await goalsDb.sales.where('monthKey').equals(monthKey).toArray()
-  return sales.sort((a, b) => b.date.localeCompare(a.date) || (b.id ?? 0) - (a.id ?? 0))
+  return sales
+    .map((sale) => {
+      if (Number.isFinite(sale.commissionMrr)) return sale
+      return { ...sale, commissionMrr: sale.planAmount ?? 0 }
+    })
+    .sort((a, b) => b.date.localeCompare(a.date) || (b.id ?? 0) - (a.id ?? 0))
 }
 
 export async function saveSale(sale: Sale): Promise<void> {
@@ -144,7 +149,8 @@ export async function deleteSale(id: number): Promise<void> {
 }
 
 export async function getMonthlySalesConfig(monthKey: string): Promise<MonthlySalesConfig | undefined> {
-  return goalsDb.monthlySalesConfigs.get(monthKey)
+  const config = await goalsDb.monthlySalesConfigs.get(monthKey)
+  return config ? { ...config, weeklyBonusPercent: config.weeklyBonusPercent ?? 0 } : undefined
 }
 
 export async function saveMonthlySalesConfig(config: MonthlySalesConfig): Promise<void> {

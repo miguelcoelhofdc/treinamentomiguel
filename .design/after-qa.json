@@ -1,14 +1,14 @@
 {
-  "target": "http://127.0.0.1:4173/metas",
+  "target": "http://127.0.0.1:5173/metas",
   "desktop": {
     "title": "Metas | Painel comercial",
-    "url": "http://127.0.0.1:4173/metas",
+    "url": "http://127.0.0.1:5173/metas",
     "viewport": {
       "width": 1440,
       "height": 1000
     },
-    "bodyTextLength": 983,
-    "bodyTextSample": "Metas PAINEL COMERCIAL Visão geral Vendas Configurações Cache local O armazenamento central está indisponível. VISÃO GERAL Resultado mensal Acompanhe vendas, atingimento e comissão prevista. Setembro de 2026 Configurar mês Nova venda Visão ",
+    "bodyTextLength": 1514,
+    "bodyTextSample": "Metas PAINEL COMERCIAL Visão geral Vendas Configurações Dados indisponíveis Nenhuma cópia sincronizada disponível. VISÃO GERAL Resultado mensal Acompanhe vendas, atingimento e comissão prevista. Setembro de 2026 Configurar mês Nova venda Da",
     "horizontalScroll": false,
     "scrollWidth": 1435,
     "textOverflow": [],
@@ -16,18 +16,18 @@
     "blockingFixed": [],
     "hasMain": true,
     "screenshotPath": "C:\\Users\\Miguel Coelho\\Desktop\\treinamentomiguel\\.design\\screenshots\\after-desktop.png",
-    "screenshotBytes": 92748,
+    "screenshotBytes": 102544,
     "blankRisk": false
   },
   "mobile": {
     "title": "Metas | Painel comercial",
-    "url": "http://127.0.0.1:4173/metas",
+    "url": "http://127.0.0.1:5173/metas",
     "viewport": {
       "width": 390,
       "height": 844
     },
-    "bodyTextLength": 884,
-    "bodyTextSample": "Metas PAINEL COMERCIAL VISÃO GERAL Resultado mensal Acompanhe vendas, atingimento e comissão prevista. Setembro de 2026 Configurar mês Nova venda Visão geral do mês Vendas de planos R$ 0,00 de uma meta ainda não definida 0% Meta mensal — Fa",
+    "bodyTextLength": 1411,
+    "bodyTextSample": "Metas PAINEL COMERCIAL VISÃO GERAL Resultado mensal Acompanhe vendas, atingimento e comissão prevista. Setembro de 2026 Configurar mês Nova venda Dados indisponíveis A nuvem está indisponível e este dispositivo ainda não possui uma cópia si",
     "horizontalScroll": false,
     "scrollWidth": 390,
     "textOverflow": [],
@@ -35,7 +35,7 @@
     "blockingFixed": [],
     "hasMain": true,
     "screenshotPath": "C:\\Users\\Miguel Coelho\\Desktop\\treinamentomiguel\\.design\\screenshots\\after-mobile.png",
-    "screenshotBytes": 39320,
+    "screenshotBytes": 41688,
     "blankRisk": false
   }
 }

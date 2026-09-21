@@ -3,6 +3,7 @@ import { get, put } from '@vercel/blob'
 const DATA_PATH = 'metas/dashboard.json'
 const MAX_SALES = 10_000
 const MAX_CONFIGS = 1_200
+const FIXED_TIER_IDS = ['below-80', '80-to-99', '100-plus'] as const
 
 interface Sale {
   id?: number
@@ -10,10 +11,15 @@ interface Sale {
   date: string
   customerName?: string
   email: string
-  planAmount: number
+  commissionMrr: number
+  farolMrr?: number
   setupAmount: number
   createdAt: string
   updatedAt: string
+}
+
+interface StoredSale extends Partial<Sale> {
+  planAmount?: number
 }
 
 interface CommissionTier {
@@ -26,24 +32,37 @@ interface MonthlySalesConfig {
   monthKey: string
   goalAmount: number
   setupCommissionPercent: number
+  weeklyBonusPercent: number
+  tierMode?: 'fixed-company-bands'
   tiers: CommissionTier[]
   updatedAt: string
 }
 
+interface StoredMonthlySalesConfig extends Omit<MonthlySalesConfig, 'weeklyBonusPercent'> {
+  weeklyBonusPercent?: number
+}
+
 interface GoalsSnapshot {
-  version: 1
+  version: 2
   sales: Sale[]
   monthlySalesConfigs: MonthlySalesConfig[]
   updatedAt: string
 }
 
+interface StoredGoalsSnapshot {
+  version?: number
+  sales: StoredSale[]
+  monthlySalesConfigs: StoredMonthlySalesConfig[]
+  updatedAt?: string
+}
+
 interface GoalsStorage {
-  read: (request: Request) => Promise<GoalsSnapshot>
+  read: (request: Request) => Promise<StoredGoalsSnapshot | GoalsSnapshot>
   write: (snapshot: GoalsSnapshot, request: Request) => Promise<void>
 }
 
 const emptySnapshot = (): GoalsSnapshot => ({
-  version: 1,
+  version: 2,
   sales: [],
   monthlySalesConfigs: [],
   updatedAt: new Date().toISOString(),
@@ -79,9 +98,11 @@ function isFiniteNonNegative(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }
 
-function isSale(value: unknown): value is Sale {
-  if (!value || typeof value !== 'object') return false
-  const sale = value as Partial<Sale>
+function isFinitePositive(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+}
+
+function hasValidSaleMetadata(sale: Partial<StoredSale>) {
   return (
     (sale.id == null || (Number.isSafeInteger(sale.id) && sale.id > 0))
     && isMonthKey(sale.monthKey)
@@ -94,11 +115,48 @@ function isSale(value: unknown): value is Sale {
     && typeof sale.email === 'string'
     && sale.email.length > 2
     && sale.email.length <= 320
-    && isFiniteNonNegative(sale.planAmount)
     && isFiniteNonNegative(sale.setupAmount)
     && typeof sale.createdAt === 'string'
     && typeof sale.updatedAt === 'string'
   )
+}
+
+function isStoredSale(value: unknown): value is StoredSale {
+  if (!value || typeof value !== 'object') return false
+  const sale = value as Partial<StoredSale>
+  return (
+    hasValidSaleMetadata(sale)
+    && (isFiniteNonNegative(sale.commissionMrr) || isFiniteNonNegative(sale.planAmount))
+    && (sale.farolMrr == null || isFinitePositive(sale.farolMrr))
+  )
+}
+
+function isIncomingSale(value: unknown): value is Sale {
+  if (!value || typeof value !== 'object') return false
+  const sale = value as Partial<StoredSale>
+  return (
+    hasValidSaleMetadata(sale)
+    && isFinitePositive(sale.commissionMrr)
+    && (sale.farolMrr == null || isFinitePositive(sale.farolMrr))
+  )
+}
+
+function normalizeSale(sale: StoredSale): Sale {
+  const commissionMrr = isFiniteNonNegative(sale.commissionMrr)
+    ? sale.commissionMrr
+    : (sale.planAmount ?? 0)
+  return {
+    ...(sale.id != null ? { id: sale.id } : {}),
+    monthKey: sale.monthKey as string,
+    date: sale.date as string,
+    ...(sale.customerName ? { customerName: sale.customerName } : {}),
+    email: sale.email as string,
+    commissionMrr,
+    ...(sale.farolMrr != null ? { farolMrr: sale.farolMrr } : {}),
+    setupAmount: sale.setupAmount as number,
+    createdAt: sale.createdAt as string,
+    updatedAt: sale.updatedAt as string,
+  }
 }
 
 function isCommissionTier(value: unknown): value is CommissionTier {
@@ -110,16 +168,22 @@ function isCommissionTier(value: unknown): value is CommissionTier {
     && tier.id.length <= 100
     && (tier.upToPercent === null || isFiniteNonNegative(tier.upToPercent))
     && isFiniteNonNegative(tier.commissionPercent)
+    && tier.commissionPercent <= 100
   )
 }
 
-function isMonthlyConfig(value: unknown): value is MonthlySalesConfig {
+function isStoredMonthlyConfig(value: unknown): value is StoredMonthlySalesConfig {
   if (!value || typeof value !== 'object') return false
-  const config = value as Partial<MonthlySalesConfig>
+  const config = value as Partial<StoredMonthlySalesConfig>
   return (
     isMonthKey(config.monthKey)
     && isFiniteNonNegative(config.goalAmount)
     && isFiniteNonNegative(config.setupCommissionPercent)
+    && config.setupCommissionPercent <= 100
+    && (config.weeklyBonusPercent == null || (
+      isFiniteNonNegative(config.weeklyBonusPercent) && config.weeklyBonusPercent <= 100
+    ))
+    && (config.tierMode == null || config.tierMode === 'fixed-company-bands')
     && Array.isArray(config.tiers)
     && config.tiers.length > 0
     && config.tiers.length <= 50
@@ -128,17 +192,53 @@ function isMonthlyConfig(value: unknown): value is MonthlySalesConfig {
   )
 }
 
-function isSnapshotData(value: unknown): value is Pick<GoalsSnapshot, 'sales' | 'monthlySalesConfigs'> {
+function isIncomingMonthlyConfig(value: unknown): value is MonthlySalesConfig {
+  if (!isStoredMonthlyConfig(value)) return false
+  const config = value as StoredMonthlySalesConfig
+  return (
+    config.goalAmount > 0
+    && config.tierMode === 'fixed-company-bands'
+    && isFiniteNonNegative(config.weeklyBonusPercent)
+    && config.tiers.length === FIXED_TIER_IDS.length
+    && FIXED_TIER_IDS.every((id, index) => config.tiers[index]?.id === id)
+    && config.tiers[0]?.upToPercent === 80
+    && config.tiers[1]?.upToPercent === 100
+    && config.tiers[2]?.upToPercent === null
+  )
+}
+
+function normalizeConfig(config: StoredMonthlySalesConfig): MonthlySalesConfig {
+  return {
+    monthKey: config.monthKey,
+    goalAmount: config.goalAmount,
+    setupCommissionPercent: config.setupCommissionPercent,
+    weeklyBonusPercent: config.weeklyBonusPercent ?? 0,
+    ...(config.tierMode ? { tierMode: config.tierMode } : {}),
+    tiers: config.tiers,
+    updatedAt: config.updatedAt,
+  }
+}
+
+function isSnapshotData(value: unknown): value is StoredGoalsSnapshot {
   if (!value || typeof value !== 'object') return false
-  const data = value as Partial<GoalsSnapshot>
+  const data = value as Partial<StoredGoalsSnapshot>
   return (
     Array.isArray(data.sales)
     && data.sales.length <= MAX_SALES
-    && data.sales.every(isSale)
+    && data.sales.every(isStoredSale)
     && Array.isArray(data.monthlySalesConfigs)
     && data.monthlySalesConfigs.length <= MAX_CONFIGS
-    && data.monthlySalesConfigs.every(isMonthlyConfig)
+    && data.monthlySalesConfigs.every(isStoredMonthlyConfig)
   )
+}
+
+function normalizeSnapshot(snapshot: StoredGoalsSnapshot | GoalsSnapshot): GoalsSnapshot {
+  return {
+    version: 2,
+    sales: snapshot.sales.map(normalizeSale),
+    monthlySalesConfigs: snapshot.monthlySalesConfigs.map(normalizeConfig),
+    updatedAt: typeof snapshot.updatedAt === 'string' ? snapshot.updatedAt : new Date().toISOString(),
+  }
 }
 
 async function readSnapshot(request: Request): Promise<GoalsSnapshot> {
@@ -151,14 +251,7 @@ async function readSnapshot(request: Request): Promise<GoalsSnapshot> {
 
   const payload: unknown = await new Response(result.stream).json()
   if (!isSnapshotData(payload)) throw new Error('INVALID_STORED_DATA')
-  return {
-    version: 1,
-    sales: payload.sales,
-    monthlySalesConfigs: payload.monthlySalesConfigs,
-    updatedAt: typeof (payload as Partial<GoalsSnapshot>).updatedAt === 'string'
-      ? (payload as Partial<GoalsSnapshot>).updatedAt as string
-      : new Date().toISOString(),
-  }
+  return normalizeSnapshot(payload)
 }
 
 async function writeSnapshot(snapshot: GoalsSnapshot, request: Request): Promise<void> {
@@ -186,7 +279,7 @@ export function createGoalsHandler(
     }
 
     try {
-      const snapshot = await storage.read(request)
+      const snapshot = normalizeSnapshot(await storage.read(request))
       if (request.method === 'GET') return json(snapshot)
 
       const body: unknown = await request.json().catch(() => null)
@@ -197,9 +290,9 @@ export function createGoalsHandler(
       const operation = (body as { operation?: unknown }).operation
       if (operation === 'saveSale') {
         const sale = (body as { sale?: unknown }).sale
-        if (!isSale(sale)) return json({ error: 'Venda inválida.' }, 400)
+        if (!isIncomingSale(sale)) return json({ error: 'Venda inválida.' }, 400)
 
-        const nextSale = { ...sale }
+        const nextSale = normalizeSale(sale)
         if (nextSale.id == null) {
           nextSale.id = Math.max(Date.now(), ...snapshot.sales.map((item) => item.id ?? 0)) + 1
           snapshot.sales.push(nextSale)
@@ -214,10 +307,11 @@ export function createGoalsHandler(
         snapshot.sales = snapshot.sales.filter((sale) => sale.id !== id)
       } else if (operation === 'saveConfig') {
         const config = (body as { config?: unknown }).config
-        if (!isMonthlyConfig(config)) return json({ error: 'Configuração inválida.' }, 400)
+        if (!isIncomingMonthlyConfig(config)) return json({ error: 'Configuração inválida.' }, 400)
+        const normalizedConfig = normalizeConfig(config)
         const index = snapshot.monthlySalesConfigs.findIndex((item) => item.monthKey === config.monthKey)
-        if (index >= 0) snapshot.monthlySalesConfigs[index] = config
-        else snapshot.monthlySalesConfigs.push(config)
+        if (index >= 0) snapshot.monthlySalesConfigs[index] = normalizedConfig
+        else snapshot.monthlySalesConfigs.push(normalizedConfig)
       } else {
         return json({ error: 'Operação desconhecida.' }, 400)
       }

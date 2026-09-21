@@ -4,15 +4,15 @@ import { createGoalsHandler } from '../../api/goals.ts'
 
 function emptySnapshot() {
   return {
-    version: 1,
+    version: 2,
     sales: [],
     monthlySalesConfigs: [],
     updatedAt: '2026-09-21T12:00:00.000Z',
   }
 }
 
-function createMemoryHandler({ configured = true, failWrite = false } = {}) {
-  let snapshot = emptySnapshot()
+function createMemoryHandler({ configured = true, failWrite = false, initialSnapshot } = {}) {
+  let snapshot = initialSnapshot ?? emptySnapshot()
   let writes = 0
   const handler = createGoalsHandler({
     read: async () => structuredClone(snapshot),
@@ -50,7 +50,8 @@ describe('goals API', () => {
       date: '2026-09-21',
       customerName: 'Cliente Teste',
       email: 'cliente@example.com',
-      planAmount: 1200,
+      commissionMrr: 1200,
+      farolMrr: 1500,
       setupAmount: 300,
       createdAt: '2026-09-21T12:00:00.000Z',
       updatedAt: '2026-09-21T12:00:00.000Z',
@@ -59,7 +60,13 @@ describe('goals API', () => {
       monthKey: '2026-09',
       goalAmount: 10000,
       setupCommissionPercent: 5,
-      tiers: [{ id: 'final', upToPercent: null, commissionPercent: 10 }],
+      weeklyBonusPercent: 6,
+      tierMode: 'fixed-company-bands',
+      tiers: [
+        { id: 'below-80', upToPercent: 80, commissionPercent: 7 },
+        { id: '80-to-99', upToPercent: 100, commissionPercent: 10 },
+        { id: '100-plus', upToPercent: null, commissionPercent: 15 },
+      ],
       updatedAt: '2026-09-21T12:00:00.000Z',
     }
 
@@ -75,6 +82,7 @@ describe('goals API', () => {
     const getResponse = await handler(new Request('https://example.test/api/goals'))
     const fetched = await getResponse.json()
     assert.equal(fetched.sales.length, 1)
+    assert.equal(fetched.sales[0].farolMrr, 1500)
     assert.equal(fetched.monthlySalesConfigs[0].goalAmount, 10000)
 
     const deleteResponse = await post(handler, { operation: 'deleteSale', id: createdSale.id })
@@ -108,7 +116,7 @@ describe('goals API', () => {
         monthKey: '2026-09',
         date: '2026-09-21',
         email: 'cliente@example.com',
-        planAmount: 1200,
+        commissionMrr: 1200,
         setupAmount: 0,
         createdAt: '2026-09-21T12:00:00.000Z',
         updatedAt: '2026-09-21T12:00:00.000Z',
@@ -118,5 +126,40 @@ describe('goals API', () => {
     assert.equal(response.status, 500)
     assert.equal((await response.json()).code, 'STORAGE_REQUEST_FAILED')
     assert.equal(getSnapshot().sales.length, 0)
+  })
+
+  it('normalizes legacy sales and configs without changing their values', async () => {
+    const legacySnapshot = {
+      version: 1,
+      sales: [{
+        id: 10,
+        monthKey: '2026-08',
+        date: '2026-08-10',
+        email: 'legado@example.com',
+        planAmount: 897,
+        setupAmount: 100,
+        createdAt: '2026-08-10T12:00:00.000Z',
+        updatedAt: '2026-08-10T12:00:00.000Z',
+      }],
+      monthlySalesConfigs: [{
+        monthKey: '2026-08',
+        goalAmount: 10000,
+        setupCommissionPercent: 5,
+        tiers: [{ id: 'final', upToPercent: null, commissionPercent: 10 }],
+        updatedAt: '2026-08-01T12:00:00.000Z',
+      }],
+      updatedAt: '2026-08-10T12:00:00.000Z',
+    }
+    const { handler } = createMemoryHandler({ initialSnapshot: legacySnapshot })
+
+    const response = await handler(new Request('https://example.test/api/goals'))
+    const payload = await response.json()
+
+    assert.equal(response.status, 200)
+    assert.equal(payload.version, 2)
+    assert.equal(payload.sales[0].commissionMrr, 897)
+    assert.equal(payload.sales[0].farolMrr, undefined)
+    assert.equal(payload.monthlySalesConfigs[0].weeklyBonusPercent, 0)
+    assert.equal(payload.monthlySalesConfigs[0].tierMode, undefined)
   })
 })

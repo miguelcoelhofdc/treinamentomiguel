@@ -5,6 +5,8 @@ import {
   CaretLeft,
   CaretRight,
   ChartBar,
+  CheckCircle,
+  Clock,
   CurrencyDollar,
   Database,
   GearSix,
@@ -37,7 +39,9 @@ import {
   calculateSalesSummary,
   currencyFormatter,
   formatMonth,
+  getCommissionMrr,
   getCurrentMonthKey,
+  getGoalMrr,
   percentFormatter,
   shiftMonth,
   tierLabel,
@@ -171,12 +175,14 @@ export default function Goals() {
   const [monthKey, setMonthKey] = useState(getCurrentMonthKey)
   const [sales, setSales] = useState<Sale[]>([])
   const [config, setConfig] = useState<MonthlySalesConfig | undefined>()
+  const [previousConfig, setPreviousConfig] = useState<MonthlySalesConfig | undefined>()
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [formSale, setFormSale] = useState<Sale | null | undefined>(undefined)
   const [saleToDelete, setSaleToDelete] = useState<Sale | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [showPastConfigConfirm, setShowPastConfigConfirm] = useState(false)
   const [activeSection, setActiveSection] = useState<SectionId>('overview')
   const [storageState, setStorageState] = useState<GoalsStorageState>({
     status: 'unavailable',
@@ -200,11 +206,12 @@ export default function Goals() {
   }, [])
 
   useEffect(() => {
-    if (!showSettings && !saleToDelete) return
+    if (!showSettings && !saleToDelete && !showPastConfigConfirm) return
     const previousOverflow = document.body.style.overflow
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       if (saleToDelete) setSaleToDelete(null)
+      else if (showPastConfigConfirm) setShowPastConfigConfirm(false)
       else setShowSettings(false)
     }
     document.body.style.overflow = 'hidden'
@@ -213,7 +220,7 @@ export default function Goals() {
       document.body.style.overflow = previousOverflow
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [saleToDelete, showSettings])
+  }, [saleToDelete, showPastConfigConfirm, showSettings])
 
   useEffect(() => {
     const sections = Array.from(document.querySelectorAll<HTMLElement>('[data-goals-section]'))
@@ -237,12 +244,14 @@ export default function Goals() {
     try {
       const nextStorageState = await initializeGoalsDatabase()
       setStorageState(nextStorageState)
-      const [monthSales, monthConfig] = await Promise.all([
+      const [monthSales, monthConfig, priorConfig] = await Promise.all([
         getSalesForMonth(selectedMonth),
         getMonthlySalesConfig(selectedMonth),
+        getMonthlySalesConfig(shiftMonth(selectedMonth, -1)),
       ])
       setSales(monthSales)
       setConfig(monthConfig)
+      setPreviousConfig(priorConfig)
       if (nextStorageState.status === 'unavailable') {
         setLoadError('A nuvem está indisponível e este dispositivo ainda não possui uma cópia sincronizada.')
       }
@@ -270,18 +279,26 @@ export default function Goals() {
   const summary = useMemo(() => calculateSalesSummary(sales, config), [sales, config])
   const progressScale = Math.min(1, Math.max(0, summary.attainmentPercent / 100))
   const currentTierCopy = summary.currentTier && config
-    ? tierLabel(summary.currentTier, config.tiers)
-    : 'Configure as faixas para calcular a comissão dos planos.'
+    ? tierLabel(summary.currentTier, config.tiers, config.tierMode === 'fixed-company-bands')
+    : 'Configure o mês para calcular a comissão sobre o MRR.'
   const canMutate = storageState.status === 'synced'
 
   const handleNavigate = (section: SectionId) => {
     if (section === 'settings') {
-      if (!canMutate) return
-      setShowSettings(true)
+      requestOpenSettings()
       return
     }
     setActiveSection(section)
     document.querySelector(`[data-goals-section="${section}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const requestOpenSettings = () => {
+    if (!canMutate) return
+    if (monthKey < getCurrentMonthKey()) {
+      setShowPastConfigConfirm(true)
+      return
+    }
+    setShowSettings(true)
   }
 
   const handleSaleSave = async (sale: Sale) => {
@@ -360,7 +377,7 @@ export default function Goals() {
                   <CaretRight size={18} weight="bold" />
                 </button>
               </div>
-              <button type="button" onClick={() => setShowSettings(true)} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#dce3df] bg-white px-4 text-[13px] font-semibold transition-colors hover:bg-[#f1f4f2] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
+              <button type="button" onClick={requestOpenSettings} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#dce3df] bg-white px-4 text-[13px] font-semibold transition-colors hover:bg-[#f1f4f2] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
                 <GearSix size={18} weight="bold" />
                 Configurar mês
               </button>
@@ -408,11 +425,11 @@ export default function Goals() {
                 <div>
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-[11px] font-semibold text-[#6d7972]">Vendas de planos</p>
-                      <p className="mt-2.5 break-words text-[36px] font-semibold leading-none tracking-[-0.045em] tabular-nums sm:text-[42px]">{currencyFormatter.format(summary.planTotal)}</p>
+                      <p className="text-[11px] font-semibold text-[#6d7972]">MRR que conta para a meta</p>
+                      <p className="mt-2.5 break-words text-[36px] font-semibold leading-none tracking-[-0.045em] tabular-nums sm:text-[42px]">{currencyFormatter.format(summary.goalMrrTotal)}</p>
                       <p className="mt-2 text-[13px] text-[#718078]">de {summary.goalAmount > 0 ? currencyFormatter.format(summary.goalAmount) : 'uma meta ainda não definida'}</p>
                     </div>
-                    <span className="inline-flex min-h-8 items-center rounded-lg border border-[#d5e7dc] bg-[#edf5f0] px-2.5 text-[12px] font-semibold text-[#246348]">{percentFormatter.format(summary.attainmentPercent)}%</span>
+                    <span className={`inline-flex min-h-8 items-center rounded-lg border px-2.5 text-[12px] font-semibold ${config ? 'border-[#d5e7dc] bg-[#edf5f0] text-[#246348]' : 'border-[#ead8ab] bg-[#fff8e5] text-[#755b1d]'}`}>{config ? `${percentFormatter.format(summary.attainmentPercent)}%` : 'Configuração pendente'}</span>
                   </div>
 
                   <div className="mt-6 h-2 overflow-hidden rounded-full bg-[#e8edea]">
@@ -426,7 +443,7 @@ export default function Goals() {
                   </div>
 
                   {!config && (
-                    <button type="button" onClick={() => setShowSettings(true)} disabled={!canMutate} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-[#eef4f0] px-3.5 text-[12px] font-semibold text-[#246348] transition-colors hover:bg-[#dfece4] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
+                    <button type="button" onClick={requestOpenSettings} disabled={!canMutate} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-[#eef4f0] px-3.5 text-[12px] font-semibold text-[#246348] transition-colors hover:bg-[#dfece4] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
                       <SlidersHorizontal size={16} weight="bold" />Definir meta e comissões
                     </button>
                   )}
@@ -434,9 +451,9 @@ export default function Goals() {
               </div>
 
               <div className="divide-y divide-[#e2e7e4] overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
-                <CompactMetric label="Comissão prevista" value={currencyFormatter.format(summary.totalCommission)} icon={TrendUp} tone="dark" />
+                <CompactMetric label="Comissão prevista" value={config ? currencyFormatter.format(summary.totalCommission) : 'Pendente'} icon={TrendUp} tone="dark" />
+                <CompactMetric label="MRR comissão" value={currencyFormatter.format(summary.commissionMrrTotal)} icon={CurrencyDollar} />
                 <CompactMetric label="Setup vendido" value={currencyFormatter.format(summary.setupTotal)} icon={Receipt} />
-                <CompactMetric label="Faturamento total" value={currencyFormatter.format(summary.revenueTotal)} icon={CurrencyDollar} />
               </div>
             </div>
 
@@ -445,9 +462,9 @@ export default function Goals() {
                 <div className="flex flex-col gap-3 border-b border-[#e4e9e6] px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
                   <div><p className="text-[11px] font-semibold text-[#78867e]">Desempenho diário</p><h3 className="mt-1 text-[19px] font-semibold tracking-[-0.02em]">Evolução das vendas</h3></div>
                   <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[#7a8780]" aria-hidden="true">
-                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#327355]" />Planos</span>
-                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#a9b8b0]" />Setup</span>
-                    <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 bg-[#1d2924]" />Acumulado</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#327355]" />MRR farol</span>
+                    <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#a9b8b0]" />MRR comissão</span>
+                    <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 bg-[#1d2924]" />Farol acumulado</span>
                   </div>
                 </div>
                 <SalesChart sales={sales} />
@@ -460,10 +477,31 @@ export default function Goals() {
                 </div>
                 <div className="mt-5 rounded-xl border border-[#dce9e1] bg-[#f3f7f4] p-4"><p className="text-[10px] font-semibold uppercase tracking-[0.09em] text-[#5f786a]">Faixa atual</p><p className="mt-1.5 text-[13px] font-medium leading-5 text-[#244c38]">{currentTierCopy}</p></div>
                 <dl className="mt-4 divide-y divide-[#e5eae7]">
-                  <div className="flex items-end justify-between gap-4 py-4"><dt><p className="text-[13px] font-semibold">Planos</p><p className="mt-1 text-[11px] text-[#7a8780]">{percentFormatter.format(summary.planCommissionPercent)}% da faixa</p></dt><dd className="text-[17px] font-semibold tracking-[-0.02em] tabular-nums">{currencyFormatter.format(summary.planCommission)}</dd></div>
+                  <div className="flex items-end justify-between gap-4 py-4"><dt><p className="text-[13px] font-semibold">MRR comissão</p><p className="mt-1 text-[11px] text-[#7a8780]">{percentFormatter.format(summary.planCommissionPercent)}% da faixa</p></dt><dd className="text-[17px] font-semibold tracking-[-0.02em] tabular-nums">{currencyFormatter.format(summary.planCommission)}</dd></div>
                   <div className="flex items-end justify-between gap-4 py-4"><dt><p className="text-[13px] font-semibold">Setups</p><p className="mt-1 text-[11px] text-[#7a8780]">{percentFormatter.format(summary.setupCommissionPercent)}% fixo</p></dt><dd className="text-[17px] font-semibold tracking-[-0.02em] tabular-nums">{currencyFormatter.format(summary.setupCommission)}</dd></div>
+                  <div className="flex items-end justify-between gap-4 py-4"><dt><p className="text-[13px] font-semibold">Bônus semanal</p><p className="mt-1 text-[11px] text-[#7a8780]">{percentFormatter.format(summary.weeklyBonusPercent)}% nas semanas atingidas</p></dt><dd className="text-[17px] font-semibold tracking-[-0.02em] tabular-nums">{currencyFormatter.format(summary.weeklyBonus)}</dd></div>
                 </dl>
-                <div className="mt-1 flex items-end justify-between gap-4 border-t-2 border-[#1d2924] pt-5"><p className="text-[12px] font-bold uppercase tracking-[0.12em]">Total previsto</p><p className="text-[22px] font-semibold tracking-[-0.035em] tabular-nums">{currencyFormatter.format(summary.totalCommission)}</p></div>
+                <div className="mt-1 flex items-end justify-between gap-4 border-t-2 border-[#1d2924] pt-5"><p className="text-[12px] font-bold uppercase tracking-[0.12em]">Total previsto</p><p className="text-[22px] font-semibold tracking-[-0.035em] tabular-nums">{config ? currencyFormatter.format(summary.totalCommission) : 'Pendente'}</p></div>
+              </div>
+            </div>
+
+            <div className="mt-5 overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
+              <div className="flex flex-col gap-2 border-b border-[#e4e9e6] px-5 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+                <div><p className="text-[11px] font-semibold text-[#78867e]">Bônus semanal</p><h3 className="mt-1 text-[19px] font-semibold tracking-[-0.02em]">Meta mensal dividida em quatro períodos</h3></div>
+                <p className="text-[11px] font-medium text-[#748078]">Meta por semana: {config ? currencyFormatter.format(summary.weeklyGoal) : 'pendente'}</p>
+              </div>
+              <div className="grid divide-y divide-[#e5eae7] sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4">
+                {summary.weeks.map((week) => (
+                  <article key={week.index} className="p-5 sm:p-4 xl:p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div><p className="text-[12px] font-semibold">{week.label}</p><p className="mt-1 text-[10px] text-[#829087]">{week.period}</p></div>
+                      <span className={`inline-flex min-h-7 items-center gap-1 rounded-md px-2 text-[10px] font-semibold ${week.attained ? 'bg-[#e7f3eb] text-[#246348]' : 'bg-[#f1f3f2] text-[#718078]'}`}>{week.attained ? <CheckCircle size={14} weight="fill" /> : <Clock size={14} weight="duotone" />}{week.attained ? 'Atingida' : config ? 'Em andamento' : 'Pendente'}</span>
+                    </div>
+                    <p className="mt-4 text-[18px] font-semibold tracking-[-0.025em] tabular-nums">{currencyFormatter.format(week.goalMrr)}</p>
+                    <p className="mt-1 text-[10px] text-[#748078]">MRR para meta</p>
+                    <div className="mt-4 flex items-end justify-between gap-3 border-t border-[#edf0ee] pt-3"><span className="text-[10px] font-medium text-[#748078]">Bônus</span><span className="text-[13px] font-semibold tabular-nums">{config ? currencyFormatter.format(week.bonus) : '—'}</span></div>
+                  </article>
+                ))}
               </div>
             </div>
           </section>
@@ -478,20 +516,21 @@ export default function Goals() {
               <div className="flex min-h-[220px] flex-col items-start justify-center rounded-2xl border border-dashed border-[#cbd7d0] bg-white p-6">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#327355]"><Receipt size={22} weight="duotone" /></span>
                 <p className="mt-4 text-[16px] font-semibold">Comece pela primeira venda de {formatMonth(monthKey)}</p>
-                <p className="mt-1 max-w-[42ch] text-[13px] leading-5 text-[#718078]">Registre nome, data, e-mail e os valores de plano e setup para alimentar o painel.</p>
+                <p className="mt-1 max-w-[42ch] text-[13px] leading-5 text-[#718078]">Registre o MRR comissão e, quando necessário, um MRR farol diferente para a meta.</p>
                 <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"><Plus size={17} weight="bold" />Cadastrar venda</button>
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
                 <div className="hidden overflow-x-auto md:block">
-                  <table className="w-full min-w-[720px] border-collapse text-left">
-                    <thead><tr className="border-b border-[#e1e7e3] bg-[#f7f9f7] text-[10px] font-bold uppercase tracking-[0.13em] text-[#748078]"><th className="px-5 py-4">Data</th><th className="px-5 py-4">Cliente</th><th className="px-5 py-4 text-right">Plano</th><th className="px-5 py-4 text-right">Setup</th><th className="px-5 py-4 text-right">Ações</th></tr></thead>
+                  <table className="w-full min-w-[900px] border-collapse text-left">
+                    <thead><tr className="border-b border-[#e1e7e3] bg-[#f7f9f7] text-[10px] font-bold uppercase tracking-[0.13em] text-[#748078]"><th className="px-5 py-4">Data</th><th className="px-5 py-4">Cliente</th><th className="px-5 py-4 text-right">MRR farol</th><th className="px-5 py-4 text-right">MRR comissão</th><th className="px-5 py-4 text-right">Setup</th><th className="px-5 py-4 text-right">Ações</th></tr></thead>
                     <tbody className="divide-y divide-[#e7ebe8]">
                       {sales.map((sale) => (
                         <tr key={sale.id} className="transition-colors hover:bg-[#f7f9f7]">
                           <td className="whitespace-nowrap px-5 py-4 text-[13px] font-semibold tabular-nums text-[#65736c]">{formatDate(sale.date)}</td>
                           <td className="max-w-[280px] px-5 py-4"><p className="truncate text-[13px] font-semibold">{sale.customerName || sale.email}</p>{sale.customerName && <p className="mt-0.5 truncate text-[11px] font-medium text-[#748078]">{sale.email}</p>}</td>
-                          <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-semibold tabular-nums">{currencyFormatter.format(sale.planAmount)}</td>
+                          <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-semibold tabular-nums">{currencyFormatter.format(getGoalMrr(sale))}</td>
+                          <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-semibold tabular-nums">{currencyFormatter.format(getCommissionMrr(sale))}</td>
                           <td className="whitespace-nowrap px-5 py-4 text-right text-[13px] font-medium tabular-nums text-[#65736c]">{currencyFormatter.format(sale.setupAmount)}</td>
                           <td className="whitespace-nowrap px-5 py-3 text-right"><button type="button" onClick={() => setFormSale(sale)} disabled={!canMutate} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#627168] transition-colors hover:bg-[#edf2ef] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Editar venda de ${sale.customerName || sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} disabled={!canMutate} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43] transition-colors hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Excluir venda de ${sale.customerName || sale.email}`}><Trash size={17} weight="bold" /></button></td>
                         </tr>
@@ -503,7 +542,7 @@ export default function Goals() {
                   {sales.map((sale) => (
                     <article key={sale.id} className="p-4">
                       <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-[14px] font-semibold">{sale.customerName || sale.email}</p>{sale.customerName && <p className="mt-0.5 truncate text-[11px] font-medium text-[#748078]">{sale.email}</p>}<p className="mt-1 text-[11px] font-medium tabular-nums text-[#748078]">{formatDate(sale.date)}</p></div><div className="flex shrink-0"><button type="button" onClick={() => setFormSale(sale)} disabled={!canMutate} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#627168] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Editar venda de ${sale.customerName || sale.email}`}><NotePencil size={17} weight="bold" /></button><button type="button" onClick={() => setSaleToDelete(sale)} disabled={!canMutate} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#a84f43] disabled:cursor-not-allowed disabled:opacity-35" aria-label={`Excluir venda de ${sale.customerName || sale.email}`}><Trash size={17} weight="bold" /></button></div></div>
-                      <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#f4f7f5] p-3"><div><p className="text-[10px] font-semibold text-[#7a8780]">Plano</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(sale.planAmount)}</p></div><div><p className="text-[10px] font-semibold text-[#7a8780]">Setup</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(sale.setupAmount)}</p></div></div>
+                      <div className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-[#f4f7f5] p-3"><div><p className="text-[10px] font-semibold text-[#7a8780]">MRR farol</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(getGoalMrr(sale))}</p></div><div><p className="text-[10px] font-semibold text-[#7a8780]">MRR comissão</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(getCommissionMrr(sale))}</p></div><div className="col-span-2 border-t border-[#dfe6e1] pt-3"><p className="text-[10px] font-semibold text-[#7a8780]">Setup</p><p className="mt-1 text-[14px] font-semibold tabular-nums">{currencyFormatter.format(sale.setupAmount)}</p></div></div>
                     </article>
                   ))}
                 </div>
@@ -518,12 +557,24 @@ export default function Goals() {
           <button type="button" className="absolute inset-0 bg-[#18221e]/42" onClick={() => setShowSettings(false)} aria-label="Fechar configurações" />
           <aside className="goals-drawer absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl bg-[#f8faf8] shadow-[-18px_0_60px_-32px_rgba(24,34,30,0.48)] md:inset-y-0 md:left-auto md:right-0 md:h-[100dvh] md:max-h-none md:w-[460px] md:rounded-none" role="dialog" aria-modal="true" aria-labelledby="goals-settings-title">
             <div className="flex items-start justify-between gap-4 border-b border-[#dfe6e1] bg-white px-5 py-5 sm:px-6"><div><p className="text-[11px] font-semibold text-[#748078]">{formatMonth(monthKey)}</p><h2 id="goals-settings-title" className="mt-1 text-[22px] font-semibold tracking-[-0.025em]">Configuração do mês</h2></div><button type="button" onClick={() => setShowSettings(false)} className="flex h-10 w-10 items-center justify-center rounded-[10px] text-[#65736c] transition-colors hover:bg-[#edf2ef] active:scale-[0.98]" aria-label="Fechar"><X size={20} weight="bold" /></button></div>
-            <div className="min-h-0 flex-1 overflow-y-auto"><CommissionSettingsForm monthKey={monthKey} config={config} onSave={handleConfigSave} /></div>
+            <div className="min-h-0 flex-1 overflow-y-auto"><CommissionSettingsForm monthKey={monthKey} config={config} previousConfig={previousConfig} onSave={handleConfigSave} /></div>
           </aside>
         </div>
       ), document.body)}
 
       {formSale !== undefined && <SaleForm monthKey={monthKey} sale={formSale ?? undefined} onCancel={() => setFormSale(undefined)} onSave={handleSaleSave} />}
+
+      {showPastConfigConfirm && createPortal((
+        <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 70 }} role="dialog" aria-modal="true" aria-labelledby="past-config-title">
+          <button type="button" className="absolute inset-0 bg-[#18221e]/46" onClick={() => setShowPastConfigConfirm(false)} aria-label="Cancelar edição do histórico" />
+          <div className="goals-modal relative w-full max-w-[430px] rounded-2xl border border-[#e4d7b8] bg-white p-5 shadow-[0_24px_70px_-28px_rgba(24,34,30,0.6)] sm:p-6">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff8e5] text-[#80641e]"><WarningCircle size={21} weight="duotone" /></span>
+            <h2 id="past-config-title" className="mt-4 text-[21px] font-semibold tracking-[-0.025em]">Editar configuração histórica?</h2>
+            <p className="mt-2 text-[13px] leading-5 text-[#718078]">Qualquer alteração recalculará somente os resultados de {formatMonth(monthKey)}. Os outros meses permanecem intactos.</p>
+            <div className="mt-6 grid grid-cols-2 gap-2.5"><button type="button" onClick={() => setShowPastConfigConfirm(false)} className="min-h-11 rounded-[10px] border border-[#dce4df] text-[13px] font-semibold transition-colors hover:bg-[#f1f5f2] active:scale-[0.99]">Cancelar</button><button type="button" onClick={() => { setShowPastConfigConfirm(false); setShowSettings(true) }} className="min-h-11 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99]">Editar este mês</button></div>
+          </div>
+        </div>
+      ), document.body)}
 
       {saleToDelete && createPortal((
         <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 70 }} role="dialog" aria-modal="true" aria-labelledby="delete-sale-title">

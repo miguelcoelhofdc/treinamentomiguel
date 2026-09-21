@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { FloppyDisk, X } from '@phosphor-icons/react'
-import { defaultDateForMonth } from '@/lib/sales'
+import { Check, FloppyDisk, X } from '@phosphor-icons/react'
+import { defaultDateForMonth, getCommissionMrr } from '@/lib/sales'
 import type { Sale } from '@/types'
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
   onSave: (sale: Sale) => Promise<void>
 }
 
-type Errors = Partial<Record<'date' | 'customerName' | 'email' | 'planAmount' | 'setupAmount' | 'form', string>>
+type Errors = Partial<Record<'date' | 'customerName' | 'email' | 'commissionMrr' | 'farolMrr' | 'setupAmount' | 'form', string>>
 
 const inputClass = 'min-h-11 w-full rounded-[10px] border border-[#d8e1db] bg-white px-3.5 py-2.5 text-[15px] font-semibold text-[#18221e] placeholder:font-normal placeholder:text-[#9aa59f] transition focus:border-[#327355] focus:outline-none focus:ring-4 focus:ring-[#327355]/10'
 const labelClass = 'mb-2 block text-[12px] font-semibold text-[#526159]'
@@ -27,7 +27,9 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
   const [date, setDate] = useState(sale?.date ?? defaultDateForMonth(monthKey))
   const [customerName, setCustomerName] = useState(sale?.customerName ?? '')
   const [email, setEmail] = useState(sale?.email ?? '')
-  const [planAmount, setPlanAmount] = useState(sale ? String(sale.planAmount) : '')
+  const [commissionMrr, setCommissionMrr] = useState(sale ? String(getCommissionMrr(sale)) : '')
+  const [hasFarolMrr, setHasFarolMrr] = useState(sale?.farolMrr != null)
+  const [farolMrr, setFarolMrr] = useState(sale?.farolMrr != null ? String(sale.farolMrr) : '')
   const [setupAmount, setSetupAmount] = useState(sale ? String(sale.setupAmount) : '')
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
@@ -48,15 +50,16 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const nextErrors: Errors = {}
-    const parsedPlan = parseMoney(planAmount)
+    const parsedCommissionMrr = parseMoney(commissionMrr)
+    const parsedFarolMrr = parseMoney(farolMrr)
     const parsedSetup = parseMoney(setupAmount)
 
     if (!date || !date.startsWith(`${monthKey}-`)) nextErrors.date = 'Escolha uma data dentro do mês selecionado.'
     if (!customerName.trim()) nextErrors.customerName = 'Informe o nome do cliente.'
     if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) nextErrors.email = 'Informe um e-mail válido.'
-    if (!Number.isFinite(parsedPlan) || parsedPlan < 0) nextErrors.planAmount = 'Informe um valor válido, igual ou maior que zero.'
+    if (!Number.isFinite(parsedCommissionMrr) || parsedCommissionMrr <= 0) nextErrors.commissionMrr = 'Informe um MRR comissão maior que zero.'
+    if (hasFarolMrr && (!Number.isFinite(parsedFarolMrr) || parsedFarolMrr <= 0)) nextErrors.farolMrr = 'Informe um MRR farol maior que zero.'
     if (!Number.isFinite(parsedSetup) || parsedSetup < 0) nextErrors.setupAmount = 'Informe um valor válido, igual ou maior que zero.'
-    if (parsedPlan === 0 && parsedSetup === 0) nextErrors.form = 'Informe um valor de plano ou setup maior que zero.'
 
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
@@ -65,12 +68,13 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
     try {
       const now = new Date().toISOString()
       await onSave({
-        ...sale,
+        ...(sale?.id != null ? { id: sale.id } : {}),
         monthKey,
         date,
         customerName: customerName.trim(),
         email: email.trim().toLowerCase(),
-        planAmount: parsedPlan,
+        commissionMrr: parsedCommissionMrr,
+        ...(hasFarolMrr ? { farolMrr: parsedFarolMrr } : {}),
         setupAmount: parsedSetup,
         createdAt: sale?.createdAt ?? now,
         updatedAt: now,
@@ -113,15 +117,30 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
               {errors.email && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.email}</p>}
             </div>
             <div>
-              <label className={labelClass} htmlFor="sale-plan">Valor do plano</label>
-              <div className="relative"><span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[12px] font-semibold text-[#7a8780]">R$</span><input id="sale-plan" type="text" inputMode="decimal" className={`${inputClass} pl-10 tabular-nums`} placeholder="0,00" value={planAmount} onChange={(event) => setPlanAmount(event.target.value)} aria-invalid={Boolean(errors.planAmount)} /></div>
-              {errors.planAmount && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.planAmount}</p>}
+              <label className={labelClass} htmlFor="sale-commission-mrr">MRR comissão</label>
+              <div className="relative"><span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[12px] font-semibold text-[#7a8780]">R$</span><input id="sale-commission-mrr" type="text" inputMode="decimal" className={`${inputClass} pl-10 tabular-nums`} placeholder="0,00" value={commissionMrr} onChange={(event) => setCommissionMrr(event.target.value)} aria-invalid={Boolean(errors.commissionMrr)} /></div>
+              <p className="mt-1.5 text-[10px] leading-4 text-[#829087]">Valor real usado para calcular a comissão.</p>
+              {errors.commissionMrr && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.commissionMrr}</p>}
             </div>
             <div>
               <label className={labelClass} htmlFor="sale-setup">Valor do setup</label>
               <div className="relative"><span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[12px] font-semibold text-[#7a8780]">R$</span><input id="sale-setup" type="text" inputMode="decimal" className={`${inputClass} pl-10 tabular-nums`} placeholder="0,00" value={setupAmount} onChange={(event) => setSetupAmount(event.target.value)} aria-invalid={Boolean(errors.setupAmount)} /></div>
               {errors.setupAmount && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.setupAmount}</p>}
             </div>
+            <div className="sm:col-span-2">
+              <button type="button" role="checkbox" aria-checked={hasFarolMrr} onClick={() => setHasFarolMrr((current) => !current)} className="flex min-h-11 w-full items-center gap-3 rounded-[10px] border border-[#d8e1db] bg-white px-3.5 text-left transition-colors hover:bg-[#f4f7f5]">
+                <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border ${hasFarolMrr ? 'border-[#246348] bg-[#246348] text-white' : 'border-[#b9c5be] bg-white text-transparent'}`}><Check size={13} weight="bold" /></span>
+                <span><span className="block text-[12px] font-semibold text-[#405048]">Informar MRR farol</span><span className="mt-0.5 block text-[10px] leading-4 text-[#829087]">Ative quando o valor que conta para a meta for diferente.</span></span>
+              </button>
+            </div>
+            {hasFarolMrr && (
+              <div className="sm:col-span-2">
+                <label className={labelClass} htmlFor="sale-farol-mrr">MRR farol</label>
+                <div className="relative"><span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-[12px] font-semibold text-[#7a8780]">R$</span><input id="sale-farol-mrr" type="text" inputMode="decimal" className={`${inputClass} pl-10 tabular-nums`} placeholder="0,00" value={farolMrr} onChange={(event) => setFarolMrr(event.target.value)} aria-invalid={Boolean(errors.farolMrr)} /></div>
+                <p className="mt-1.5 text-[10px] leading-4 text-[#829087]">Este valor conta para a meta; a comissão continua usando o MRR comissão.</p>
+                {errors.farolMrr && <p className="mt-2 text-[11px] font-medium text-[#a84f43]">{errors.farolMrr}</p>}
+              </div>
+            )}
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-2.5 border-t border-[#dfe6e1] pt-5">

@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts'
 import { ChartBar } from '@phosphor-icons/react'
-import { currencyFormatter } from '@/lib/sales'
+import { currencyFormatter, getCommissionMrr, getGoalMrr } from '@/lib/sales'
 import type { Sale } from '@/types'
 
 interface Props {
@@ -24,9 +24,9 @@ interface TooltipPayload {
 }
 
 const labels: Record<string, string> = {
-  planos: 'Planos no dia',
-  setup: 'Setup no dia',
-  acumulado: 'Planos acumulados',
+  farol: 'MRR farol no dia',
+  comissao: 'MRR comissão no dia',
+  acumulado: 'Farol acumulado',
 }
 
 function SalesTooltip({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) {
@@ -54,12 +54,12 @@ function compactCurrency(value: number) {
 
 export default function SalesChart({ sales }: Props) {
   const data = useMemo(() => {
-    const byDay = new Map<string, { day: string; planos: number; setup: number }>()
+    const byDay = new Map<string, { day: string; farol: number; comissao: number }>()
     sales.forEach((sale) => {
       const day = sale.date.slice(8, 10)
-      const current = byDay.get(day) ?? { day, planos: 0, setup: 0 }
-      current.planos += sale.planAmount
-      current.setup += sale.setupAmount
+      const current = byDay.get(day) ?? { day, farol: 0, comissao: 0 }
+      current.farol += getGoalMrr(sale)
+      current.comissao += getCommissionMrr(sale)
       byDay.set(day, current)
     })
 
@@ -67,7 +67,7 @@ export default function SalesChart({ sales }: Props) {
     return Array.from(byDay.values())
       .sort((a, b) => a.day.localeCompare(b.day))
       .map((entry) => {
-        runningPlanTotal += entry.planos
+        runningPlanTotal += entry.farol
         return { ...entry, acumulado: runningPlanTotal }
       })
   }, [sales])
@@ -77,13 +77,13 @@ export default function SalesChart({ sales }: Props) {
       <div className="flex min-h-[280px] flex-col items-start justify-center px-5 py-8 sm:px-6">
         <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#327355]"><ChartBar size={22} weight="duotone" /></span>
         <p className="mt-4 text-[15px] font-semibold">O gráfico começa na primeira venda</p>
-        <p className="mt-1 max-w-[38ch] text-[12px] leading-5 text-[#718078]">Planos, setups e o acumulado serão organizados por dia.</p>
+        <p className="mt-1 max-w-[38ch] text-[12px] leading-5 text-[#718078]">MRR farol, MRR comissão e o acumulado serão organizados por dia.</p>
       </div>
     )
   }
 
   return (
-    <div className="h-[300px] w-full px-1 pb-3 pt-5 sm:px-4" aria-label="Vendas diárias e total acumulado de planos">
+    <div className="h-[300px] w-full px-1 pb-3 pt-5 sm:px-4" aria-label="MRR diário e farol acumulado">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 8, right: 8, left: -14, bottom: 0 }} barCategoryGap="28%">
           <CartesianGrid vertical={false} stroke="#e5eae7" strokeDasharray="3 5" />
@@ -91,8 +91,8 @@ export default function SalesChart({ sales }: Props) {
           <YAxis yAxisId="daily" axisLine={false} tickLine={false} width={58} tick={{ fill: '#849088', fontSize: 9, fontWeight: 600 }} tickFormatter={compactCurrency} />
           <YAxis yAxisId="total" orientation="right" axisLine={false} tickLine={false} width={54} tick={{ fill: '#849088', fontSize: 9, fontWeight: 600 }} tickFormatter={compactCurrency} />
           <Tooltip content={<SalesTooltip />} cursor={{ fill: '#f1f5f2' }} />
-          <Bar yAxisId="daily" dataKey="planos" name="Planos" stackId="sales" fill="#327355" radius={[0, 0, 4, 4]} />
-          <Bar yAxisId="daily" dataKey="setup" name="Setup" stackId="sales" fill="#a9b8b0" radius={[5, 5, 0, 0]} />
+          <Bar yAxisId="daily" dataKey="farol" name="MRR farol" fill="#327355" radius={[5, 5, 0, 0]} />
+          <Bar yAxisId="daily" dataKey="comissao" name="MRR comissão" fill="#a9b8b0" radius={[5, 5, 0, 0]} />
           <Line yAxisId="total" type="monotone" dataKey="acumulado" name="Acumulado" stroke="#1d2924" strokeWidth={2.5} dot={{ r: 3, fill: '#ffffff', stroke: '#1d2924', strokeWidth: 2 }} activeDot={{ r: 5 }} />
         </ComposedChart>
       </ResponsiveContainer>

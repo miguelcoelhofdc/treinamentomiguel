@@ -1,6 +1,6 @@
 # UI QA REPORT
 
-Target: http://127.0.0.1:4173/metas
+Target: http://127.0.0.1:5173/metas
 
 ## Screenshots
 
@@ -9,7 +9,7 @@ Target: http://127.0.0.1:4173/metas
 
 ## Desktop Checks
 
-- PASS blank / loading risk: body text 983, screenshot 92748 bytes
+- PASS blank / loading risk: body text 1514, screenshot 102544 bytes
 - PASS horizontal scroll: scrollWidth 1435, viewport 1440
 - PASS text overflow candidates: 0
 - PASS small button candidates: 0
@@ -17,7 +17,7 @@ Target: http://127.0.0.1:4173/metas
 
 ## Mobile Checks
 
-- PASS blank / loading risk: body text 884, screenshot 39320 bytes
+- PASS blank / loading risk: body text 1411, screenshot 41688 bytes
 - PASS horizontal scroll: scrollWidth 390, viewport 390
 - PASS text overflow candidates: 0
 - PASS small button candidates: 0
