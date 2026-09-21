@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ArrowClockwise,
@@ -45,6 +45,8 @@ import {
 import type { MonthlySalesConfig, Sale } from '@/types'
 
 type SectionId = 'overview' | 'sales' | 'settings'
+
+const FOCUS_REFRESH_COOLDOWN_MS = 1_500
 
 const navigation: { id: SectionId; label: string; icon: Icon }[] = [
   { id: 'overview', label: 'Visão geral', icon: SquaresFour },
@@ -180,6 +182,7 @@ export default function Goals() {
     status: 'unavailable',
     updatedAt: null,
   })
+  const lastRefreshStartedAt = useRef(0)
 
   useEffect(() => {
     const previousTitle = document.title
@@ -227,6 +230,7 @@ export default function Goals() {
   }, [loading])
 
   const loadMonth = useCallback(async (selectedMonth: string, showSkeleton = false) => {
+    lastRefreshStartedAt.current = Date.now()
     if (showSkeleton) setLoading(true)
     setLoadError(null)
     setActionError(null)
@@ -255,7 +259,10 @@ export default function Goals() {
   }, [loadMonth, monthKey])
 
   useEffect(() => {
-    const handleFocus = () => void loadMonth(monthKey)
+    const handleFocus = () => {
+      if (Date.now() - lastRefreshStartedAt.current < FOCUS_REFRESH_COOLDOWN_MS) return
+      void loadMonth(monthKey)
+    }
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [loadMonth, monthKey])
