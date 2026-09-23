@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowLeft, CheckCircle, Copy, FloppyDisk, PencilSimple, Sparkle } from '@phosphor-icons/react'
+import { parseLocaleNumber } from '@/lib/numbers'
 import { fixedTiersFromConfig, getReusableConfigPercentages } from '@/lib/sales'
 import type { MonthlySalesConfig } from '@/types'
 
@@ -22,12 +23,6 @@ type InitializationMode = 'choose' | 'repeat' | 'change' | 'existing'
 const inputClass = 'min-h-11 w-full rounded-[10px] border border-[#d8e1db] bg-white px-3.5 py-2.5 text-[15px] font-semibold text-[#18221e] placeholder:font-normal placeholder:text-[#9aa59f] transition focus:border-[#327355] focus:outline-none focus:ring-4 focus:ring-[#327355]/10 disabled:cursor-not-allowed disabled:bg-[#f2f5f3] disabled:text-[#617068]'
 const labelClass = 'mb-2 block text-[12px] font-semibold text-[#526159]'
 const tierNames = ['Abaixo de 80% da meta', 'De 80% a menos de 100% da meta', '100% ou mais da meta']
-
-function parseNumber(value: string) {
-  const normalized = value.trim().replace(/\s/g, '').replace(',', '.')
-  if (!normalized) return 0
-  return Number(normalized)
-}
 
 function toDraft(source?: MonthlySalesConfig, includeGoal = true): Draft {
   const reusable = getReusableConfigPercentages(source)
@@ -63,10 +58,10 @@ export default function CommissionSettingsForm({ monthKey, config, previousConfi
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    const goalAmount = parseNumber(draft.goalAmount)
-    const setupCommissionPercent = parseNumber(draft.setupCommissionPercent)
-    const weeklyBonusPercent = parseNumber(draft.weeklyBonusPercent)
-    const tierRates = draft.tierRates.map(parseNumber)
+    const goalAmount = parseLocaleNumber(draft.goalAmount)
+    const setupCommissionPercent = parseLocaleNumber(draft.setupCommissionPercent)
+    const weeklyBonusPercent = parseLocaleNumber(draft.weeklyBonusPercent)
+    const tierRates = draft.tierRates.map(parseLocaleNumber)
 
     if (!Number.isFinite(goalAmount) || goalAmount <= 0) {
       setError('Informe uma meta mensal maior que zero.')

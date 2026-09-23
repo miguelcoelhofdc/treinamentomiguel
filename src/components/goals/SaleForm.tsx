@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { Check, FloppyDisk, X } from '@phosphor-icons/react'
+import { parseLocaleNumber } from '@/lib/numbers'
 import { defaultDateForMonth, getCommissionMrr } from '@/lib/sales'
 import type { Sale } from '@/types'
 
@@ -15,13 +16,6 @@ type Errors = Partial<Record<'date' | 'customerName' | 'email' | 'commissionMrr'
 
 const inputClass = 'min-h-11 w-full rounded-[10px] border border-[#d8e1db] bg-white px-3.5 py-2.5 text-[15px] font-semibold text-[#18221e] placeholder:font-normal placeholder:text-[#9aa59f] transition focus:border-[#327355] focus:outline-none focus:ring-4 focus:ring-[#327355]/10'
 const labelClass = 'mb-2 block text-[12px] font-semibold text-[#526159]'
-
-function parseMoney(value: string) {
-  const normalized = value.trim().replace(/\s/g, '').replace(',', '.')
-  if (!normalized) return 0
-  const amount = Number(normalized)
-  return Number.isFinite(amount) ? amount : Number.NaN
-}
 
 export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
   const [date, setDate] = useState(sale?.date ?? defaultDateForMonth(monthKey))
@@ -50,9 +44,9 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
     const nextErrors: Errors = {}
-    const parsedCommissionMrr = parseMoney(commissionMrr)
-    const parsedFarolMrr = parseMoney(farolMrr)
-    const parsedSetup = parseMoney(setupAmount)
+    const parsedCommissionMrr = parseLocaleNumber(commissionMrr)
+    const parsedFarolMrr = parseLocaleNumber(farolMrr)
+    const parsedSetup = parseLocaleNumber(setupAmount)
 
     if (!date || !date.startsWith(`${monthKey}-`)) nextErrors.date = 'Escolha uma data dentro do mês selecionado.'
     if (!customerName.trim()) nextErrors.customerName = 'Informe o nome do cliente.'
