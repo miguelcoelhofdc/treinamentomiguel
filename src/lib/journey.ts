@@ -1,29 +1,24 @@
-import type { DailyLog, Plan, TestDefinition, TrainingDay } from '../types/index.ts'
+import type { ActivityLog, DailyLog, PhaseId, Plan, TestDefinition, TrainingDay } from '../types/index.ts'
 import { addCalendarDays, calendarDay, isDateKey, weekday } from './date.ts'
 
-export function getTrainingDay(plan: Plan, startDate: string, date: string): TrainingDay {
-  const offset = calendarDay(date) - calendarDay(startDate)
-  const weekNumber = Math.floor(offset / 7) + 1
-  const phase = plan.phases.find(item => weekNumber >= item.startWeek && weekNumber <= item.endWeek)?.id ?? (weekNumber > 26 ? 'performance' : 'base')
+export function getTrainingDay(plan: Plan, _startDate: string, date: string, phase: PhaseId = 'base', isDeload = false): TrainingDay {
   const dayOfWeek = weekday(date)
-  const template = plan.weekTemplate[String(dayOfWeek)]
+  const template = plan.dailyTemplate[String(dayOfWeek)]
   return {
     date, dayOfWeek, phase,
-    status: offset < 0 ? 'notStarted' : weekNumber > 26 ? 'completed' : 'active',
-    weekNumber: Math.max(0, Math.min(26, weekNumber)),
-    isDeload: plan.deloadWeeks.includes(weekNumber),
+    status: 'active', isDeload,
     sessionType: template.subtype ?? template.type,
     sessionLabel: template.label,
     sessionIcon: template.icon,
   }
 }
 
-export function planWeekDates(startDate: string, week: number): string[] {
-  return Array.from({ length: 7 }, (_, day) => addCalendarDays(startDate, (week - 1) * 7 + day))
+export function planDates(date: string, count = 7): string[] {
+  return Array.from({ length: count }, (_, day) => addCalendarDays(date, day))
 }
 
 export function plannedWorkouts(plan: Plan): number {
-  return Object.values(plan.weekTemplate).filter(day => day.type !== 'descanso').length
+  return Object.values(plan.dailyTemplate).filter(day => day.type !== 'descanso').length
 }
 
 export function hasCheckIn(log?: DailyLog): boolean {
@@ -47,7 +42,7 @@ export const ACHIEVEMENTS = [
   ...[10, 25, 50].map(value => ({ id: `workouts-${value}`, title: `${value} treinos entregues`, description: `${value} sessões concluídas`, metric: 'workouts', value })),
 ] as const
 
-export function journeyStats(logs: DailyLog[], plan: Plan, startDate: string, today: string) {
+export function journeyStats(logs: DailyLog[], plan: Plan, startDate: string, today: string, activities: ActivityLog[] = []) {
   const byDate = dailyLogMap(logs, today)
   const checkIns = [...byDate.values()].filter(hasCheckIn).map(log => log.date).sort()
   let bestStreak = 0, run = 0, previous = ''
@@ -59,22 +54,20 @@ export function journeyStats(logs: DailyLog[], plan: Plan, startDate: string, to
   let streak = 0
   let cursor = hasCheckIn(byDate.get(today)) ? today : addCalendarDays(today, -1)
   while (hasCheckIn(byDate.get(cursor))) { streak++; cursor = addCalendarDays(cursor, -1) }
-  const training = getTrainingDay(plan, startDate, today)
-  const weekDates = planWeekDates(startDate, Math.max(1, training.weekNumber))
-  const completedSession = (date: string) => plan.weekTemplate[String(weekday(date))].type !== 'descanso' && Boolean(byDate.get(date)?.workoutDone)
-  const weeklyWorkouts = training.status === 'active' ? weekDates.filter(completedSession).length : 0
+  const completedDates = new Set(activities.filter(item => item.completed && isDateKey(item.date) && item.date <= today).map(item => item.date))
+  const completedSession = (date: string) => completedDates.has(date) || Boolean(byDate.get(date)?.workoutDone)
   let due = 0, delivered = 0
-  for (let day = 0; day < 182; day++) {
+  for (let day = 0; day <= calendarDay(today) - calendarDay(startDate); day++) {
     const date = addCalendarDays(startDate, day)
     if (date > today) break
-    if (plan.weekTemplate[String(weekday(date))].type === 'descanso') continue
+    if ((byDate.get(date)?.sessionType ?? plan.dailyTemplate[String(weekday(date))].type) === 'descanso' && !completedSession(date)) continue
     const done = completedSession(date)
     if (date < today || done) { due++; if (done) delivered++ }
   }
-  const workouts = [...byDate.values()].filter(log => log.workoutDone).length
+  const workouts = new Set([...completedDates, ...[...byDate.values()].filter(log => log.workoutDone).map(log => log.date)]).size
   const metrics: Record<string, number> = { checkIns: checkIns.length, bestStreak, workouts }
   const unlocked = ACHIEVEMENTS.filter(item => metrics[item.metric] >= item.value).map(item => item.id)
-  return { byDate, streak, bestStreak, checkIns: checkIns.length, workouts, weeklyWorkouts, due, delivered,
+  return { byDate, streak, bestStreak, checkIns: checkIns.length, workouts, due, delivered,
     adherence: due > 0 ? Math.round(delivered / due * 100) : null,
     todayCheckedIn: hasCheckIn(byDate.get(today)), unlocked, metrics }
 }

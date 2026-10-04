@@ -1,76 +1,4 @@
-import type { Exercise, Plan, RunningWeek } from '@/types'
-
-const baseIntervals = [
-  '5 min de caminhada leve; 8 ciclos de 1 min de trote confortável + 1 min de caminhada; finalize caminhando até completar 30 min.',
-  '5 min de caminhada leve; 8 ciclos de 1 min 15 s de trote + 1 min 15 s de caminhada; 5 min leves no final.',
-  '5 min de caminhada leve; 8 ciclos de 1 min 30 s de trote + 1 min 30 s de caminhada; 3 min leves no final.',
-  'Semana leve: 5 min de caminhada; 6 ciclos de 1 min de trote + 2 min de caminhada; 5 min leves no final.',
-  '5 min de caminhada; 8 ciclos de 2 min de trote + 1 min de caminhada; 5 min leves no final.',
-  '5 min de caminhada; 7 ciclos de 2 min 30 s de trote + 1 min 30 s de caminhada; finalize leve.',
-  '5 min de caminhada; 7 ciclos de 3 min de trote + 1 min 30 s de caminhada; finalize leve.',
-  'Semana leve: 5 min de caminhada; 6 ciclos de 2 min de trote + 1 min 30 s de caminhada; 4 min leves no final.',
-]
-
-const developmentIntervals = [
-  '5 min de caminhada; 6 ciclos de 4 min de trote + 1 min de caminhada; 3 min leves no final.',
-  '5 min de caminhada; 5 ciclos de 5 min de trote + 1 min de caminhada; 5 min leves no final.',
-  '5 min de caminhada; 4 ciclos de 7 min de trote + 1 min 30 s de caminhada; finalize leve até 42 min.',
-  'Semana leve: 5 min de caminhada; 6 ciclos de 3 min de trote + 1 min de caminhada; finalize leve até 34 min.',
-  '5 min de caminhada; 3 ciclos de 9 min de trote + 2 min de caminhada; 4 min leves no final.',
-  '5 min de caminhada; 3 ciclos de 10 min de trote + 2 min de caminhada; 4 min leves no final.',
-  '5 min de caminhada; 2 blocos de 15 min de trote, separados por 3 min caminhando; 4 min leves no final.',
-  'Semana leve: 5 min de caminhada; 5 ciclos de 4 min de trote + 1 min de caminhada; finalize leve até 36 min.',
-  '5 min de caminhada; 20 min de trote, 3 min caminhando, 14 min de trote; 3 min leves no final.',
-]
-
-const performanceIntervals = [
-  '5 min de caminhada; 25 min de trote, 3 min caminhando, 8 min de trote; 4 min leves no final.',
-  '5 min de caminhada; 30 min de trote contínuo confortável; 10 min de caminhada leve para fechar.',
-  'Semana leve: 5 min de caminhada; 4 ciclos de 5 min de trote + 2 min de caminhada; 5 min leves no final.',
-  '5 min de caminhada; 30 min contínuos em ritmo conversável; finalize leve até 45 min.',
-  '5 min de caminhada; 3 blocos de 10 min de trote um pouco mais firme + 2 min caminhando; finalize leve.',
-  '5 min de caminhada; 35 min contínuos em ritmo confortável; 10 min leves no final.',
-  'Semana leve: 5 min de caminhada; 25 min contínuos confortáveis; 10 min leves no final.',
-  '5 min de caminhada; 40 min contínuos confortáveis ou com pausas curtas planejadas; 5 min leves no final.',
-  'Reavaliação: após aquecer, percorra 30 min em ritmo sustentável e registre distância, esforço e como terminou.',
-]
-
-function runningDetail(week: number): string {
-  if (week <= 8) return baseIntervals[week - 1]
-  if (week <= 17) return developmentIntervals[week - 9]
-  return performanceIntervals[week - 18]
-}
-
-function longDetail(week: number): string {
-  const isDeload = [4, 8, 12, 16, 20, 24].includes(week)
-  const minutes = isDeload
-    ? Math.min(45, 28 + week)
-    : Math.min(65, 34 + Math.round(week * 1.25))
-  const runPrompt = week <= 4
-    ? 'Mantenha caminhada firme; se estiver confortável, inclua 4 a 6 trotes de 1 min.'
-    : week <= 12
-      ? 'Alterne 4 a 8 min de trote com 1 a 2 min caminhando, sempre em ritmo conversável.'
-      : 'Busque blocos contínuos confortáveis, usando caminhada antes que a técnica ou a respiração se percam.'
-
-  return `${minutes} min totais em percurso plano. ${runPrompt} Esforço alvo 4–6/10; termine sentindo que conseguiria continuar.`
-}
-
-function createRunningWeeks(): RunningWeek[] {
-  return Array.from({ length: 26 }, (_, index) => {
-    const week = index + 1
-    return {
-      week,
-      thursday: {
-        label: week === 26 ? 'Reavaliação de 30 minutos' : 'Intervalos por percepção de esforço',
-        detail: runningDetail(week),
-      },
-      sunday: {
-        label: [4, 8, 12, 16, 20, 24].includes(week) ? 'Caminhada regenerativa' : 'Caminhada + corrida contínua',
-        detail: longDetail(week),
-      },
-    }
-  })
-}
+import type { Exercise, Plan } from '@/types'
 
 const fullBodyA: Exercise[] = [
   {
@@ -325,29 +253,23 @@ export const sintiaPlan: Plan = {
     {
       id: 'base',
       name: 'Base segura',
-      startWeek: 1,
-      endWeek: 8,
       description: 'Aprender cargas, registrar o ponto de partida e construir caminhada + corrida sem pressa. Termine as séries com 3–4 repetições possíveis.',
       color: '#3F7660',
     },
     {
       id: 'desenvolvimento',
       name: 'Desenvolvimento',
-      startWeek: 9,
-      endWeek: 17,
       description: 'Aumentar gradualmente o tempo de trote e as cargas, mantendo técnica e recuperação. A maior parte do cardio continua em ritmo conversável.',
       color: '#B06D32',
     },
     {
       id: 'performance',
       name: 'Consolidação',
-      startWeek: 18,
-      endWeek: 26,
       description: 'Consolidar 30 minutos ou mais de caminhada/corrida sustentável e preservar força durante a redução de peso, sem treinar até a falha.',
       color: '#9B4A3F',
     },
   ],
-  weekTemplate: {
+  dailyTemplate: {
     '0': { type: 'descanso', subtype: null, label: 'Descanso ativo opcional', icon: 'recovery' },
     '1': { type: 'forca', subtype: 'forcaA', label: 'Força A — Corpo inteiro', icon: 'strength' },
     '2': { type: 'corrida', subtype: 'qualidade', label: 'Caminhada + corrida — Intervalos', icon: 'run' },
@@ -356,7 +278,6 @@ export const sintiaPlan: Plan = {
     '5': { type: 'descanso', subtype: null, label: 'Recuperação', icon: 'recovery' },
     '6': { type: 'corrida', subtype: 'longa', label: 'Caminhada + corrida — Contínua', icon: 'run' },
   },
-  deloadWeeks: [4, 8, 12, 16, 20, 24],
   exercises: {
     forcaA: fullBodyA,
     forcaB: fullBodyB,
@@ -388,7 +309,11 @@ export const sintiaPlan: Plan = {
       },
     },
   },
-  running: { weeks: createRunningWeeks() },
+  running: { levels: {
+    base: { qualidade: { label: 'Intervalos por percepção de esforço', detail: '5 min de caminhada leve; 8 ciclos de 1 min de trote confortável + 1 min de caminhada; finalize caminhando até completar 30 min.' }, longa: { label: 'Caminhada + corrida contínua', detail: '35 min totais em percurso plano. Mantenha caminhada firme; se estiver confortável, inclua 4 a 6 trotes de 1 min.' } },
+    desenvolvimento: { qualidade: { label: 'Intervalos por percepção de esforço', detail: '5 min de caminhada; 6 ciclos de 4 min de trote + 1 min de caminhada; 3 min leves no final.' }, longa: { label: 'Caminhada + corrida contínua', detail: '45 min totais em percurso plano. Alterne 4 a 8 min de trote com 1 a 2 min caminhando, sempre em ritmo conversável.' } },
+    performance: { qualidade: { label: 'Corrida sustentável', detail: '5 min de caminhada; 25 min de trote, 3 min caminhando, 8 min de trote; 4 min leves no final.' }, longa: { label: 'Caminhada + corrida contínua', detail: '55 min totais em percurso plano. Busque blocos contínuos confortáveis, usando caminhada antes que a técnica ou a respiração se percam.' } },
+  } },
   mobility: {
     shoulder: [
       { id: 'sintia-circulos-ombro', name: 'Círculos de Ombro', sets: 1, reps: '8/direção', freq: 'Antes do treino', technique: 'Movimentos lentos e sem elevar os ombros.' },
@@ -471,7 +396,7 @@ export const sintiaPlan: Plan = {
     },
   },
   tests: [
-    { id: 'sintia-t30', name: 'Caminhada/corrida contínua', unit: 'min', lower: false, initial: 'A registrar', target: 30, description: 'Na semana 1, registre quantos minutos mantém em ritmo confortável; repita a cada 4 semanas.' },
+    { id: 'sintia-t30', name: 'Caminhada/corrida contínua', unit: 'min', lower: false, initial: 'A registrar', target: 30, description: 'No primeiro registro, registre quantos minutos mantém em ritmo confortável; repita quando quiser reavaliar.' },
     { id: 'sintia-dist30', name: 'Distância em 30 minutos', unit: 'km', lower: false, initial: 'A registrar', target: 'Evoluir com conforto', description: 'Percorra 30 minutos em terreno plano e registre a distância sem transformar o teste em sprint.' },
     { id: 'sintia-flexoes', name: 'Flexões declaradas', unit: 'reps', lower: false, initial: 50, target: 'Reavaliar técnica', description: 'Confirme o número com a mesma variação e amplitude antes de definir uma nova meta.' },
     { id: 'sintia-prancha', name: 'Prancha', unit: 'seg', lower: false, initial: 30, target: 60, description: 'Tempo com respiração contínua e postura estável; pare quando perder a forma.' },

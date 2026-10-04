@@ -73,8 +73,8 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
       <Suspense fallback={<AppSkeleton />}>
         <Routes>
           <Route path="/" element={<Journey settings={settings} updateSetting={updateSetting} />} />
-          <Route path="/hoje" element={<Today key={today} startDate={settings.startDate} name={settings.name} />} />
-          <Route path="/plano" element={<Plan startDate={settings.startDate} />} />
+          <Route path="/hoje" element={<Today key={today} settings={settings} updateSetting={updateSetting} />} />
+          <Route path="/plano" element={<Plan settings={settings} updateSetting={updateSetting} />} />
           <Route
             path="/progresso"
             element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} settings={settings} updateSetting={updateSetting} />}

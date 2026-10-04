@@ -2,14 +2,14 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 import { addCalendarDays, isDateKey } from './date.ts'
-import { journeyStats, hasCheckIn, planWeekDates, getTrainingDay, plannedWorkouts, effectiveTarget, parseTestNumber, validateTarget, testGoalProgress } from './journey.ts'
+import { journeyStats, hasCheckIn, planDates, getTrainingDay, plannedWorkouts, effectiveTarget, parseTestNumber, validateTarget, testGoalProgress } from './journey.ts'
 import { decodeTrainingSettings, parsePerformanceTargets } from './trainingSettings.ts'
 import { sintiaPlan } from '../data/plan-sintia.ts'
 
 const plan = JSON.parse(readFileSync(new URL('../data/plan.json', import.meta.url), 'utf8'))
 const stats = (logs, today = '2026-10-05', start = '2026-10-01') => journeyStats(logs, plan, start, today)
 const checkin = date => ({ date, checkInDone: true, energy: 4 })
-const defaults = { name: 'Miguel', startDate: '2026-06-01', height: 175, initialWeight: 80, goalWeight: 75, darkMode: false, routineType: 'morning', weeklyWorkoutGoal: 6, performanceTargets: {} }
+const defaults = { name: 'Miguel', startDate: '2026-06-01', height: 175, initialWeight: 80, goalWeight: 75, darkMode: false, routineType: 'morning', performanceTargets: {}, trainingLevel: 'base', lightVolume: false, sessionDurationMin: 30, primaryGoal: null, goalHistory: [], customActivities: [] }
 
 describe('daily presence and streaks', () => {
   it('preserves yesterday’s streak until today ends', () => {
@@ -57,9 +57,9 @@ describe('daily presence and streaks', () => {
 })
 
 describe('dated plan and adherence', () => {
-  it('uses exact seven-day blocks when the start is Thursday', () => {
-    assert.deepEqual(planWeekDates('2026-10-01', 1), ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07'])
-    assert.equal(getTrainingDay(plan, '2026-10-01', '2026-10-08').weekNumber, 2)
+  it('browses dates independently of a start date or program length', () => {
+    assert.deepEqual(planDates('2026-10-01'), ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07'])
+    assert.equal(getTrainingDay(plan, '2026-10-01', '2030-10-08').status, 'active')
     assert.equal(getTrainingDay(plan, '2026-10-01', '2026-10-07').sessionType, 'descanso')
   })
   it('does not penalize today’s pending workout, and excludes rests', () => {
@@ -67,22 +67,22 @@ describe('dated plan and adherence', () => {
     assert.equal(value.due, 4); assert.equal(value.delivered, 2); assert.equal(value.adherence, 50)
     const after = stats([{ date: '2026-10-05', workoutDone: true }])
     assert.equal(after.due, 5); assert.equal(after.delivered, 1)
-    assert.equal(stats([{ date: '2026-10-07', workoutDone: true }], '2026-10-07').weeklyWorkouts, 0)
+    assert.equal(stats([{ date: '2026-10-07', workoutDone: true }], '2026-10-07').workouts, 1)
   })
   it('check-in without training preserves presence but does not deliver a session', () => {
     const value = stats([checkin('2026-10-05')])
-    assert.equal(value.streak, 1); assert.equal(value.weeklyWorkouts, 0); assert.equal(value.delivered, 0)
+    assert.equal(value.streak, 1); assert.equal(value.workouts, 0); assert.equal(value.delivered, 0)
   })
-  it('handles cycles before start, after end, phase changes and deload', () => {
-    assert.equal(getTrainingDay(plan, '2026-10-01', '2026-09-30').status, 'notStarted')
+  it('never finishes or changes difficulty based on elapsed dates', () => {
+    assert.equal(getTrainingDay(plan, '2026-10-01', '2026-09-30').status, 'active')
     assert.equal(stats([checkin('2026-09-30')], '2026-09-30').due, 0)
-    assert.equal(getTrainingDay(plan, '2026-10-01', addCalendarDays('2026-10-01', 21)).isDeload, true)
-    assert.equal(getTrainingDay(plan, '2026-10-01', addCalendarDays('2026-10-01', 56)).phase, 'desenvolvimento')
-    assert.equal(getTrainingDay(plan, '2026-10-01', addCalendarDays('2026-10-01', 119)).phase, 'performance')
-    assert.equal(getTrainingDay(plan, '2026-10-01', addCalendarDays('2026-10-01', 182)).status, 'completed')
-    assert.equal(stats([], '2027-04-01').due, 156)
+    assert.equal(getTrainingDay(plan, '2026-10-01', addCalendarDays('2026-10-01', 21)).isDeload, false)
+    assert.equal(getTrainingDay(plan, '2026-10-01', addCalendarDays('2026-10-01', 364)).phase, 'base')
+    assert.equal(getTrainingDay(plan, '2026-10-01', '2030-10-01', 'desenvolvimento', true).phase, 'desenvolvimento')
+    assert.equal(getTrainingDay(plan, '2026-10-01', '2030-10-01', 'desenvolvimento', true).isDeload, true)
+    assert.equal(stats([], addCalendarDays('2026-10-01', 364)).due, 312)
   })
-  it('uses each profile’s own schedule and weekly limit', () => {
+  it('preserves each profile’s suggested activities', () => {
     assert.equal(plannedWorkouts(plan), 6); assert.equal(plannedWorkouts(sintiaPlan), 4)
     assert.equal(getTrainingDay(sintiaPlan, '2026-10-01', '2026-10-04').sessionType, 'descanso')
     assert.equal(getTrainingDay(plan, '2026-10-01', '2026-10-04').sessionType, 'longa')
@@ -109,14 +109,14 @@ describe('personal targets and compatible stored preferences', () => {
     assert.equal(effectiveTarget({ ...run, id: 'peso', name: 'Peso', unit: 'kg' }, { peso: 60 }, 73), 73)
   })
   it('loads old preferences with defaults, new targets, and rejects malformed targets', () => {
-    assert.equal(decodeTrainingSettings([], defaults, plan).weeklyWorkoutGoal, 6)
+    assert.equal(decodeTrainingSettings([], defaults, plan).primaryGoal, null)
     const test = plan.tests.find(test => test.unit !== 'kg')
     const targets = { [test.id]: test.target }
     assert.deepEqual(parsePerformanceTargets(JSON.stringify(targets), plan), targets)
     assert.throws(() => parsePerformanceTargets('[]', plan))
     assert.throws(() => parsePerformanceTargets(JSON.stringify({ [test.id]: null }), plan))
     const value = decodeTrainingSettings([{ key: 'weeklyWorkoutGoal', value: '99' }, { key: 'startDate', value: '2026-02-30' }, { key: 'performanceTargets', value: '{}' }], defaults, plan)
-    assert.equal(value.weeklyWorkoutGoal, 6); assert.equal(value.startDate, defaults.startDate)
-    assert.equal(decodeTrainingSettings([{ key: 'weeklyWorkoutGoal', value: '6' }], { ...defaults, weeklyWorkoutGoal: 4 }, sintiaPlan).weeklyWorkoutGoal, 4)
+    assert.equal('weeklyWorkoutGoal' in value, false); assert.equal(value.startDate, defaults.startDate)
+    assert.equal(decodeTrainingSettings([{ key: 'weeklyWorkoutGoal', value: '6' }], defaults, sintiaPlan).primaryGoal, null)
   })
 })

@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { Link } from 'react-router-dom'
 import {
   Barbell,
-  CalendarBlank,
   CaretDown,
   Check,
   CheckCircle,
@@ -12,7 +10,6 @@ import {
   PersonSimpleRun,
   ShieldCheck,
   Sparkle,
-  Trophy,
   Warning,
   X,
 } from '@phosphor-icons/react'
@@ -28,7 +25,12 @@ import { getExerciseChecks, toggleExerciseCheck, getDailyLog, saveDailyLog } fro
 import { localDateKey } from '@/lib/date'
 import { saveDailyActivity } from '@/lib/trainingActivity'
 import plan from '@/data/activePlan'
-import type { DailyLog, Exercise, PhaseId } from '@/types'
+import type { DailyLog, Exercise, PhaseId, TrainingSettings } from '@/types'
+import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
+import TrainingControls from '@/components/journey/TrainingControls'
+import ActivityRecorder from '@/components/journey/ActivityRecorder'
+import { activityCategory, activityName } from '@/lib/continuousTraining'
+import { db } from '@/db'
 
 const DAY_NAMES = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
 const MONTH_NAMES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
@@ -54,18 +56,20 @@ function getReadiness(log?: DailyLog): number | null {
 }
 
 interface Props {
-  startDate: string
-  name: string
+  settings: TrainingSettings
+  updateSetting: UpdateTrainingSetting
 }
 
-export default function Today({ startDate, name }: Props) {
+export default function Today({ settings, updateSetting }: Props) {
   const today = useMemo(() => new Date(), [])
   const todayStr = localDateKey(today)
-  const training = useTrainingDay(startDate)
+  const suggestion = useTrainingDay(settings.startDate, undefined, settings.trainingLevel, settings.lightVolume)
   const completionButtonRef = useRef<HTMLButtonElement>(null)
+  const completionPrompted = useRef(false)
 
   const [checks, setChecks] = useState<Map<string, boolean>>(new Map())
   const [dailyLog, setDailyLog] = useState<DailyLog>()
+  const [actualMinutes, setActualMinutes] = useState('')
   const [pendingChecks, setPendingChecks] = useState<Set<string>>(new Set())
   const [showLog, setShowLog] = useState(false)
   const [showRunLog, setShowRunLog] = useState(false)
@@ -96,7 +100,14 @@ export default function Today({ startDate, name }: Props) {
 
   useEffect(() => { loadState() }, [loadState])
 
-  const phase = (training.phase as PhaseId) ?? 'base'
+  const completed = dailyLog?.workoutDone ?? false
+  const selectedType = dailyLog?.sessionType ?? suggestion.sessionType
+  const training = { ...suggestion, sessionType: selectedType, sessionLabel: dailyLog?.sessionName ?? activityName(selectedType, plan), phase: completed ? dailyLog?.trainingLevel ?? settings.trainingLevel : settings.trainingLevel, isDeload: completed ? dailyLog?.lightVolume ?? settings.lightVolume : settings.lightVolume }
+  const phase = training.phase
+  const changeSession = async (type: string) => {
+    try { await saveDailyLog({ date: todayStr, sessionType: type, sessionName: activityName(type, plan) }); completionPrompted.current = false; await loadState(); setShowCompletionSheet(false); setShowRunLog(false); setMutationError('') }
+    catch { setMutationError('Não foi possível escolher a atividade. Tente novamente.') }
+  }
   const isRest = training.sessionType === 'descanso'
   const workoutDone = dailyLog?.workoutDone ?? false
 
@@ -116,7 +127,9 @@ export default function Today({ startDate, name }: Props) {
   const sessionProgress = workoutDone ? 100 : totalExercises > 0 ? (doneExercises / totalExercises) * 100 : 0
 
   useEffect(() => {
-    if (doneExercises > 0 && doneExercises === totalExercises && !workoutDone && !isRest) {
+    if (doneExercises < totalExercises) completionPrompted.current = false
+    if (doneExercises > 0 && doneExercises === totalExercises && !workoutDone && !isRest && !completionPrompted.current) {
+      completionPrompted.current = true
       setShowCompletionSheet(true)
     }
   }, [doneExercises, totalExercises, workoutDone, isRest])
@@ -160,24 +173,29 @@ export default function Today({ startDate, name }: Props) {
     }
   }
 
-  const handleMarkDone = async () => {
-    await saveDailyActivity({ date: todayStr, workoutDone: true })
-    setDailyLog(current => ({ ...current, date: todayStr, workoutDone: true }))
+  const handleMarkDone = async (fromRun = false) => {
+    const duration = actualMinutes.trim() ? Number(actualMinutes.replace(',', '.')) : undefined
+    if (duration != null && (!Number.isFinite(duration) || duration <= 0)) throw new Error('Tempo inválido')
+    await db.transaction('rw', db.activityLogs, db.dailyLogs, db.settings, async () => {
+      if (!fromRun) await db.activityLogs.put({ id: 'day:' + todayStr, date: todayStr, activity: activityCategory(training.sessionType), name: training.sessionLabel, ...(duration ? { durationMin: duration } : {}), completed: true })
+      await saveDailyActivity({ date: todayStr, workoutDone: true, sessionType: training.sessionType, sessionName: training.sessionLabel, trainingLevel: phase, lightVolume: training.isDeload })
+    })
+    await loadState()
   }
 
   const handleConclude = async () => {
-    setShowCompletionSheet(false)
     try {
       await handleMarkDone()
+      setShowCompletionSheet(false)
       setMutationError('')
       setShowUndo(true)
       setShowLog(true)
-    } catch { setMutationError('Não foi possível concluir o treino. Tente novamente.') }
+    } catch { setMutationError('Não foi possível concluir o treino. Verifique o tempo informado e tente novamente.') }
   }
 
   const handleUndo = async () => {
     try {
-      await saveDailyLog({ date: todayStr, workoutDone: false })
+      await db.transaction('rw', db.activityLogs, db.dailyLogs, async () => { await db.activityLogs.update(`day:${todayStr}`, { completed: false }); await saveDailyLog({ date: todayStr, workoutDone: false }) })
       setDailyLog(current => ({ ...current, date: todayStr, workoutDone: false }))
       setShowUndo(false)
       setMutationError('')
@@ -185,7 +203,7 @@ export default function Today({ startDate, name }: Props) {
   }
 
   const dateLabel = `${DAY_NAMES[today.getDay()]}, ${today.getDate()} de ${MONTH_NAMES[today.getMonth()]}`
-  const firstName = name.trim().split(' ')[0] || 'atleta'
+  const firstName = settings.name.trim().split(' ')[0] || 'atleta'
   const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite'
   const readiness = getReadiness(dailyLog)
   const hasJointCautions = [
@@ -193,30 +211,6 @@ export default function Today({ startDate, name }: Props) {
     ...plan.exercises.forcaB,
     ...plan.exercises.forcaC,
   ].some(exercise => exercise.caution !== null)
-
-  if (training.status === 'notStarted') {
-    return (
-      <div className="page-content flex min-h-[78dvh] flex-col items-start justify-center page-enter">
-        <div className="icon-tile mb-5 h-14 w-14 rounded-[18px]"><CalendarBlank size={28} weight="duotone" /></div>
-        <p className="page-kicker mb-2">Seu ciclo começa em breve</p>
-        <h1 className="page-title max-w-sm">Prepare o ponto de partida.</h1>
-        <p className="mt-3 max-w-sm text-body text-ink-muted">Defina a data de início para liberar a sessão do dia e acompanhar seu ritmo.</p>
-        <Link to="/ajustes" className="btn-primary mt-6">Configurar início</Link>
-      </div>
-    )
-  }
-
-  if (training.status === 'completed') {
-    return (
-      <div className="page-content flex min-h-[78dvh] flex-col items-start justify-center page-enter">
-        <div className="icon-tile mb-5 h-14 w-14 rounded-[18px]"><Trophy size={28} weight="duotone" /></div>
-        <p className="page-kicker mb-2">Ciclo concluído</p>
-        <h1 className="page-title max-w-sm">Você chegou ao fim deste ciclo.</h1>
-        <p className="mt-3 max-w-sm text-body text-ink-muted">Confira seus registros, {firstName}. Compare os testes e escolha o próximo marco.</p>
-        <Link to="/progresso" className="btn-primary mt-6">Ver meu progresso</Link>
-      </div>
-    )
-  }
 
   if (loading) {
     return (
@@ -241,7 +235,7 @@ export default function Today({ startDate, name }: Props) {
   }
 
   const runSession = training.sessionType === 'qualidade' || training.sessionType === 'longa'
-    ? getRunningSession(training.weekNumber, training.dayOfWeek)
+    ? getRunningSession(phase, training.sessionType)
     : null
 
   return (
@@ -251,8 +245,10 @@ export default function Today({ startDate, name }: Props) {
           eyebrow={`${greeting}, ${firstName}`}
           title="Hoje"
           description={dateLabel}
-          action={<span className="badge-fase">Semana {training.weekNumber}</span>}
+          action={<span className="badge-fase">{plan.phases.find(level => level.id === phase)?.name}</span>}
         />
+        <div className="surface p-4"><label className="label" htmlFor="today-activity">O que você quer fazer hoje?</label><select id="today-activity" className="input" value={training.sessionType} disabled={workoutDone} onChange={event => void changeSession(event.target.value)}>{['forcaA', 'forcaB', 'forcaC', 'qualidade', 'longa', 'calistenia', 'caminhada', 'mobilidade', 'descanso', ...settings.customActivities.map(name => 'custom:' + name)].map(type => <option key={type} value={type}>{activityName(type, plan)}{type === suggestion.sessionType ? ' · sugestão de hoje' : ''}</option>)}</select><p className="helper">Tempo disponível: {settings.sessionDurationMin} min. Você também pode registrar outras atividades.</p></div>
+        <ActivityRecorder settings={settings} updateSetting={updateSetting} defaultActivity={activityCategory(training.sessionType)} onSaved={() => void loadState()} />
         {mutationError && <p className="rounded-[18px] border border-red-200 bg-red-50 p-4 text-[13px] text-red-700 dark:bg-red-950/30 dark:text-red-300" role="alert">{mutationError}</p>}
 
         <section className="hero-surface p-5 sm:p-6" aria-labelledby="session-title">
@@ -403,7 +399,7 @@ export default function Today({ startDate, name }: Props) {
                     onSaved={async log => {
                       setShowRunLog(false)
                       if (log.date !== todayStr) return
-                      try { await handleMarkDone(); setMutationError('') }
+                      try { await handleMarkDone(true); setMutationError('') }
                       catch { setMutationError('Corrida salva. Não foi possível concluir a sessão; tente novamente.'); setShowRunLog(true) }
                     }}
                   />
@@ -453,6 +449,7 @@ export default function Today({ startDate, name }: Props) {
             {doneExercises === totalExercises && <button className="btn-primary mt-3 w-full" onClick={() => setShowCompletionSheet(true)}>Concluir treino</button>}
           </div>
         )}
+        <TrainingControls settings={settings} updateSetting={updateSetting} />
       </main>
 
       {showUndo && (
@@ -483,6 +480,7 @@ export default function Today({ startDate, name }: Props) {
               </div>
               <h2 id="completion-title" className="text-[27px] font-semibold tracking-[-0.035em] text-ink">Sessão entregue.</h2>
               <p className="mt-2 text-body text-ink-muted">Você completou {doneExercises} movimentos. Salve o dia e registre como o corpo respondeu.</p>
+              <div className="mb-4"><label className="label" htmlFor="completed-duration">Tempo realizado · minutos · opcional</label><input id="completed-duration" className="input" inputMode="decimal" value={actualMinutes} onChange={event => setActualMinutes(event.target.value)} placeholder="Informe o tempo real para acompanhar sua meta" /></div>
               <button ref={completionButtonRef} onClick={handleConclude} className="btn-primary mt-6 w-full">Concluir e fazer check-out</button>
               <button onClick={() => setShowCompletionSheet(false)} className="btn-ghost mb-1 mt-2 w-full">Revisar antes</button>
             </div>

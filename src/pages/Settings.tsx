@@ -32,9 +32,11 @@ import { localDateKey } from '@/lib/date'
 import { isDateKey } from '@/lib/date'
 import plan from '@/data/activePlan'
 import GoalEditor from '@/components/journey/GoalEditor'
-import { plannedWorkouts } from '@/lib/journey'
+import { isActivityLog, validateGoal } from '@/lib/continuousTraining'
+import TrainingControls from '@/components/journey/TrainingControls'
 import { parsePerformanceTargets, type UpdateTrainingSetting } from '@/lib/trainingSettings'
 import type {
+  ActivityLog,
   AppSettings,
   DailyLog,
   ExerciseCheck,
@@ -62,6 +64,7 @@ interface BackupPayload {
   strength: StrengthLog[]
   settings: AppSettings[]
   exerciseChecks: ExerciseCheck[]
+  activities: ActivityLog[]
 }
 
 type Feedback = { message: string; type: 'success' | 'error' }
@@ -74,7 +77,7 @@ type ProfileDraft = {
 }
 type ProfileField = keyof ProfileDraft
 
-const BACKUP_FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks'] as const
+const BACKUP_FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks', 'activities'] as const
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -91,6 +94,10 @@ function isDailyLog(value: unknown): value is DailyLog {
   ) && (value.notes == null || typeof value.notes === 'string')
     && (value.workoutDone == null || typeof value.workoutDone === 'boolean')
     && (value.checkInDone == null || typeof value.checkInDone === 'boolean')
+    && (value.sessionType == null || typeof value.sessionType === 'string')
+    && (value.sessionName == null || typeof value.sessionName === 'string')
+    && (value.trainingLevel == null || ['base', 'desenvolvimento', 'performance'].includes(String(value.trainingLevel)))
+    && (value.lightVolume == null || typeof value.lightVolume === 'boolean')
 }
 
 function isRunningLog(value: unknown): value is RunningLog {
@@ -151,20 +158,27 @@ function parseBackup(raw: string): BackupPayload {
     strength: (parsed.strength ?? []) as StrengthLog[],
     settings: (parsed.settings ?? []) as AppSettings[],
     exerciseChecks: (parsed.exerciseChecks ?? []) as ExerciseCheck[],
+    activities: (parsed.activities ?? []) as ActivityLog[],
   }
 
   if (!payload.daily.every(isDailyLog)
     || !payload.running.every(isRunningLog)
     || !payload.strength.every(isStrengthLog)
     || !payload.settings.every(isAppSetting)
-    || !payload.exerciseChecks.every(isExerciseCheck)) {
+    || !payload.exerciseChecks.every(isExerciseCheck)
+    || !payload.activities.every(isActivityLog)) {
     throw new Error('Há registros corrompidos ou incompatíveis no backup.')
   }
 
   for (const { key, value } of payload.settings) {
     if (key === 'performanceTargets') parsePerformanceTargets(value, plan)
-    if (key === 'startDate' && !isDateKey(value)) throw new Error('Data do ciclo inválida no backup.')
-    if (key === 'weeklyWorkoutGoal' && (!Number.isInteger(Number(value)) || Number(value) < 1 || Number(value) > plannedWorkouts(plan))) throw new Error('Meta semanal inválida no backup.')
+    if (key === 'primaryGoal' && JSON.parse(value) !== null && !validateGoal(JSON.parse(value))) throw new Error('Meta principal inválida no backup.')
+    if (key === 'goalHistory' && (!Array.isArray(JSON.parse(value)) || !JSON.parse(value).every(validateGoal))) throw new Error('Histórico de metas inválido no backup.')
+    if (key === 'trainingLevel' && !['base', 'desenvolvimento', 'performance'].includes(value)) throw new Error('Nível de treino inválido no backup.')
+    if (key === 'lightVolume' && !['true', 'false'].includes(value)) throw new Error('Volume de treino inválido no backup.')
+    if (key === 'sessionDurationMin' && (!Number.isFinite(Number(value)) || Number(value) <= 0 || Number(value) > 1440)) throw new Error('Tempo de treino inválido no backup.')
+    if (key === 'customActivities' && (!Array.isArray(JSON.parse(value)) || !JSON.parse(value).every((item: unknown) => typeof item === 'string' && item.trim().length > 0 && item.length <= 80))) throw new Error('Atividades inválidas no backup.')
+    if (key === 'startDate' && !isDateKey(value)) throw new Error('Data de início inválida no backup.')
   }
   return payload
 }
@@ -181,6 +195,7 @@ function recordCount(payload: BackupPayload): number {
     + payload.strength.length
     + payload.settings.length
     + payload.exerciseChecks.length
+    + payload.activities.length
 }
 
 function SettingsSection({
@@ -290,7 +305,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
         commitSetting('initialWeight', initialWeight),
         commitSetting('goalWeight', goalWeight),
       ])
-      showFeedback('Perfil e metas atualizados.')
+      showFeedback('Perfil atualizado.')
     } catch {
       showFeedback('Não foi possível salvar o perfil. Tente novamente.', 'error')
     } finally {
@@ -304,7 +319,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     successMessage: string,
   ) => {
     if (key === 'startDate' && typeof value === 'string' && !isDateKey(value)) {
-      showFeedback('Escolha uma data válida para o início do ciclo.', 'error')
+      showFeedback('Escolha uma data válida para o início do acompanhamento.', 'error')
       return
     }
     setBusy('preference')
@@ -321,22 +336,24 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
   const handleExport = async () => {
     setBusy('export')
     try {
-      const [daily, running, strength, storedSettings, exerciseChecks] = await Promise.all([
+      const [daily, running, strength, storedSettings, exerciseChecks, activities] = await Promise.all([
         db.dailyLogs.toArray(),
         db.runningLogs.toArray(),
         db.strengthLogs.toArray(),
         db.settings.toArray(),
         db.exerciseChecks.toArray(),
+        db.activityLogs.toArray(),
       ])
       const payload: BackupPayload = {
         kind: `treino-${profileId}-backup`,
-        schemaVersion: 1,
+        schemaVersion: 2,
         exportedAt: new Date().toISOString(),
         daily,
         running,
         strength,
         settings: storedSettings,
         exerciseChecks,
+        activities,
       }
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -364,7 +381,6 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     const goalWeight = Number(imported.get('goalWeight'))
     const routineType = imported.get('routineType')
     const darkMode = imported.get('darkMode')
-    const weeklyWorkoutGoal = imported.get('weeklyWorkoutGoal')
     const performanceTargets = imported.get('performanceTargets')
 
     if (name) await commitSetting('name', name)
@@ -378,7 +394,14 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     if (darkMode === 'true' || darkMode === 'false') {
       await commitSetting('darkMode', darkMode === 'true')
     }
-    if (weeklyWorkoutGoal != null) await commitSetting('weeklyWorkoutGoal', Number(weeklyWorkoutGoal))
+    for (const key of ['primaryGoal', 'goalHistory', 'customActivities', 'lightVolume'] as const) {
+      const value = imported.get(key)
+      if (value != null) await commitSetting(key, JSON.parse(value))
+    }
+    const level = imported.get('trainingLevel')
+    if (level === 'base' || level === 'desenvolvimento' || level === 'performance') await commitSetting('trainingLevel', level)
+    const duration = imported.get('sessionDurationMin')
+    if (duration != null) await commitSetting('sessionDurationMin', Number(duration))
     if (performanceTargets != null) await commitSetting('performanceTargets', parsePerformanceTargets(performanceTargets, plan))
   }
 
@@ -398,7 +421,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
 
       await db.transaction(
         'rw',
-        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks],
+        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs],
         async () => {
           for (const importedLog of payload.daily) {
             const log = stripId(importedLog)
@@ -413,6 +436,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             if (duplicateIds.length > 0) await db.dailyLogs.bulkDelete(duplicateIds)
           }
 
+          const runIdMap = new Map<number, number>()
           for (const importedLog of payload.running) {
             const log = stripId(importedLog)
             const existing = (await db.runningLogs.where('date').equals(log.date).toArray())
@@ -420,8 +444,9 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
                 && item.distanceKm === log.distanceKm
                 && Math.abs(item.durationMin - log.durationMin) < 0.000_001)
             const primary = existing[0]
+            const restoredId = primary?.id ?? await db.runningLogs.add(log)
             if (primary?.id != null) await db.runningLogs.update(primary.id, log)
-            else await db.runningLogs.add(log)
+            if (importedLog.id != null) runIdMap.set(importedLog.id, restoredId as number)
 
             const duplicateIds = existing.slice(1)
               .map(item => item.id)
@@ -429,6 +454,11 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             if (duplicateIds.length > 0) await db.runningLogs.bulkDelete(duplicateIds)
           }
 
+          for (const activity of payload.activities) {
+            const sourceId = /^run:(\d+)$/.exec(activity.id)
+            const restoredId = sourceId ? runIdMap.get(Number(sourceId[1])) : undefined
+            await db.activityLogs.put({ ...activity, id: restoredId == null ? activity.id : 'run:' + restoredId })
+          }
           for (const importedLog of payload.strength) {
             const log = stripId(importedLog)
             const existing = (await db.strengthLogs.where('date').equals(log.date).toArray())
@@ -491,13 +521,14 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     try {
       await db.transaction(
         'rw',
-        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.exerciseChecks],
+        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.exerciseChecks, db.activityLogs],
         async () => {
           await Promise.all([
             db.dailyLogs.clear(),
             db.runningLogs.clear(),
             db.strengthLogs.clear(),
             db.exerciseChecks.clear(),
+            db.activityLogs.clear(),
           ])
         },
       )
@@ -615,31 +646,6 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
           </div>
 
           <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-[1fr_auto] sm:items-end sm:p-5">
-            <div>
-              <label className="label" htmlFor="settings-goal-weight">Meta de peso</label>
-              <div className="relative">
-                <input
-                  id="settings-goal-weight"
-                  type="number"
-                  inputMode="decimal"
-                  step="0.1"
-                  min="30"
-                  max="300"
-                  className="input pr-12 tabular-nums"
-                  value={profileDraft.goalWeight}
-                  onChange={event => setProfileValue('goalWeight', event.target.value)}
-                  aria-invalid={Boolean(fieldErrors.goalWeight)}
-                  aria-describedby={fieldErrors.goalWeight ? 'settings-goal-weight-error' : 'settings-goal-weight-helper'}
-                />
-                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-[13px] font-semibold text-ink-muted">kg</span>
-              </div>
-              <p id="settings-goal-weight-helper" className="helper">A linha de meta em Progresso usa este valor.</p>
-              {fieldErrors.goalWeight && (
-                <p id="settings-goal-weight-error" className="mt-2 text-[12px] font-medium text-red-600 dark:text-red-300">
-                  {fieldErrors.goalWeight}
-                </p>
-              )}
-            </div>
             <button
               type="submit"
               className="btn-primary w-full sm:w-auto"
@@ -657,15 +663,15 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
       <SettingsSection
         icon={CalendarDots}
         title="Plano e rotina"
-        description="Defina quando o ciclo começa e em qual período você costuma treinar."
+        description="Defina a data de referência do acompanhamento e em qual período você costuma treinar."
       >
         <div className="list-surface divide-y divide-line/80">
           <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-[1fr_13rem] sm:items-center sm:p-5">
             <div className="flex items-start gap-3">
               <CalendarDots size={21} weight="duotone" className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
               <div>
-                <label className="text-[15px] font-semibold text-ink" htmlFor="settings-start-date">Início do ciclo</label>
-                <p className="mt-1 text-[12px] leading-4 text-ink-muted">Alterar esta data recalcula as 26 semanas do plano.</p>
+                <label className="text-[15px] font-semibold text-ink" htmlFor="settings-start-date">Início do acompanhamento</label>
+                <p className="mt-1 text-[12px] leading-4 text-ink-muted">Uma referência para seus registros. O acompanhamento não tem data final.</p>
               </div>
             </div>
             <input
@@ -674,7 +680,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
               className="input tabular-nums"
               value={settings.startDate}
               disabled={busy !== null}
-              onChange={event => void handlePreference('startDate', event.target.value, 'Data do ciclo atualizada.')}
+              onChange={event => void handlePreference('startDate', event.target.value, 'Data de início atualizada.')}
             />
           </div>
 
@@ -719,6 +725,8 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
           </div>
         </div>
       </SettingsSection>
+
+      <TrainingControls settings={settings} updateSetting={updateSetting} />
 
       <SettingsSection
         icon={Palette}
@@ -800,7 +808,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             <div>
               <p className="text-[14px] font-semibold text-ink">Backup completo</p>
               <p className="mt-1 text-[12px] leading-5 text-ink-muted">
-                Inclui perfil, preferências, check-ins, corridas, força e marcações de exercícios.
+                Inclui perfil, metas, atividades, preferências, check-ins, corridas, força e marcações de exercícios.
               </p>
             </div>
           </div>

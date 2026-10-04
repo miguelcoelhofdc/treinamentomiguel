@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck } from '@/types'
+import type { ActivityLog, DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck } from '@/types'
 import { ACCESS_PROFILES, getStoredProfileId } from '@/lib/auth'
 
 class TrainingDB extends Dexie {
@@ -8,6 +8,7 @@ class TrainingDB extends Dexie {
   strengthLogs!: Table<StrengthLog>
   settings!: Table<AppSettings>
   exerciseChecks!: Table<ExerciseCheck>
+  activityLogs!: Table<ActivityLog, string>
 
   constructor(databaseName: string) {
     super(databaseName)
@@ -25,6 +26,7 @@ class TrainingDB extends Dexie {
       settings:           '++id, key',
       exerciseChecks:     '++id, date, exerciseId, [date+exerciseId]',
     })
+    this.version(3).stores({ activityLogs: 'id, date, activity' })
   }
 }
 
@@ -82,7 +84,10 @@ export async function toggleExerciseCheck(date: string, exerciseId: string): Pro
 
 // Running log helpers
 export async function saveRunningLog(log: RunningLog): Promise<void> {
-  await db.runningLogs.add(log)
+  await db.transaction('rw', db.runningLogs, db.activityLogs, async () => {
+    const id = await db.runningLogs.add(log)
+    await db.activityLogs.put({ id: `run:${id}`, date: log.date, activity: 'corrida', name: 'Corrida', durationMin: log.durationMin, distanceKm: log.distanceKm, completed: true })
+  })
 }
 
 export async function getAllRunningLogs(): Promise<RunningLog[]> {

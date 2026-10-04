@@ -29,29 +29,23 @@
     {
       "id": "base",
       "name": "Base",
-      "startWeek": 1,
-      "endWeek": 8,
       "description": "Construção aeróbica e adaptação técnica. Foco em consistência, postura e aprender os movimentos com segurança.",
       "color": "#4CAF50"
     },
     {
       "id": "desenvolvimento",
       "name": "Desenvolvimento",
-      "startWeek": 9,
-      "endWeek": 17,
       "description": "Aumento progressivo de volume e intensidade. Intervalos mais longos na corrida, cargas maiores na força.",
       "color": "#FF9800"
     },
     {
       "id": "performance",
       "name": "Performance",
-      "startWeek": 18,
-      "endWeek": 26,
       "description": "Pico de performance e especificidade. Treinos no pace de prova, cargas máximas e AMRAP de calistenia.",
       "color": "#F44336"
     }
   ],
-  "weekTemplate": {
+  "dailyTemplate": {
     "0": { "type": "corrida", "subtype": "longa",    "label": "Corrida Longa",          "icon": "run" },
     "1": { "type": "forca",   "subtype": "forcaA",   "label": "Força A — Inferior",     "icon": "strength" },
     "2": { "type": "forca",   "subtype": "forcaB",   "label": "Força B — Superior + Barras", "icon": "strength" },
@@ -60,7 +54,6 @@
     "5": { "type": "forca",   "subtype": "forcaC",   "label": "Força C — Full + Cond",  "icon": "strength" },
     "6": { "type": "calistenia","subtype":"calistenia","label": "Calistenia + Metcon",   "icon": "bodyweight" }
   },
-  "deloadWeeks": [4, 8, 12, 16, 20, 24],
   "exercises": {
     "forcaA": [
       {
@@ -435,34 +428,38 @@
     }
   },
   "running": {
-    "weeks": [
-      { "week": 1,  "thursday": { "label": "Rodagem fácil 20–25min", "detail": "Pace bem confortável (consegue conversar). Aquecimento 5min caminhando." }, "sunday": { "label": "Corrida longa 30min fácil", "detail": "Pace aeróbico leve. Hidratação a cada 15min." } },
-      { "week": 2,  "thursday": { "label": "4 × 2min forte / 2min trote", "detail": "Aquec. 10min. 4 séries: 2min forte (esforço 7/10) + 2min trote. Volta 10min." }, "sunday": { "label": "Corrida longa 35min fácil", "detail": "Pace confortável. Esforço 5–6/10." } },
-      { "week": 3,  "thursday": { "label": "30min fácil + 4 acelerações 20s", "detail": "Rodagem fácil com 4 acelerações de 20s distribuídas no meio. Recuperação completa entre cada." }, "sunday": { "label": "Corrida longa 40min fácil", "detail": "Pace aeróbico leve. Aproveite para trabalhar a postura." } },
-      { "week": 4,  "thursday": { "label": "DELOAD — 15min fácil", "detail": "Semana de recuperação. Ritmo muito leve, foco em mobilidade pós-corrida." }, "sunday": { "label": "DELOAD — 25min fácil", "detail": "Recuperação ativa. Sem esforço. Aproveite para observar sua técnica." } },
-      { "week": 5,  "thursday": { "label": "5 × 1'30\" forte / 2min trote", "detail": "Aquec. 10min. 5 séries: 1'30\" forte (7–8/10) + 2min trote. Volta 10min." }, "sunday": { "label": "Corrida longa 40min fácil", "detail": "Manter pace confortável, especialmente no início." } },
-      { "week": 6,  "thursday": { "label": "30min progressivo", "detail": "1° terço: bem leve → 2° terço: moderado → 3° terço: no limite confortável. Sem estouro." }, "sunday": { "label": "Corrida longa 45min fácil", "detail": "Pace constante e leve. Nutrição pré-corrida testada." } },
-      { "week": 7,  "thursday": { "label": "6 × 1min forte / 1'30\" trote", "detail": "Aquec. 10min. 6 séries: 1min forte (zona 4) + 1'30\" trote. Volta 10min." }, "sunday": { "label": "Corrida longa 50min fácil", "detail": "Primeira corrida de 50min. Pace deve ser muito leve nos primeiros 20min." } },
-      { "week": 8,  "thursday": { "label": "DELOAD — 20min fácil", "detail": "Recuperação. Passe da metade do plano com qualidade nas pernas." }, "sunday": { "label": "DELOAD — 30min fácil", "detail": "Última rodagem da fase Base. Registre seu peso e faça os testes." } },
-      { "week": 9,  "thursday": { "label": "4 × 3min forte / 2min trote", "detail": "Aquec. 10min. 4 séries: 3min forte (7–8/10) + 2min trote. Volta 10min." }, "sunday": { "label": "Corrida longa 50min fácil", "detail": "Início da fase de Desenvolvimento. Consistência é a chave." } },
-      { "week": 10, "thursday": { "label": "Fartlek 30min (forte/fraco alternado)", "detail": "Aqueça 10min. 30min de fartlek: alterne 2min forte / 2min fácil conforme sentir. Livremente." }, "sunday": { "label": "Corrida longa 55min fácil", "detail": "Pace aeróbico. Comece lentamente e mantenha estável." } },
-      { "week": 11, "thursday": { "label": "3 × 5min tempo / 2'30\" trote", "detail": "Aquec. 10min. 3 séries: 5min no limiar (8/10, difícil mas sustentável) + 2'30\" trote." }, "sunday": { "label": "Corrida longa 60min fácil", "detail": "Primeira hora! Divida mentalmente em 3 blocos de 20min. Hydratação." } },
-      { "week": 12, "thursday": { "label": "DELOAD — 25min fácil", "detail": "Semana de recuperação. Movimentos leves, priorize prehab e sono." }, "sunday": { "label": "DELOAD — 40min fácil", "detail": "Recuperação de volume. Pace muito leve." } },
-      { "week": 13, "thursday": { "label": "4 × 4min forte / 2min trote", "detail": "Aquec. 10min. 4 séries: 4min forte + 2min trote. Mantenha pace consistente." }, "sunday": { "label": "Corrida longa 60min fácil", "detail": "Segundo 60min. Deve parecer mais tranquilo que o primeiro (semana 11)." } },
-      { "week": 14, "thursday": { "label": "Tempo run contínuo 20min", "detail": "Aquec. 10min. 20min contínuos no limiar: difícil, mas controlado. Volta 10min." }, "sunday": { "label": "Corrida longa 65min fácil", "detail": "Pace constante. Observe sinais de fadiga acumulada." } },
-      { "week": 15, "thursday": { "label": "5 × 3min forte / 90s trote", "detail": "Aquec. 10min. 5 séries: 3min forte + 90s trote. Volume de qualidade alto." }, "sunday": { "label": "Corrida longa 70min fácil", "detail": "70 minutos em ritmo leve. Refuel pós-corrida caprichado." } },
-      { "week": 16, "thursday": { "label": "DELOAD — 25min + 4 strides", "detail": "25min leve + 4 acelerações de 20s com recuperação completa. Deload ativo." }, "sunday": { "label": "DELOAD — 45min fácil", "detail": "Manutenção aeróbica. Sem intensidade." } },
-      { "week": 17, "thursday": { "label": "Tempo run contínuo 25min", "detail": "Aquec. 10min. 25min no limiar. Registre o pace médio para comparação." }, "sunday": { "label": "Corrida longa 70min fácil", "detail": "Última longa da fase Desenvolvimento. Avalie sua evolução." } },
-      { "week": 18, "thursday": { "label": "4 × 1km no pace de prova / 2min trote", "detail": "Aquec. 10min. 4 × 1km no pace alvo do seu 5km. Recuperação de 2min." }, "sunday": { "label": "Corrida longa 75min fácil", "detail": "Início da fase Performance. Volume alto com pace conservado." } },
-      { "week": 19, "thursday": { "label": "5 × 1km no pace de prova / 2min trote", "detail": "Aquec. 10min. 5 × 1km no pace de prova. Maior carga de qualidade até agora." }, "sunday": { "label": "Corrida longa 80min fácil", "detail": "80 minutos. Pace estável e leve. Atenção à alimentação pré-corrida." } },
-      { "week": 20, "thursday": { "label": "DELOAD — 20min fácil", "detail": "Recuperação total. Pernas frescas para a fase final." }, "sunday": { "label": "DELOAD — 50min fácil", "detail": "Corrida restauradora. Curta o movimento sem pressão." } },
-      { "week": 21, "thursday": { "label": "3 × 2km no pace de prova / 3min trote", "detail": "Aquec. 10min. 3 × 2km no pace alvo. Mantenha consistência entre as séries." }, "sunday": { "label": "Corrida longa 75min fácil", "detail": "Volta ao volume alto. Aproveite o deload da semana passada." } },
-      { "week": 22, "thursday": { "label": "Tempo run contínuo 30min", "detail": "30min no limiar. Desafiante. Registre pace e sensações para ajuste final." }, "sunday": { "label": "Corrida longa 80min fácil", "detail": "Penúltima longa de alto volume. Hidratação e nutrição estratégica." } },
-      { "week": 23, "thursday": { "label": "4 × 2km no pace de prova / 2'30\" trote", "detail": "Maior sessão de qualidade do ciclo. Mantenha pace constante em todos os 4 km." }, "sunday": { "label": "Corrida longa 85min fácil", "detail": "Pico de volume do programa. Celebre estar aqui!" } },
-      { "week": 24, "thursday": { "label": "DELOAD — 20min fácil", "detail": "Último deload. Guarde energia para as duas últimas semanas." }, "sunday": { "label": "DELOAD — 55min fácil", "detail": "Mantendo base aeróbica antes da fase final." } },
-      { "week": 25, "thursday": { "label": "3 × 3km no pace alvo / 3min trote", "detail": "Sessão de confiança. Sinta o pace de prova e confirme que consegue mantê-lo." }, "sunday": { "label": "Corrida longa 90min fácil", "detail": "Maior corrida do ciclo. Prepare nutrição e hidratação com antecedência." } },
-      { "week": 26, "thursday": { "label": "TAPER — 30min fácil", "detail": "Semana de afunilamento. Corrida leve para manter as pernas soltas antes do teste final." }, "sunday": { "label": "TAPER — 60min fácil (Último Longo)", "detail": "Último longo do ciclo! Parabéns pela jornada. Teste de performance pode ser feito essa semana." } }
-    ]
+    "levels": {
+      "base": {
+        "qualidade": {
+          "label": "Rodagem fácil 20–25min",
+          "detail": "Pace bem confortável (consegue conversar). Aquecimento 5min caminhando."
+        },
+        "longa": {
+          "label": "Corrida longa 30min fácil",
+          "detail": "Pace aeróbico leve. Hidratação a cada 15min."
+        }
+      },
+      "desenvolvimento": {
+        "qualidade": {
+          "label": "4 × 3min forte / 2min trote",
+          "detail": "Aquec. 10min. 4 séries: 3min forte (7–8/10) + 2min trote. Volta 10min."
+        },
+        "longa": {
+          "label": "Corrida longa 50min fácil",
+          "detail": "Pace confortável. Consistência é a chave. Ajuste o tempo à sua disponibilidade."
+        }
+      },
+      "performance": {
+        "qualidade": {
+          "label": "4 × 1km no pace de prova / 2min trote",
+          "detail": "Aquec. 10min. 4 × 1km no pace alvo do seu 5km. Recuperação de 2min."
+        },
+        "longa": {
+          "label": "Corrida longa 75min fácil",
+          "detail": "Volume alto com pace conservador. Ajuste o tempo à sua disponibilidade e recuperação."
+        }
+      }
+    }
   },
   "mobility": {
     "shoulder": [

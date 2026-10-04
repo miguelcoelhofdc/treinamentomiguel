@@ -53,26 +53,22 @@ console.log('\n🔍 Amostra da aba Perfil:',  profileRows.slice(0, 3))
 console.log('🔍 Amostra da aba Corrida:',  runRows.slice(0, 3))
 console.log('🔍 Amostra da aba Força:',    strengthRows.slice(0, 3))
 
-// Build running weeks from spreadsheet data
-const runningWeeks = runRows.slice(0, 26).map((row, i) => ({
-  week: i + 1,
-  thursday: {
-    label: String(row['Quinta - Qualidade'] ?? row['quinta'] ?? row['Qualidade'] ?? `Sessão qualidade semana ${i+1}`),
-    detail: String(row['Detalhe Quinta'] ?? row['detalhe_qui'] ?? ''),
-  },
-  sunday: {
-    label: String(row['Domingo - Longa'] ?? row['domingo'] ?? row['Longa'] ?? `Corrida longa semana ${i+1}`),
-    detail: String(row['Detalhe Domingo'] ?? row['detalhe_dom'] ?? ''),
-  },
+// Spreadsheet sessions are imported as selectable levels, never as calendar stages.
+const runningLevels = Object.fromEntries(['base', 'desenvolvimento', 'performance'].map((level, index) => {
+  const row = runRows[[0, 8, 17][index]]
+  return [level, row ? {
+    qualidade: { label: String(row['Quinta - Qualidade'] ?? row['quinta'] ?? row['Qualidade'] ?? 'Sessão de qualidade'), detail: String(row['Detalhe Quinta'] ?? row['detalhe_qui'] ?? '') },
+    longa: { label: String(row['Domingo - Longa'] ?? row['domingo'] ?? row['Longa'] ?? 'Corrida longa'), detail: String(row['Detalhe Domingo'] ?? row['detalhe_dom'] ?? '') },
+  } : undefined]
 }))
 
-// Read existing plan.json as base (we only override running weeks from spreadsheet)
+// Preserve existing levels if a corresponding spreadsheet session is missing.
 const existingPlan = JSON.parse(readFileSync(OUT_PATH, 'utf8'))
 
 const plan = {
   ...existingPlan,
   meta: { ...existingPlan.meta, source: 'xlsx', generatedAt: new Date().toISOString() },
-  running: { weeks: runningWeeks.length >= 26 ? runningWeeks : existingPlan.running.weeks },
+  running: { levels: Object.fromEntries(Object.keys(existingPlan.running.levels).map(level => [level, runningLevels[level] ?? existingPlan.running.levels[level]])) },
 }
 
 // Override profile if spreadsheet has data

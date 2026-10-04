@@ -3,8 +3,6 @@ export type PhaseId = 'base' | 'desenvolvimento' | 'performance'
 export interface Phase {
   id: PhaseId
   name: string
-  startWeek: number
-  endWeek: number
   description: string
   color: string
 }
@@ -74,10 +72,9 @@ export interface RunningSession {
   detail: string
 }
 
-export interface RunningWeek {
-  week: number
-  thursday: RunningSession
-  sunday: RunningSession
+export interface RunningLevel {
+  qualidade: RunningSession
+  longa: RunningSession
 }
 
 export interface MobilityExercise {
@@ -147,15 +144,14 @@ export interface Plan {
     healthNotes: string[]
   }
   phases: Phase[]
-  weekTemplate: Record<string, WeekDayTemplate>
-  deloadWeeks: number[]
+  dailyTemplate: Record<string, WeekDayTemplate>
   exercises: {
     forcaA: Exercise[]
     forcaB: Exercise[]
     forcaC: Exercise[]
     calistenia: CalisteniaSession
   }
-  running: { weeks: RunningWeek[] }
+  running: { levels: Record<PhaseId, RunningLevel> }
   mobility: { shoulder: MobilityExercise[]; knee: MobilityExercise[] }
   nutrition: {
     dailyTargets: { trainingDay: NutritionTargets; restDay: NutritionTargets }
@@ -181,6 +177,10 @@ export interface DailyLog {
   notes?: string
   workoutDone?: boolean
   checkInDone?: boolean
+  sessionType?: string
+  sessionName?: string
+  trainingLevel?: PhaseId
+  lightVolume?: boolean
 }
 
 export interface TrainingSettings {
@@ -191,8 +191,36 @@ export interface TrainingSettings {
   goalWeight: number
   darkMode: boolean
   routineType: 'morning' | 'evening'
-  weeklyWorkoutGoal: number
   performanceTargets: Record<string, string | number>
+  trainingLevel: PhaseId
+  lightVolume: boolean
+  sessionDurationMin: number
+  primaryGoal: TrainingGoal | null
+  goalHistory: TrainingGoal[]
+  customActivities: string[]
+}
+
+export interface ActivityLog {
+  id: string
+  date: string
+  activity: string
+  name: string
+  durationMin?: number
+  distanceKm?: number
+  completed: boolean
+}
+
+export interface TrainingGoal {
+  id: string
+  title: string
+  activity: string
+  kind: 'minutes' | 'distance' | 'sessions' | 'runTime' | 'weight'
+  target: number
+  startDate: string
+  endDate?: string
+  distanceKm?: number
+  baseline?: number
+  archivedAt?: string
 }
 
 export interface RunningLog {
@@ -265,10 +293,9 @@ export interface MonthlySalesConfig {
 }
 
 export interface TrainingDay {
-  status: 'notStarted' | 'active' | 'completed'
+  status: 'active'
   date: string
   dayOfWeek: number
-  weekNumber: number
   phase: PhaseId
   isDeload: boolean
   sessionType: string

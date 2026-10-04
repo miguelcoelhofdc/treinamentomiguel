@@ -16,7 +16,7 @@ interface DataPoint {
 
 interface WeightChartProps {
   data: DataPoint[]
-  goal: number
+  goal?: number
   initial: number
 }
 
@@ -67,7 +67,7 @@ export default function WeightChart({ data, goal, initial }: WeightChartProps) {
 
   if (chartData.length === 0) return null
 
-  const values = [goal, initial, ...chartData.map((point) => point.weight)].filter(Number.isFinite)
+  const values = [...(goal == null ? [] : [goal]), initial, ...chartData.map((point) => point.weight)].filter(Number.isFinite)
   const rawMin = Math.min(...values)
   const rawMax = Math.max(...values)
   const span = Math.max(1, rawMax - rawMin)
@@ -79,7 +79,7 @@ export default function WeightChart({ data, goal, initial }: WeightChartProps) {
   return (
     <div
       role="img"
-      aria-label={`Gráfico da evolução do peso corporal até a meta. Último registro: ${weightFormatter.format(chartData[chartData.length - 1].weight)} kg.`}
+      aria-label={`Gráfico da evolução do peso corporal. Último registro: ${weightFormatter.format(chartData[chartData.length - 1].weight)} kg.`}
     >
       <ResponsiveContainer width="100%" height={232}>
         <LineChart data={chartData} margin={{ top: 14, right: 10, left: -10, bottom: 4 }}>
@@ -106,7 +106,7 @@ export default function WeightChart({ data, goal, initial }: WeightChartProps) {
             cursor={{ stroke: accentColor, strokeOpacity: 0.22, strokeWidth: 1 }}
             wrapperStyle={{ outline: 'none' }}
           />
-          <ReferenceLine
+          {goal != null && <ReferenceLine
             y={goal}
             stroke={accentColor}
             strokeOpacity={0.48}
@@ -118,7 +118,7 @@ export default function WeightChart({ data, goal, initial }: WeightChartProps) {
               fontSize: 10,
               fontWeight: 600,
             }}
-          />
+          />}
           <Line
             type="monotone"
             dataKey="weight"

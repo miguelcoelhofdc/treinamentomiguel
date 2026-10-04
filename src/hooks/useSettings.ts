@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { liveQuery } from 'dexie'
 import { db, setSetting } from '@/db'
 import plan from '@/data/activePlan'
-import { plannedWorkouts } from '@/lib/journey'
 import { decodeTrainingSettings, type UpdateTrainingSetting } from '@/lib/trainingSettings'
 import type { TrainingSettings } from '@/types'
 
@@ -10,7 +9,8 @@ const DEFAULTS: TrainingSettings = {
   startDate: plan.profile.startDate, name: plan.profile.name,
   height: plan.profile.height, initialWeight: plan.profile.initialWeight,
   goalWeight: Number(plan.profile.goals.weight), darkMode: false, routineType: 'morning',
-  weeklyWorkoutGoal: plannedWorkouts(plan), performanceTargets: {},
+  performanceTargets: {}, trainingLevel: 'base', lightVolume: false,
+  sessionDurationMin: 30, primaryGoal: null, goalHistory: [], customActivities: [],
 }
 
 export function useSettings() {

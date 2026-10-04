@@ -24,8 +24,11 @@ import { getWeightHistory, getAllRunningLogs, getStrengthPRs, getDailyLog, saveD
 import plan from '@/data/activePlan'
 import type { RunningLog, TestDefinition, TrainingSettings } from '@/types'
 import GoalEditor from '@/components/journey/GoalEditor'
+import GoalCard from '@/components/journey/GoalCard'
+import ActivityRecorder from '@/components/journey/ActivityRecorder'
+import { goalProgress, goalUnit } from '@/lib/continuousTraining'
 import { useJourney } from '@/hooks/useJourney'
-import { effectiveTarget, testGoalProgress } from '@/lib/journey'
+import { effectiveTarget } from '@/lib/journey'
 import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
 
 interface ProgressProps {
@@ -166,6 +169,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
   const [testStatus, setTestStatus] = useState<Record<string, SaveStatus>>({})
   const [testErrors, setTestErrors] = useState<Record<string, string | undefined>>({})
   const [loading, setLoading] = useState(true)
+  const [visibleActivities, setVisibleActivities] = useState(12)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const load = useCallback(async (showSkeleton = false) => {
@@ -192,7 +196,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
 
   useEffect(() => {
     void load(true)
-  }, [load, journey.logs])
+  }, [load, journey.logs, journey.activities])
 
   const sortedWeights = useMemo(
     () => [...weightData].sort((a, b) => a.date.localeCompare(b.date)),
@@ -225,7 +229,8 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
     0,
   )
   const weightDelta = currentWeight == null ? null : currentWeight - initialWeight
-  const weightProgress = calculateWeightProgress(initialWeight, goalWeight, currentWeight)
+  const activeWeightGoal = settings.primaryGoal?.kind === 'weight' ? settings.primaryGoal.target : undefined
+  const weightProgress = activeWeightGoal == null ? 0 : calculateWeightProgress(initialWeight, activeWeightGoal, currentWeight)
   const WeightTrendIcon = (weightDelta ?? 0) <= 0 ? TrendDown : TrendUp
   const weightTrendColor = weightDelta == null || weightDelta === 0
     ? 'text-white/70'
@@ -286,9 +291,13 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
 
       <section className="evolution-consistency mb-6" aria-label="Sua constância">
         <div className="mb-4 flex items-center justify-between"><h2 className="text-[18px] font-bold">Seu ritmo, seus marcos</h2><GoalEditor settings={settings} updateSetting={updateSetting} compact /></div>
-        {journey.error ? <p role="alert" className="text-[13px] text-red-600">Não foi possível carregar a constância. <button className="btn-ghost" onClick={journey.retry}>Tentar novamente</button></p> : <div className="grid grid-cols-3 gap-2"><div><strong>{journey.loaded ? journey.stats.streak : '—'}</strong><span>Dias de sequência</span></div><div><strong>{journey.loaded ? journey.stats.workouts : '—'}</strong><span>Treinos realizados</span></div><div><strong>{journey.loaded && journey.stats.adherence != null ? `${journey.stats.adherence}%` : '—'}</strong><span>Cumprimento do plano</span></div></div>}
+        {journey.error ? <p role="alert" className="text-[13px] text-red-600">Não foi possível carregar a constância. <button className="btn-ghost" onClick={journey.retry}>Tentar novamente</button></p> : <div className="grid grid-cols-3 gap-2"><div><strong>{journey.loaded ? journey.stats.streak : '—'}</strong><span>Dias de sequência</span></div><div><strong>{journey.loaded ? journey.stats.workouts : '—'}</strong><span>Dias ativos</span></div><div><strong>{journey.loaded ? Math.round(journey.activities.reduce((sum, item) => sum + (item.durationMin ?? 0), 0)) : '—'}</strong><span>Minutos registrados</span></div></div>}
       </section>
 
+      {journey.loaded && !journey.error && <GoalCard settings={settings} updateSetting={updateSetting} activities={journey.activities} logs={journey.logs} today={journey.today} />}
+      <div className="mb-6"><ActivityRecorder settings={settings} updateSetting={updateSetting} /></div>
+      {journey.loaded && !journey.error && journey.activities.length > 0 && <section className="list-surface mb-6 p-4" aria-label="Atividades recentes"><h2 className="mb-3 text-[16px] font-bold">Atividades recentes</h2><ol className="divide-y divide-line">{[...journey.activities].reverse().slice(0, visibleActivities).map(item => <li key={item.id} className="py-3 flex flex-wrap items-center justify-between gap-2"><div className="min-w-0"><p className="text-[14px] font-semibold break-words">{item.name}</p><p className="helper">{item.date.split('-').reverse().join('/')}</p></div><p className="text-[13px] font-bold text-accent-strong">{item.durationMin != null ? item.durationMin.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' min' : 'Tempo não informado'}{item.distanceKm != null ? ' · ' + item.distanceKm.toLocaleString('pt-BR') + ' km' : ''}</p></li>)}</ol>{journey.activities.length > visibleActivities && <button className="btn-ghost w-full mt-2" onClick={() => setVisibleActivities(value => value + 12)}>Ver mais atividades</button>}</section>}
+      {settings.goalHistory.length > 0 && journey.loaded && !journey.error && <section className="list-surface mb-6 p-4" aria-label="Histórico de metas"><h2 className="mb-3 text-[16px] font-bold">Metas anteriores</h2><ol className="divide-y divide-line">{[...settings.goalHistory].reverse().map(goal => { const result = goalProgress(goal, journey.activities, journey.logs, journey.today); return <li key={goal.id} className="py-3"><p className="text-[14px] font-bold">{goal.title}</p><p className="helper">{result.current == null ? 'Sem resultado registrado' : result.current.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' ' + goalUnit(goal)} · alvo {goal.target} {goalUnit(goal)} · {result.achieved ? 'Alcançada' : 'Encerrada'}</p></li> })}</ol></section>}
       {loadError && (
         <div className="mb-5 flex items-start gap-3 rounded-[18px] border border-red-200 bg-red-50 p-4 text-red-900 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200" role="alert">
           <WarningCircle size={21} weight="duotone" className="mt-0.5 shrink-0" />
@@ -321,7 +330,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
             </p>
           </div>
 
-          <div className="flex shrink-0 flex-col items-center gap-2">
+          {activeWeightGoal != null && <div className="flex shrink-0 flex-col items-center gap-2">
             <ProgressRing
               value={weightProgress}
               size={76}
@@ -330,7 +339,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
               label={currentWeight == null ? '—' : `${Math.round(weightProgress)}%`}
             />
             <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/45">do caminho</span>
-          </div>
+          </div>}
         </div>
 
         <div className="relative mt-6 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 pt-4">
@@ -339,8 +348,8 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
             <p className="mt-1 text-[17px] font-semibold text-white tabular-nums">{weightFormatter.format(initialWeight)} kg</p>
           </div>
           <div className="pl-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">Meta</p>
-            <p className="mt-1 text-[17px] font-semibold text-white tabular-nums">{weightFormatter.format(goalWeight)} kg</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">{activeWeightGoal != null ? 'Meta escolhida' : 'Acompanhamento'}</p>
+            <p className="mt-1 text-[17px] font-semibold text-white tabular-nums">{activeWeightGoal != null ? weightFormatter.format(activeWeightGoal) + ' kg' : 'Sem prazo final'}</p>
           </div>
         </div>
       </section>
@@ -372,15 +381,15 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
             <h2 id="weight-chart-title">Peso corporal</h2>
             <p>Tendência dos registros feitos pela manhã.</p>
           </div>
-          <span className="badge-fase shrink-0 gap-1.5">
+          {activeWeightGoal != null && <span className="badge-fase shrink-0 gap-1.5">
             <Target size={13} weight="bold" />
-            {weightFormatter.format(goalWeight)} kg
-          </span>
+            {weightFormatter.format(activeWeightGoal)} kg
+          </span>}
         </div>
         <div className="mt-4 overflow-hidden rounded-[22px] border border-line/85 bg-surface px-2 py-4 sm:px-4">
           {sortedWeights.length === 0
-            ? <ChartEmpty title="Sua curva começa no primeiro registro" description="Adicione o peso no Log do Dia e acompanhe a direção ao longo das semanas." />
-            : <WeightChart data={sortedWeights} goal={goalWeight} initial={initialWeight} />}
+            ? <ChartEmpty title="Sua curva começa no primeiro registro" description="Adicione o peso no Log do Dia e acompanhe a direção ao longo do tempo." />
+            : <WeightChart data={sortedWeights} goal={activeWeightGoal} initial={initialWeight} />}
         </div>
       </section>
 
@@ -467,7 +476,6 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
             const inputId = `test-${test.id}`
             const helperId = `${inputId}-helper`
             const target = effectiveTarget(test, settings.performanceTargets, goalWeight)
-            const goalProgress = testGoalProgress(test, currentValue, target)
 
             return (
               <div key={test.id} className="px-4 py-5 sm:px-5">
@@ -475,7 +483,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
                   <div className="min-w-0">
                     <p className="text-[15px] font-semibold text-ink">{test.name}</p>
                     <p className="mt-1 text-[12px] leading-4 text-ink-muted">
-                      Inicial {test.initial} {test.unit} · meta {target} {test.unit}
+                      Inicial {test.initial} {test.unit} · referência {target} {test.unit}
                     </p>
                   </div>
                   {comparison && (
@@ -491,8 +499,6 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
                 </div>
 
                 <p className="mt-2 text-[13px] leading-5 text-ink-soft">{test.description}</p>
-                {goalProgress.percent != null && <div className="goal-track mt-3" role="progressbar" aria-label={`Progresso de ${test.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(goalProgress.percent)}><span style={{ transform: `scaleX(${goalProgress.percent / 100})` }} /></div>}
-                {goalProgress.achieved && <p className="mt-2 text-[12px] font-bold text-accent-strong">Meta alcançada!</p>}
 
                 <div className="mt-4">
                   <label htmlFor={inputId} className="label">Resultado atual</label>

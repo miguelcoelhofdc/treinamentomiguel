@@ -1,6 +1,7 @@
 import type { AppSettings, Plan, TrainingSettings } from '../types/index.ts'
 import { isDateKey } from './date.ts'
-import { plannedWorkouts, isWeightTest, validateTarget } from './journey.ts'
+import { isWeightTest, validateTarget } from './journey.ts'
+import { validateGoal } from './continuousTraining.ts'
 
 export type UpdateTrainingSetting = <K extends keyof TrainingSettings>(key: K, value: TrainingSettings[K]) => Promise<void>
 
@@ -26,7 +27,17 @@ export function decodeTrainingSettings(rows: AppSettings[], defaults: TrainingSe
     if ((key === 'initialWeight' || key === 'goalWeight') && Number(value) >= 30 && Number(value) <= 300) result[key] = Number(value)
     if (key === 'darkMode' && ['true', 'false'].includes(value)) result.darkMode = value === 'true'
     if (key === 'routineType' && (value === 'morning' || value === 'evening')) result.routineType = value
-    if (key === 'weeklyWorkoutGoal' && Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= plannedWorkouts(plan)) result.weeklyWorkoutGoal = Number(value)
+    if (key === 'trainingLevel' && ['base', 'desenvolvimento', 'performance'].includes(value)) result.trainingLevel = value as TrainingSettings['trainingLevel']
+    if (key === 'lightVolume' && ['true', 'false'].includes(value)) result.lightVolume = value === 'true'
+    if (key === 'sessionDurationMin' && Number(value) > 0 && Number(value) <= 1440) result.sessionDurationMin = Number(value)
+    if (['primaryGoal', 'goalHistory', 'customActivities'].includes(key)) {
+      try {
+        const parsed: unknown = JSON.parse(value)
+        if (key === 'primaryGoal' && (parsed === null || validateGoal(parsed))) result.primaryGoal = parsed
+        if (key === 'goalHistory' && Array.isArray(parsed) && parsed.every(validateGoal)) result.goalHistory = parsed
+        if (key === 'customActivities' && Array.isArray(parsed) && parsed.every(item => typeof item === 'string' && item.trim().length > 0 && item.length <= 80)) result.customActivities = [...new Set(parsed)]
+      } catch { /* Keep valid defaults when a stored preference cannot be decoded. */ }
+    }
     if (key === 'performanceTargets') {
       try { result.performanceTargets = parsePerformanceTargets(value, plan) } catch { /* Preserve defaults when a legacy preference is invalid. */ }
     }

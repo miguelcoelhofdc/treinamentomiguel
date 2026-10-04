@@ -70,7 +70,10 @@
 .checkin-done .checkin-icon { color: hsl(var(--color-accent-strong)); }
 .dark .checkin-banner { border-color: #674626; background: #2b251a; }
 .dark .checkin-done { border-color: #446236; background: #223a23; }
-.weekly-goal { padding: 14px 15px 16px; border: 2px solid hsl(var(--color-line)); border-radius: 20px; margin-bottom: 16px; background: hsl(var(--color-surface)); }
+.personal-target { padding: 14px 15px 16px; border: 2px solid hsl(var(--color-line)); border-radius: 20px; margin-bottom: 16px; background: hsl(var(--color-surface)); }
+.journey-date-tools { display: flex; align-items: center; gap: 4px; padding: 12px 0; }
+.journey-date-tools .input { flex: 1; min-width: 0; width: 0; padding-inline: 8px; }
+.journey-date-tools .btn-ghost { padding-inline: 8px; font-size: 12px; }
 .goal-symbol { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #e8f4dc; color: #3f871f; border-radius: 14px; }
 .goal-done { background: #dff7cf; }
 .goal-track { height: 10px; background: hsl(var(--color-line)); border-radius: 8px; overflow: hidden; margin-top: 13px; }
@@ -151,8 +154,8 @@
   .presence-week li { gap: 5px; }
   .presence-day { width: 32px; height: 32px; }
   .checkin-banner { padding-block: 10px; margin-bottom: 12px; }
-  .weekly-goal { padding: 10px 13px 12px; margin-bottom: 12px; }
-  .weekly-goal .goal-track { margin-top: 9px; height: 8px; }
+  .personal-target { padding: 10px 13px 12px; margin-bottom: 12px; }
+  .personal-target .goal-track { margin-top: 9px; height: 8px; }
   .today-shortcut { padding-block: 12px; margin-bottom: 16px; }
   .journey-unit { padding-block: 15px; }
   .journey-week-tools { padding-top: 0; }

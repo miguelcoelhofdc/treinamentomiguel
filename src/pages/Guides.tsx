@@ -82,7 +82,7 @@ export default function Guides({ routineType }: GuidesProps) {
       <PageHeader
         eyebrow="Base de apoio"
         title="Guias"
-        description="Protocolos práticos para sustentar treino, recuperação e alimentação ao longo da semana."
+        description="Protocolos práticos para sustentar treino, recuperação e alimentação ao longo do tempo."
       />
 
       <div className="list-surface divide-y divide-line/80">

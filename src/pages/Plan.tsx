@@ -11,14 +11,19 @@ import PageHeader from '@/components/ui/PageHeader'
 import SessionIcon from '@/components/ui/SessionIcon'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
 import plan from '@/data/activePlan'
-import type { Exercise, PhaseId, WeekDayTemplate } from '@/types'
+import type { Exercise, WeekDayTemplate } from '@/types'
 import { formatShortDate, weekday } from '@/lib/date'
-import { planWeekDates } from '@/lib/journey'
+import { planDates } from '@/lib/journey'
+import { addCalendarDays, isDateKey } from '@/lib/date'
+import TrainingControls from '@/components/journey/TrainingControls'
+import type { TrainingSettings } from '@/types'
+import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
 
 const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
 interface Props {
-  startDate: string
+  settings: TrainingSettings
+  updateSetting: UpdateTrainingSetting
 }
 
 function getExercises(subtype: string): Exercise[] {
@@ -28,115 +33,27 @@ function getExercises(subtype: string): Exercise[] {
   return []
 }
 
-export default function Plan({ startDate }: Props) {
-  const todayTraining = useTrainingDay(startDate)
-  const currentWeek = Math.min(26, Math.max(1, todayTraining.weekNumber || 1))
+export default function Plan({ settings, updateSetting }: Props) {
+  const todayTraining = useTrainingDay(settings.startDate, undefined, settings.trainingLevel, settings.lightVolume)
   const [searchParams] = useSearchParams()
-  const requestedWeek = Number(searchParams.get('semana'))
-  const requestedDay = searchParams.get('dia')
-  const [week, setWeek] = useState(Number.isInteger(requestedWeek) && requestedWeek >= 1 && requestedWeek <= 26 ? requestedWeek : currentWeek)
-  const [expandedDay, setExpandedDay] = useState<number | null>(requestedDay != null && /^[0-6]$/.test(requestedDay) ? Number(requestedDay) : todayTraining.dayOfWeek)
-  const dates = planWeekDates(startDate, week)
-
-  const isDeload = plan.deloadWeeks.includes(week)
-  const phase: PhaseId = week <= 8 ? 'base' : week <= 17 ? 'desenvolvimento' : 'performance'
-  const phaseInfo = plan.phases.find(item => item.id === phase)
-  const isHomeWeek = week === currentWeek
-  const isCurrentWeek = isHomeWeek && todayTraining.status !== 'notStarted'
-
+  const requestedDate = searchParams.get('data')
+  const [anchor, setAnchor] = useState<string | null>(requestedDate && isDateKey(requestedDate) ? requestedDate : null)
+  const date = anchor ?? todayTraining.date
+  const [expandedDay, setExpandedDay] = useState<number | null>(weekday(date))
+  const dates = planDates(date)
+  const phase = settings.trainingLevel
   return (
     <div className="page-content page-enter">
-      <PageHeader
-        eyebrow="Ciclo de 26 semanas"
-        title="Plano de treino"
-        description="Navegue pela progressão e abra cada sessão para revisar o que vem pela frente."
-      />
-
-      <section className="hero-surface p-5 sm:p-6" aria-label="Selecionar semana do plano">
-        <div className="flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => setWeek(value => Math.max(1, value - 1))}
-            disabled={week <= 1}
-            aria-label="Semana anterior"
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] border border-canvas/10 bg-canvas/10 text-canvas transition duration-200 hover:bg-canvas/15 active:scale-[0.96] disabled:opacity-30"
-          >
-            <CaretLeft size={22} weight="bold" />
-          </button>
-
-          <div className="min-w-0 text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-canvas/60">Semana</p>
-            <p className="mt-1 text-[3rem] font-semibold leading-none tracking-[-0.06em] tabular-nums text-canvas">{week}</p>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-              <span className="text-[13px] font-semibold text-canvas/75">{phaseInfo?.name}</span>
-              {isDeload && <span className="badge bg-canvas/10 text-canvas">Deload</span>}
-              {isCurrentWeek && <span className="badge bg-canvas text-ink">Semana atual</span>}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setWeek(value => Math.min(26, value + 1))}
-            disabled={week >= 26}
-            aria-label="Próxima semana"
-            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] border border-canvas/10 bg-canvas/10 text-canvas transition duration-200 hover:bg-canvas/15 active:scale-[0.96] disabled:opacity-30"
-          >
-            <CaretRight size={22} weight="bold" />
-          </button>
-        </div>
-
-        <div className="mt-6">
-          <input
-            type="range"
-            min="1"
-            max="26"
-            step="1"
-            value={week}
-            onChange={event => setWeek(Number(event.target.value))}
-            aria-label={`Semana ${week} de 26`}
-            className="block w-full accent-canvas [&::-moz-range-thumb]:bg-canvas [&::-webkit-slider-thumb]:bg-canvas"
-          />
-          <div className="mt-2 flex justify-between text-[11px] font-semibold tabular-nums text-canvas/55">
-            <span>01</span>
-            <span>26</span>
-          </div>
-        </div>
-      </section>
-
-      {!isHomeWeek && (
-        <button
-          type="button"
-          onClick={() => setWeek(currentWeek)}
-          className="btn-secondary mt-3 w-full"
-        >
-          <ArrowCounterClockwise size={18} weight="bold" />
-          {todayTraining.status === 'notStarted' ? 'Voltar à primeira semana' : 'Voltar à semana atual'}
-        </button>
-      )}
-
-      <div className="mt-5 border-l-2 border-accent/35 pl-4">
-        <p className="text-body text-ink-soft">{phaseInfo?.description}</p>
-        {isDeload && (
-          <p className="mt-2 text-[13px] font-semibold leading-5 text-accent-strong">
-            Volume reduzido para consolidar a evolução e recuperar o corpo.
-          </p>
-        )}
-      </div>
-
-      <section className="mt-8" aria-labelledby="weekly-timeline-title">
-        <div className="section-heading mb-5">
-          <div>
-            <h2 id="weekly-timeline-title">Ritmo da semana</h2>
-            <p>Toque em uma sessão para ver a prescrição.</p>
-          </div>
-          <span className="text-[12px] font-semibold tabular-nums text-ink-muted">7 dias</span>
-        </div>
-
+      <PageHeader eyebrow="Acompanhamento contínuo" title="Sua rotina" description="Sugestões por data. Escolha a atividade do dia e ajuste o treino no seu ritmo." />
+      <TrainingControls settings={settings} updateSetting={updateSetting} />
+      <section className="mt-6" aria-labelledby="routine-timeline-title">
+        <div className="section-heading mb-4"><div><h2 id="routine-timeline-title">Próximas atividades</h2><p>Toque para consultar o treino sugerido.</p></div></div>
+        <div className="journey-date-tools mb-4"><button className="btn-icon" aria-label="Ver datas anteriores" onClick={() => setAnchor(addCalendarDays(date, -7))}><CaretLeft size={22} /></button><label htmlFor="routine-date" className="sr-only">Data inicial da rotina</label><input id="routine-date" className="input" type="date" value={date} onChange={event => { if (isDateKey(event.target.value)) { setAnchor(event.target.value); setExpandedDay(weekday(event.target.value)) } }} /><button className="btn-icon" aria-label="Ver próximas datas" onClick={() => setAnchor(addCalendarDays(date, 7))}><CaretRight size={22} /></button><button className="btn-ghost" onClick={() => { setAnchor(null); setExpandedDay(todayTraining.dayOfWeek) }}><ArrowCounterClockwise size={18} />Hoje</button></div>
         <ol className="relative ml-[22px] border-l border-line">
           {dates.map((date, index) => {
             const dayOfWeek = weekday(date)
-            const template = (plan.weekTemplate as Record<string, WeekDayTemplate>)[String(dayOfWeek)]
-            const isToday = date === todayTraining.date && isCurrentWeek
+            const template = (plan.dailyTemplate as Record<string, WeekDayTemplate>)[String(dayOfWeek)]
+            const isToday = date === todayTraining.date
             const isExpanded = expandedDay === dayOfWeek
             const contentId = `plan-day-${dayOfWeek}`
             const sessionType = template.subtype ?? template.type
@@ -205,7 +122,7 @@ export default function Plan({ startDate }: Props) {
                                     )}
                                   </div>
                                   <p className="shrink-0 text-[13px] font-semibold tabular-nums text-accent-strong">
-                                    {prescription.sets} × {prescription.reps}
+                                    {Math.max(1, prescription.sets - (settings.lightVolume ? 1 : 0))} × {prescription.reps}
                                   </p>
                                 </div>
                               )
@@ -224,7 +141,7 @@ export default function Plan({ startDate }: Props) {
                         )}
 
                         {template.type === 'corrida' && (() => {
-                          const runningSession = getRunningSession(week, dayOfWeek)
+                          const runningSession = getRunningSession(phase, template.subtype ?? '')
                           return runningSession ? (
                             <div>
                               <p className="text-[15px] font-semibold text-ink">{runningSession.label}</p>

@@ -44,9 +44,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
   if (!phaseData) return null
 
   const sets = isDeload ? Math.max(1, phaseData.sets - 1) : phaseData.sets
-  const repsLabel = isDeload
-    ? phaseData.reps.replace(/\d+/, value => String(Math.max(6, Math.round(parseInt(value) * 0.7))))
-    : phaseData.reps
+  const repsLabel = phaseData.reps
 
   const handleCheck = () => {
     setAnimating(true)
@@ -145,7 +143,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
 
             {phaseData.variation && (
               <p className="rounded-[12px] bg-accent-soft px-3 py-2 font-semibold text-accent-strong">
-                Variação da fase: {phaseData.variation}
+                Variação do nível: {phaseData.variation}
               </p>
             )}
 
