@@ -1,5 +1,6 @@
-import { useState, type CSSProperties } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import BottomSheet from '@/components/ui/BottomSheet'
+import { useEffect, useState, type CSSProperties } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowCounterClockwise,
   CaretDown,
@@ -8,7 +9,6 @@ import {
   Warning,
 } from '@phosphor-icons/react'
 import PageHeader from '@/components/ui/PageHeader'
-import SessionIcon from '@/components/ui/SessionIcon'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
 import plan from '@/data/activePlan'
 import type { Exercise, WeekDayTemplate } from '@/types'
@@ -42,39 +42,29 @@ export default function Plan({ settings, updateSetting }: Props) {
   const [expandedDay, setExpandedDay] = useState<number | null>(weekday(date))
   const dates = planDates(date)
   const phase = settings.trainingLevel
+  const [showSettings, setShowSettings] = useState(false)
+  useEffect(() => { if (requestedDate && isDateKey(requestedDate)) { setAnchor(requestedDate); setExpandedDay(weekday(requestedDate)) } }, [requestedDate])
   return (
-    <div className="page-content page-enter">
-      <PageHeader eyebrow="Acompanhamento contínuo" title="Sua rotina" description="Sugestões por data. Escolha a atividade do dia e ajuste o treino no seu ritmo." />
-      <TrainingControls settings={settings} updateSetting={updateSetting} />
+    <main className="page-content training-form-page page-enter">
+      <PageHeader title="Rotina" description="Consulte as sugestões e escolha seu ritmo." action={<Link to="/hoje" className="btn-ghost">Treino de hoje</Link>} />
+      <button className="inline-link mb-4" onClick={() => setShowSettings(true)}>Ajustar treino</button>
       <section className="mt-6" aria-labelledby="routine-timeline-title">
         <div className="section-heading mb-4"><div><h2 id="routine-timeline-title">Próximas atividades</h2><p>Toque para consultar o treino sugerido.</p></div></div>
         <div className="journey-date-tools mb-4"><button className="btn-icon" aria-label="Ver datas anteriores" onClick={() => setAnchor(addCalendarDays(date, -7))}><CaretLeft size={22} /></button><label htmlFor="routine-date" className="sr-only">Data inicial da rotina</label><input id="routine-date" className="input" type="date" value={date} onChange={event => { if (isDateKey(event.target.value)) { setAnchor(event.target.value); setExpandedDay(weekday(event.target.value)) } }} /><button className="btn-icon" aria-label="Ver próximas datas" onClick={() => setAnchor(addCalendarDays(date, 7))}><CaretRight size={22} /></button><button className="btn-ghost" onClick={() => { setAnchor(null); setExpandedDay(todayTraining.dayOfWeek) }}><ArrowCounterClockwise size={18} />Hoje</button></div>
-        <ol className="relative ml-[22px] border-l border-line">
+        <ol className="open-list">
           {dates.map((date, index) => {
             const dayOfWeek = weekday(date)
             const template = (plan.dailyTemplate as Record<string, WeekDayTemplate>)[String(dayOfWeek)]
             const isToday = date === todayTraining.date
             const isExpanded = expandedDay === dayOfWeek
             const contentId = `plan-day-${dayOfWeek}`
-            const sessionType = template.subtype ?? template.type
 
             return (
               <li
                 key={date}
-                className="relative pl-8 reveal-item"
+                className="reveal-item"
                 style={{ '--index': index } as CSSProperties}
               >
-                <span
-                  className={`absolute -left-[22px] top-3 flex h-11 w-11 items-center justify-center rounded-[14px] border shadow-sm transition-colors duration-200 ${
-                    isToday
-                      ? 'border-accent bg-accent text-canvas'
-                      : 'border-line bg-surface text-accent-strong'
-                  }`}
-                  aria-hidden="true"
-                >
-                  <SessionIcon type={sessionType} size={21} weight="duotone" />
-                </span>
-
                 <div className={index < dates.length - 1 ? 'border-b border-line/85' : ''}>
                   <button
                     type="button"
@@ -99,7 +89,7 @@ export default function Plan({ settings, updateSetting }: Props) {
 
                   {isExpanded && (
                     <div id={contentId} role="region" className="reveal-item pb-5">
-                      <div className="rounded-[18px] bg-surface-raised px-4 py-3.5">
+                      <div className="py-3">
                         {template.type === 'descanso' && (
                           <p className="text-body text-ink-soft">
                             Descanso ativo com mobilidade, caminhada leve ou recuperação completa.
@@ -158,6 +148,7 @@ export default function Plan({ settings, updateSetting }: Props) {
           })}
         </ol>
       </section>
-    </div>
+      {showSettings && <BottomSheet title="Ajustar treino" onClose={() => setShowSettings(false)}><TrainingControls settings={settings} updateSetting={updateSetting} /></BottomSheet>}
+    </main>
   )
 }

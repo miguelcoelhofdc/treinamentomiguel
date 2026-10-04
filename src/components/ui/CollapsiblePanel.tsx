@@ -22,11 +22,12 @@ export default function CollapsiblePanel({
   const contentId = `${id}-content`
 
   return (
-    <section className="list-surface">
+    <section className="list-surface disclosure">
       <button
         type="button"
+        aria-label={title}
         onClick={() => setOpen(value => !value)}
-        className="flex min-h-[68px] w-full items-center gap-3 px-4 py-3 text-left transition duration-200 hover:bg-surface-raised/70 active:translate-y-px sm:px-5"
+        className="disclosure-trigger flex w-full items-center gap-3 text-left"
         aria-expanded={open}
         aria-controls={contentId}
       >
@@ -44,7 +45,7 @@ export default function CollapsiblePanel({
         />
       </button>
       {open && (
-        <div id={contentId} role="region" className="reveal-item border-t border-line/80 px-4 pb-5 pt-4 sm:px-5">
+        <div id={contentId} role="region" aria-label={title} className="disclosure-body reveal-item">
           {children}
         </div>
       )}

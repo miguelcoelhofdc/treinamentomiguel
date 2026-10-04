@@ -1,22 +1,21 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import CollapsiblePanel from '@/components/ui/CollapsiblePanel'
+import SegmentTabs from '@/components/ui/SegmentTabs'
+import BottomSheet from '@/components/ui/BottomSheet'
+import DailyLogForm from '@/components/DailyLogForm'
+import { AchievementsPanel } from '@/components/journey/Achievements'
+import WellnessDetails from '@/components/progress/WellnessDetails'
+import ActivityHistory from '@/components/progress/ActivityHistory'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ArrowClockwise,
-  Barbell,
-  ChartLineUp,
   CheckCircle,
   FloppyDisk,
   Plus,
-  RoadHorizon,
   SpinnerGap,
-  Target,
-  Timer,
-  TrendDown,
   TrendUp,
   WarningCircle,
-  X,
 } from '@phosphor-icons/react'
 import PageHeader from '@/components/ui/PageHeader'
-import ProgressRing from '@/components/ui/ProgressRing'
 import WeightChart from '@/components/charts/WeightChart'
 import PaceChart from '@/components/charts/PaceChart'
 import RunningLogForm from '@/components/RunningLogForm'
@@ -28,7 +27,7 @@ import GoalCard from '@/components/journey/GoalCard'
 import ActivityRecorder from '@/components/journey/ActivityRecorder'
 import { goalProgress, goalUnit } from '@/lib/continuousTraining'
 import { useJourney } from '@/hooks/useJourney'
-import { effectiveTarget } from '@/lib/journey'
+import { effectiveTarget, hasCheckIn } from '@/lib/journey'
 import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
 
 interface ProgressProps {
@@ -51,7 +50,6 @@ const distanceFormatter = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 1,
 })
 
-const revealStyle = (index: number) => ({ '--index': index } as CSSProperties)
 
 function formatPace(value: number | null) {
   if (value == null || !Number.isFinite(value) || value <= 0) return '—'
@@ -116,51 +114,18 @@ function sanitizeTestValues(notes?: string) {
   }
 }
 
-function ChartEmpty({
-  title,
-  description,
-  action,
-}: {
-  title: string
-  description: string
-  action?: () => void
-}) {
-  return (
-    <div className="flex min-h-[220px] flex-col items-start justify-center px-4 py-8 sm:px-8">
-      <span className="icon-tile mb-4" aria-hidden="true">
-        <ChartLineUp size={22} weight="duotone" />
-      </span>
-      <p className="text-body-md text-ink">{title}</p>
-      <p className="mt-1 max-w-[34ch] text-[13px] leading-5 text-ink-muted">{description}</p>
-      {action && (
-        <button type="button" onClick={action} className="btn-secondary mt-5">
-          <Plus size={18} weight="bold" />
-          Registrar corrida
-        </button>
-      )}
-    </div>
-  )
-}
-
 function ProgressLoading() {
-  return (
-    <div className="page-content" aria-label="Carregando progresso" aria-busy="true">
-      <PageHeader eyebrow="Performance" title="Evolução" description="Organizando seus registros mais recentes." />
-      <div className="space-y-6">
-        <div className="skeleton h-56 w-full rounded-[28px]" />
-        <div className="grid grid-cols-2 gap-5 border-y border-line py-5">
-          <div className="skeleton h-14" />
-          <div className="skeleton h-14" />
-        </div>
-        <div className="skeleton h-72 w-full rounded-[22px]" />
-        <div className="skeleton h-72 w-full rounded-[22px]" />
-      </div>
-    </div>
-  )
+  return <main className="page-content" aria-label="Carregando evolução" aria-busy="true"><PageHeader title="Evolução" description="Seu progresso, no seu ritmo." /><div className="skeleton h-12 mb-8" /><div className="skeleton h-32 mb-8" /><div className="skeleton h-16" /></main>
 }
 
 export default function Progress({ initialWeight, goalWeight, settings, updateSetting }: ProgressProps) {
   const journey = useJourney(settings.startDate)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sections = [{ id: 'resumo', label: 'Resumo' }, { id: 'saude', label: 'Saúde' }, { id: 'historico', label: 'Histórico' }, { id: 'metas', label: 'Metas' }]
+  const requestedSection = searchParams.get('aba') ?? 'resumo'
+  const section = sections.some(item => item.id === requestedSection) ? requestedSection : 'resumo'
+  const [showWellness, setShowWellness] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
   const [weightData, setWeightData] = useState<{ date: string; weight: number }[]>([])
   const [runData, setRunData] = useState<RunningLog[]>([])
   const [prs, setPrs] = useState<Map<string, { weightKg: number; reps: number; date: string }>>(new Map())
@@ -169,7 +134,6 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
   const [testStatus, setTestStatus] = useState<Record<string, SaveStatus>>({})
   const [testErrors, setTestErrors] = useState<Record<string, string | undefined>>({})
   const [loading, setLoading] = useState(true)
-  const [visibleActivities, setVisibleActivities] = useState(12)
   const [loadError, setLoadError] = useState<string | null>(null)
 
   const load = useCallback(async (showSkeleton = false) => {
@@ -195,7 +159,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
   }, [])
 
   useEffect(() => {
-    void load(true)
+    void load()
   }, [load, journey.logs, journey.activities])
 
   const sortedWeights = useMemo(
@@ -231,12 +195,6 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
   const weightDelta = currentWeight == null ? null : currentWeight - initialWeight
   const activeWeightGoal = settings.primaryGoal?.kind === 'weight' ? settings.primaryGoal.target : undefined
   const weightProgress = activeWeightGoal == null ? 0 : calculateWeightProgress(initialWeight, activeWeightGoal, currentWeight)
-  const WeightTrendIcon = (weightDelta ?? 0) <= 0 ? TrendDown : TrendUp
-  const weightTrendColor = weightDelta == null || weightDelta === 0
-    ? 'text-white/70'
-    : weightDelta < 0
-      ? 'text-success'
-      : 'text-danger'
 
   const strengthRecords = useMemo(
     () => Array.from(prs.entries()).sort(([nameA], [nameB]) => nameA.localeCompare(nameB, 'pt-BR')),
@@ -269,180 +227,25 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
   }
 
   if (loading) return <ProgressLoading />
-
-  const weightChangeCopy = weightDelta == null
-    ? 'Registre seu peso no Log do Dia para iniciar a curva.'
-    : weightDelta === 0
-      ? 'Você está no mesmo marco do início.'
-      : `${weightFormatter.format(Math.abs(weightDelta))} kg ${weightDelta < 0 ? 'abaixo' : 'acima'} do início.`
-
-  return (
-    <div className="page-content page-enter">
-      <PageHeader
-        eyebrow="Performance"
-        title="Evolução"
-        description="O que mudou, onde você está e qual é o próximo marco."
-        action={(
-          <span className="icon-tile" aria-hidden="true">
-            <ChartLineUp size={23} weight="duotone" />
-          </span>
-        )}
-      />
-
-      <section className="evolution-consistency mb-6" aria-label="Sua constância">
-        <div className="mb-4 flex items-center justify-between"><h2 className="text-[18px] font-bold">Seu ritmo, seus marcos</h2><GoalEditor settings={settings} updateSetting={updateSetting} compact /></div>
-        {journey.error ? <p role="alert" className="text-[13px] text-red-600">Não foi possível carregar a constância. <button className="btn-ghost" onClick={journey.retry}>Tentar novamente</button></p> : <div className="grid grid-cols-3 gap-2"><div><strong>{journey.loaded ? journey.stats.streak : '—'}</strong><span>Dias de sequência</span></div><div><strong>{journey.loaded ? journey.stats.workouts : '—'}</strong><span>Dias ativos</span></div><div><strong>{journey.loaded ? Math.round(journey.activities.reduce((sum, item) => sum + (item.durationMin ?? 0), 0)) : '—'}</strong><span>Minutos registrados</span></div></div>}
-      </section>
-
-      {journey.loaded && !journey.error && <GoalCard settings={settings} updateSetting={updateSetting} activities={journey.activities} logs={journey.logs} today={journey.today} />}
-      <div className="mb-6"><ActivityRecorder settings={settings} updateSetting={updateSetting} /></div>
-      {journey.loaded && !journey.error && journey.activities.length > 0 && <section className="list-surface mb-6 p-4" aria-label="Atividades recentes"><h2 className="mb-3 text-[16px] font-bold">Atividades recentes</h2><ol className="divide-y divide-line">{[...journey.activities].reverse().slice(0, visibleActivities).map(item => <li key={item.id} className="py-3 flex flex-wrap items-center justify-between gap-2"><div className="min-w-0"><p className="text-[14px] font-semibold break-words">{item.name}</p><p className="helper">{item.date.split('-').reverse().join('/')}</p></div><p className="text-[13px] font-bold text-accent-strong">{item.durationMin != null ? item.durationMin.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' min' : 'Tempo não informado'}{item.distanceKm != null ? ' · ' + item.distanceKm.toLocaleString('pt-BR') + ' km' : ''}</p></li>)}</ol>{journey.activities.length > visibleActivities && <button className="btn-ghost w-full mt-2" onClick={() => setVisibleActivities(value => value + 12)}>Ver mais atividades</button>}</section>}
-      {settings.goalHistory.length > 0 && journey.loaded && !journey.error && <section className="list-surface mb-6 p-4" aria-label="Histórico de metas"><h2 className="mb-3 text-[16px] font-bold">Metas anteriores</h2><ol className="divide-y divide-line">{[...settings.goalHistory].reverse().map(goal => { const result = goalProgress(goal, journey.activities, journey.logs, journey.today); return <li key={goal.id} className="py-3"><p className="text-[14px] font-bold">{goal.title}</p><p className="helper">{result.current == null ? 'Sem resultado registrado' : result.current.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' ' + goalUnit(goal)} · alvo {goal.target} {goalUnit(goal)} · {result.achieved ? 'Alcançada' : 'Encerrada'}</p></li> })}</ol></section>}
-      {loadError && (
-        <div className="mb-5 flex items-start gap-3 rounded-[18px] border border-red-200 bg-red-50 p-4 text-red-900 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200" role="alert">
-          <WarningCircle size={21} weight="duotone" className="mt-0.5 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-semibold">Dados indisponíveis</p>
-            <p className="mt-1 text-[13px] leading-5 opacity-80">{loadError}</p>
-          </div>
-          <button type="button" onClick={() => void load(true)} className="btn-icon -mr-2 -mt-2" aria-label="Tentar carregar novamente">
-            <ArrowClockwise size={19} weight="bold" />
-          </button>
-        </div>
-      )}
-
-      <section className="hero-surface reveal-item p-5 sm:p-6" style={revealStyle(0)} aria-labelledby="weight-trajectory-title">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full border border-white/10" />
-        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full border border-white/10" />
-
-        <div className="relative flex items-end justify-between gap-5">
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.17em] text-white/55">Trajetória corporal</p>
-            <h2 id="weight-trajectory-title" className="mt-4 flex items-baseline gap-2">
-              <span className="text-[46px] font-semibold leading-none tracking-[-0.055em] text-white tabular-nums">
-                {currentWeight == null ? '—' : weightFormatter.format(currentWeight)}
-              </span>
-              {currentWeight != null && <span className="text-[14px] font-semibold text-white/55">kg</span>}
-            </h2>
-            <p className="mt-3 flex max-w-[30ch] items-center gap-2 text-[13px] leading-5 text-white/70">
-              {weightDelta != null && <WeightTrendIcon size={16} weight="bold" className={`shrink-0 ${weightTrendColor}`} />}
-              {weightChangeCopy}
-            </p>
-          </div>
-
-          {activeWeightGoal != null && <div className="flex shrink-0 flex-col items-center gap-2">
-            <ProgressRing
-              value={weightProgress}
-              size={76}
-              stroke={7}
-              inverse
-              label={currentWeight == null ? '—' : `${Math.round(weightProgress)}%`}
-            />
-            <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/45">do caminho</span>
-          </div>}
-        </div>
-
-        <div className="relative mt-6 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 pt-4">
-          <div className="pr-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">Partida</p>
-            <p className="mt-1 text-[17px] font-semibold text-white tabular-nums">{weightFormatter.format(initialWeight)} kg</p>
-          </div>
-          <div className="pl-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/45">{activeWeightGoal != null ? 'Meta escolhida' : 'Acompanhamento'}</p>
-            <p className="mt-1 text-[17px] font-semibold text-white tabular-nums">{activeWeightGoal != null ? weightFormatter.format(activeWeightGoal) + ' kg' : 'Sem prazo final'}</p>
-          </div>
-        </div>
-      </section>
-
-      <section
-        className="reveal-item mt-6 grid grid-cols-2 divide-x divide-line border-y border-line py-5"
-        style={revealStyle(1)}
-        aria-label="Resumo de corrida"
-      >
-        <div className="flex min-w-0 items-start gap-3 pr-4">
-          <RoadHorizon size={21} weight="duotone" className="mt-0.5 shrink-0 text-accent" />
-          <div className="min-w-0">
-            <p className="metric-number text-[26px] leading-none">{distanceFormatter.format(totalKm)}</p>
-            <p className="mt-1.5 text-[12px] leading-4 text-ink-muted">km em {runData.length} {runData.length === 1 ? 'sessão' : 'sessões'}</p>
-          </div>
-        </div>
-        <div className="flex min-w-0 items-start gap-3 pl-4">
-          <Timer size={21} weight="duotone" className="mt-0.5 shrink-0 text-accent" />
-          <div className="min-w-0">
-            <p className="metric-number text-[26px] leading-none">{formatPace(bestPace)}</p>
-            <p className="mt-1.5 text-[12px] leading-4 text-ink-muted">melhor pace de qualidade</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="reveal-item mt-8" style={revealStyle(2)} aria-labelledby="weight-chart-title">
-        <div className="section-heading">
-          <div>
-            <h2 id="weight-chart-title">Peso corporal</h2>
-            <p>Tendência dos registros feitos pela manhã.</p>
-          </div>
-          {activeWeightGoal != null && <span className="badge-fase shrink-0 gap-1.5">
-            <Target size={13} weight="bold" />
-            {weightFormatter.format(activeWeightGoal)} kg
-          </span>}
-        </div>
-        <div className="mt-4 overflow-hidden rounded-[22px] border border-line/85 bg-surface px-2 py-4 sm:px-4">
-          {sortedWeights.length === 0
-            ? <ChartEmpty title="Sua curva começa no primeiro registro" description="Adicione o peso no Log do Dia e acompanhe a direção ao longo do tempo." />
-            : <WeightChart data={sortedWeights} goal={activeWeightGoal} initial={initialWeight} />}
-        </div>
-      </section>
-
-      <section className="reveal-item mt-8" style={revealStyle(3)} aria-labelledby="pace-chart-title">
-        <div className="section-heading">
-          <div>
-            <h2 id="pace-chart-title">Ritmo de corrida</h2>
-            <p>Compare qualidade e longa na mesma linha do tempo.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowRunForm((visible) => !visible)}
-            className="btn-ghost -mr-2 shrink-0 text-accent-strong"
-            aria-expanded={showRunForm}
-            aria-controls="running-log-form"
-          >
-            {showRunForm ? <X size={17} weight="bold" /> : <Plus size={17} weight="bold" />}
-            {showRunForm ? 'Fechar' : 'Registrar'}
-          </button>
-        </div>
-
-        {showRunForm && (
-          <div id="running-log-form" className="mt-4 rounded-[22px] border border-line/85 bg-surface p-4 sm:p-5">
-            <p className="section-title">Nova corrida</p>
-            <RunningLogForm onSaved={() => { setShowRunForm(false); void load() }} />
-          </div>
-        )}
-
-        <div className="mt-4 overflow-hidden rounded-[22px] border border-line/85 bg-surface px-2 py-4 sm:px-4">
-          {chartableRuns.length === 0
-            ? (
-              <ChartEmpty
-                title="Ainda não há pace comparável"
-                description="Registre uma corrida de qualidade ou uma longa para formar sua linha de evolução."
-                action={() => setShowRunForm(true)}
-              />
-            )
-            : <PaceChart data={chartableRuns} />}
-        </div>
-      </section>
-
-      {strengthRecords.length > 0 && (
-        <section className="reveal-item mt-9" style={revealStyle(4)} aria-labelledby="strength-title">
-          <div className="section-heading mb-4">
-            <div>
-              <h2 id="strength-title" className="flex items-center gap-2">
-                <Barbell size={20} weight="duotone" className="text-accent" />
-                Recordes de força
-              </h2>
-              <p>Melhores cargas registradas por exercício.</p>
-            </div>
-          </div>
-          <div className="list-surface divide-y divide-line">
+  const latestWeight = sortedWeights.at(-1)
+  const wellness = [...journey.stats.byDate.values()].filter(hasCheckIn).sort((a, b) => a.date.localeCompare(b.date)).at(-1)
+  const minutes = Math.round(journey.activities.reduce((sum, item) => sum + (item.durationMin ?? 0), 0))
+  const changeSection = (next: string) => setSearchParams(previous => { const params = new URLSearchParams(previous); params.set('aba', next); return params })
+  return <main className="page-content page-enter">
+    <PageHeader title="Evolução" description="Seu progresso, no seu ritmo." />
+    <div className="evolution-tabs"><SegmentTabs id="evolution" tabs={sections} active={section} onChange={changeSection} ariaLabel="Áreas de evolução" /></div>
+    {loadError && <div role="alert" className="subtle-alert mb-6"><WarningCircle size={20} className="shrink-0 text-red-600" /><div className="flex-1"><p>{loadError}</p><button className="btn-ghost mt-2" onClick={() => void load()}>Tentar novamente</button></div></div>}
+    {journey.error && <div role="alert" className="subtle-alert mb-6"><p>Não foi possível carregar as atividades.</p><button className="btn-ghost" onClick={journey.retry}>Tentar novamente</button></div>}
+    <div role="tabpanel" id="evolution-panel" aria-labelledby={'evolution-tab-' + section}>
+    {section === 'resumo' && <>
+      <section className="evolution-metric" aria-label="Resumo da sua evolução"><p className="page-kicker mb-3">Seu movimento até aqui</p><h2 className="evolution-metric-value">{journey.loaded ? journey.stats.workouts : '—'}</h2><p className="evolution-metric-label">dias ativos</p><p className="mt-4 text-[14px] text-ink-muted">{minutes.toLocaleString('pt-BR')} minutos registrados</p><div className="mt-5"><ActivityRecorder settings={settings} updateSetting={updateSetting} primary /></div></section>
+      <CollapsiblePanel id="running-progress" title="Corrida" description="Distância, ritmo e registros">
+        <div className="flex flex-wrap gap-6 mb-6"><div><p className="text-[24px] font-medium">{distanceFormatter.format(totalKm)} km</p><p className="helper">{runData.length} sessões</p></div><div><p className="text-[24px] font-medium">{formatPace(bestPace)}</p><p className="helper">Melhor pace de qualidade · min/km</p></div></div>
+        {chartableRuns.length ? <PaceChart data={chartableRuns} /> : <div className="state-block"><h2>Ainda não há pace comparável</h2><p>Registre uma corrida de qualidade ou longa para acompanhar o ritmo.</p></div>}
+        <button className="btn-secondary mt-4" onClick={() => setShowRunForm(true)}><Plus size={18} />Registrar corrida</button>
+      </CollapsiblePanel>
+      {strengthRecords.length > 0 && <CollapsiblePanel id="strength-progress" title="Recordes de força" description="Melhores cargas por exercício">
+          <div className="open-list divide-y divide-line">
             {strengthRecords.map(([exercise, record]) => (
               <div key={exercise} className="flex items-center justify-between gap-4 px-4 py-4 sm:px-5">
                 <div className="min-w-0">
@@ -456,18 +259,9 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      <section className="reveal-item mt-9" style={revealStyle(5)} aria-labelledby="tests-title">
-        <div className="section-heading mb-4">
-          <div>
-            <h2 id="tests-title">Testes de performance</h2>
-            <p>Atualize cada marco e compare com sua linha inicial.</p>
-          </div>
-        </div>
-
-        <div className="list-surface divide-y divide-line">
+      </CollapsiblePanel>}
+      <CollapsiblePanel id="performance-tests" title="Testes de performance" description="Consultar e atualizar seus resultados">
+        <div className="open-list divide-y divide-line">
           {(plan.tests as TestDefinition[]).map((test) => {
             const currentValue = testValues[test.id] ?? ''
             const comparison = compareTestValue(currentValue, test)
@@ -544,7 +338,33 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
             )
           })}
         </div>
-      </section>
+      </CollapsiblePanel>
+      <CollapsiblePanel id="consistency-progress" title="Constância e conquistas" description="Pequenos passos que se acumulam">
+        <dl className="health-details"><div><dt>Sequência atual</dt><dd>{journey.stats.streak} dias</dd></div><div><dt>Melhor sequência</dt><dd>{journey.stats.bestStreak} dias</dd></div><div><dt>Conquistas</dt><dd>{journey.stats.unlocked.length} de 8</dd></div></dl><button className="btn-secondary mt-6" onClick={() => setShowAchievements(true)}>Ver conquistas</button>
+      </CollapsiblePanel>
+    </>}
+    {section === 'saude' && <>
+      <section className="evolution-metric" aria-labelledby="weight-title"><h2 id="weight-title" className="page-kicker mb-3">Peso corporal</h2><div className="health-reading"><p className="evolution-metric-value">{currentWeight == null ? '—' : weightFormatter.format(currentWeight)}</p>{currentWeight != null && <span className="text-ink-muted">kg</span>}</div><p className="evolution-metric-label">{latestWeight ? 'Registrado em ' + formatDate(latestWeight.date) : 'Seu acompanhamento começa no primeiro registro.'}</p><button className="btn-primary mt-6" onClick={() => setShowWellness(true)}>Atualizar check-in</button></section>
+      <CollapsiblePanel id="weight-history" title="Evolução do peso" description="Tendência e referências">
+        {sortedWeights.length ? <WeightChart data={sortedWeights} goal={activeWeightGoal} initial={initialWeight} /> : <div className="state-block"><h2>Sua curva começa no primeiro registro</h2><p>Adicione seu peso nos detalhes do check-in.</p></div>}
+        <dl className="health-details mt-6"><div><dt>Peso inicial</dt><dd>{weightFormatter.format(initialWeight)} kg</dd></div>{activeWeightGoal != null && <div><dt>Meta escolhida</dt><dd>{weightFormatter.format(activeWeightGoal)} kg</dd></div>}</dl>
+        {weightDelta != null && <p className="helper mt-4">{weightFormatter.format(Math.abs(weightDelta))} kg {weightDelta < 0 ? 'abaixo' : weightDelta > 0 ? 'acima' : 'de diferença'} do início.</p>}
+        {activeWeightGoal != null && currentWeight != null && <p className="helper">{Math.round(weightProgress)}% do caminho até a meta.</p>}
+      </CollapsiblePanel>
+      <CollapsiblePanel id="wellness-details" title="Último check-in" description={wellness ? 'Registrado em ' + formatDate(wellness.date) : 'Sono, energia e sinais do corpo'}><WellnessDetails log={wellness} /></CollapsiblePanel>
+    </>}
+    {section === 'historico' && <>
+      <div className="flex items-center justify-between gap-4 mb-4"><h2 className="text-[20px] font-semibold">Suas atividades</h2><ActivityRecorder settings={settings} updateSetting={updateSetting} /></div>
+      {journey.activities.length ? <ActivityHistory activities={journey.activities} /> : <div className="state-block"><h2>Seu histórico começa com um passo</h2><p>Registre uma atividade ou conclua seu treino. Os registros aparecerão aqui.</p><Link to="/hoje" className="btn-secondary">Abrir treino</Link></div>}
+    </>}
+    {section === 'metas' && <>
+      <GoalCard settings={settings} updateSetting={updateSetting} activities={journey.activities} logs={journey.logs} today={journey.today} editable={false} />
+      <div className="mb-8"><GoalEditor settings={settings} updateSetting={updateSetting} /></div>
+      {settings.goalHistory.length > 0 && <CollapsiblePanel id="previous-goals" title="Metas anteriores" description="O caminho que você já percorreu"><ol className="divide-y divide-line">{[...settings.goalHistory].reverse().map(goal => { const result = goalProgress(goal, journey.activities, journey.logs, journey.today); return <li key={goal.id} className="py-4"><p className="text-[16px] font-medium">{goal.title}</p><p className="helper">{result.current == null ? 'Sem resultado registrado' : result.current.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' ' + goalUnit(goal)} · alvo {goal.target} {goalUnit(goal)} · {result.achieved ? 'Alcançada' : 'Encerrada'}</p></li> })}</ol></CollapsiblePanel>}
+    </>}
     </div>
-  )
+    {showRunForm && <BottomSheet title="Registrar corrida" onClose={() => setShowRunForm(false)}><RunningLogForm onSaved={() => { setShowRunForm(false); void load() }} /></BottomSheet>}
+    {showWellness && <BottomSheet title="Seu check-in de hoje" onClose={() => setShowWellness(false)}><DailyLogForm date={journey.today} onSaved={() => setShowWellness(false)} /></BottomSheet>}
+    {showAchievements && <AchievementsPanel unlocked={journey.stats.unlocked} onClose={() => setShowAchievements(false)} />}
+  </main>
 }

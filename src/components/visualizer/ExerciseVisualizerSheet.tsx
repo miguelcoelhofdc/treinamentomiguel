@@ -1,5 +1,6 @@
+import BottomSheet from '@/components/ui/BottomSheet'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowsClockwise, Pause, Play, X } from '@phosphor-icons/react'
+import { ArrowsClockwise, Pause, Play } from '@phosphor-icons/react'
 import { getMovements } from '@/animations'
 import type { PhaseId } from '@/types'
 import type { VisualizerCanvasHandle } from './VisualizerCanvas'
@@ -26,91 +27,25 @@ export default function ExerciseVisualizerSheet({ exerciseId, exerciseName, phas
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1)
   const canvasRef = useRef<VisualizerCanvasHandle>(null)
   const progressRef = useRef<HTMLInputElement>(null)
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
-  const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
 
   const active = movements[Math.min(activeIndex, movements.length - 1)]
 
   useEffect(() => {
-    closeButtonRef.current?.focus()
-
-    // Trava de scroll robusta no iOS: `overflow: hidden` sozinho não segura o
-    // body no Safari mobile (rubber-band). Fixamos o body preservando a posição
-    // e restauramos ao fechar.
-    const scrollY = window.scrollY
-    const { body } = document
-    body.style.position = 'fixed'
-    body.style.top = `-${scrollY}px`
-    body.style.left = '0'
-    body.style.right = '0'
-    body.style.overflow = 'hidden'
-
-    // Impede que a pinça de dois dedos sobre o canvas vire zoom da página no
-    // iOS (o que deixa o app "travado" num zoom estranho). Os gestos do
-    // OrbitControls usam pointer events e não são afetados por isto.
     const preventGesture = (event: Event) => event.preventDefault()
     document.addEventListener('gesturestart', preventGesture)
     document.addEventListener('gesturechange', preventGesture)
     document.addEventListener('gestureend', preventGesture)
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onCloseRef.current()
-    }
-    window.addEventListener('keydown', onKey)
-
     return () => {
-      body.style.position = ''
-      body.style.top = ''
-      body.style.left = ''
-      body.style.right = ''
-      body.style.overflow = ''
-      window.scrollTo(0, scrollY)
       document.removeEventListener('gesturestart', preventGesture)
       document.removeEventListener('gesturechange', preventGesture)
       document.removeEventListener('gestureend', preventGesture)
-      window.removeEventListener('keydown', onKey)
     }
   }, [])
 
   if (!active) return null
 
   return (
-    <>
-      <div className="sheet-overlay" aria-hidden="true" />
-      <div
-        className="modal-center"
-        onClick={event => {
-          // Fecha ao tocar na área escurecida (fora do card). O card para a
-          // propagação por ser filho: cliques nele têm target !== currentTarget.
-          if (event.target === event.currentTarget) onClose()
-        }}
-      >
-        <section
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="visualizer-title"
-          className="modal-card animate-modal-in"
-        >
-          <div className="px-5 pb-5 pt-5 sm:px-6">
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">Visualização do movimento</p>
-                <h2 id="visualizer-title" className="mt-0.5 truncate text-[19px] font-semibold tracking-[-0.02em] text-ink">
-                  {exerciseName}
-                </h2>
-              </div>
-              <button
-                ref={closeButtonRef}
-                type="button"
-                onClick={onClose}
-                className="btn-icon shrink-0"
-                aria-label="Fechar"
-              >
-                <X size={20} weight="bold" />
-              </button>
-            </div>
-
+    <BottomSheet title={exerciseName} description="Visualização do movimento" onClose={onClose}>
             {movements.length > 1 && (
               <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Sub-movimentos">
                 {movements.map((movement, index) => (
@@ -200,9 +135,6 @@ export default function ExerciseVisualizerSheet({ exerciseId, exerciseName, phas
             {active.animation.notes && (
               <p className="mt-3 text-[12px] leading-5 text-ink-muted">{active.animation.notes}</p>
             )}
-          </div>
-        </section>
-      </div>
-    </>
+    </BottomSheet>
   )
 }

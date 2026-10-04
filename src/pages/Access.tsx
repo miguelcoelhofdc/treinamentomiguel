@@ -1,8 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import {
   ArrowRight,
-  Key,
-  LockKeyOpen,
   ShieldCheck,
   SpinnerGap,
 } from '@phosphor-icons/react'
@@ -42,50 +40,15 @@ export default function Access() {
   }
 
   return (
-    <main className="training-theme training-access relative min-h-[100dvh] overflow-hidden bg-canvas px-4 py-6 sm:px-6 sm:py-10">
-      <div className="pointer-events-none absolute -right-24 -top-32 h-80 w-80 rounded-full border border-accent/15" aria-hidden="true" />
-      <div className="pointer-events-none absolute -right-8 -top-16 h-52 w-52 rounded-full border border-accent/10" aria-hidden="true" />
-
-      <div className="mx-auto grid min-h-[calc(100dvh-3rem)] w-full max-w-5xl overflow-hidden rounded-[30px] border border-line bg-surface shadow-[0_34px_90px_-50px_rgba(20,49,37,0.55)] md:min-h-[42rem] md:grid-cols-[0.92fr_1.08fr]">
-        <section className="relative flex flex-col justify-between overflow-hidden bg-ink p-7 text-canvas sm:p-10 md:p-12">
-          <div className="absolute -bottom-28 -left-28 h-72 w-72 rounded-full border border-white/10" aria-hidden="true" />
-          <div className="absolute -bottom-10 -left-10 h-44 w-44 rounded-full border border-white/10" aria-hidden="true" />
-
-          <div className="relative">
-            <span className="inline-flex h-12 w-12 items-center justify-center rounded-[16px] border border-white/10 bg-white/10 text-primary-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-              <ShieldCheck size={25} weight="duotone" />
-            </span>
-            <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-200">Treino pessoal</p>
-            <h1 className="mt-3 max-w-[12ch] text-[2.4rem] font-semibold leading-[0.98] tracking-[-0.05em] text-white sm:text-[3rem]">
-              Um passo por dia. Uma nova versão de você.
-            </h1>
-            <p className="mt-5 max-w-[34ch] text-[15px] leading-6 text-white/62">
-              Seu treino de hoje, sua sequência e cada pequena conquista. Sua jornada começa aqui.
-            </p>
-          </div>
-
-          <div className="relative mt-12 border-t border-white/10 pt-5">
-            <p className="flex items-start gap-2.5 text-[12px] leading-5 text-white/55">
-              <LockKeyOpen size={17} weight="duotone" className="mt-0.5 shrink-0 text-primary-200" />
-              Acesso local simples, sem e-mail. O código identifica qual conta deve ser aberta.
-            </p>
-          </div>
-        </section>
-
-        <section className="flex items-center p-6 sm:p-10 md:p-14">
-          <div className="w-full max-w-md">
-            <span className="icon-tile mb-6 h-12 w-12 rounded-[16px]" aria-hidden="true">
-              <Key size={23} weight="duotone" />
-            </span>
-            <p className="page-kicker">Acesso ao aplicativo</p>
-            <h2 className="mt-2 text-[2rem] font-semibold leading-none tracking-[-0.04em] text-ink">Digite sua senha</h2>
-            <p className="mt-3 max-w-[38ch] text-[14px] leading-6 text-ink-muted">
-              Não é necessário informar e-mail. Use o código de cinco caracteres recebido para sua conta.
-            </p>
-
+    <main className="training-theme training-access">
+      <div className="access-form">
+        <span className="icon-tile mb-6" aria-hidden="true"><ShieldCheck size={28} /></span>
+        <p className="page-kicker">Treino e bem-estar</p>
+        <h1 className="page-title mt-2">Seu próximo passo começa aqui</h1>
+        <p className="page-subtitle mt-3">Entre com o código recebido para abrir seu plano pessoal.</p>
             <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
               <div>
-                <label htmlFor="access-code" className="label">Senha de acesso</label>
+                <label htmlFor="access-code" className="label">Código de acesso</label>
                 <input
                   id="access-code"
                   type="password"
@@ -116,11 +79,9 @@ export default function Access() {
                 {submitting
                   ? <SpinnerGap size={20} weight="bold" className="animate-spin" />
                   : <ArrowRight size={20} weight="bold" />}
-                {submitting ? 'Validando acesso' : 'Entrar no meu plano'}
+                {submitting ? 'Validando acesso' : 'Entrar'}
               </button>
             </form>
-          </div>
-        </section>
       </div>
     </main>
   )

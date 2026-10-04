@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Fire, LockSimple, Medal, Sparkle } from '@phosphor-icons/react'
+import { useEffect, useRef, useState } from 'react'
+import { Fire, LockSimple, Medal } from '@phosphor-icons/react'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { ACHIEVEMENTS } from '@/lib/journey'
 
@@ -17,15 +17,30 @@ export function AchievementsPanel({ unlocked, onClose }: { unlocked: string[]; o
 
 export function AchievementCelebration() {
   const [ids, setIds] = useState<string[]>([])
+  const pending = useRef<string[]>([])
   useEffect(() => {
-    const listener = (event: Event) => setIds((event as CustomEvent<string[]>).detail)
+    let frame = 0
+    const flush = () => {
+      if (pending.current.length && !document.querySelector('[role="dialog"]')) {
+        setIds(pending.current)
+        pending.current = []
+      }
+    }
+    const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(flush) }
+    const listener = (event: Event) => {
+      pending.current = [...new Set([...pending.current, ...(event as CustomEvent<string[]>).detail])]
+      schedule()
+    }
+    const observer = new MutationObserver(schedule)
+    observer.observe(document.getElementById('training-overlays') ?? document.body, { childList: true, subtree: true })
     window.addEventListener('training-achievement', listener)
-    return () => window.removeEventListener('training-achievement', listener)
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); window.removeEventListener('training-achievement', listener) }
   }, [])
+
   if (!ids.length) return null
-  return <BottomSheet title="Olha o que você conquistou!" onClose={() => setIds([])}>
-    <div className="celebration-art" aria-hidden="true"><Sparkle className="celebration-spark left-6 top-5" size={25} weight="fill" /><Medal size={86} weight="fill" /><Sparkle className="celebration-spark bottom-4 right-7" size={29} weight="fill" /></div>
+  return <BottomSheet title="Uma nova conquista" onClose={() => setIds([])}>
+    <div className="celebration-art" aria-hidden="true"><Medal size={48} /></div>
     <div className="mb-7 text-center" role="status">{ids.map(id => <p key={id} className="mt-2 text-[20px] font-bold">{ACHIEVEMENTS.find(item => item.id === id)?.title}</p>)}<p className="mt-3 text-[14px] text-ink-muted">Seu esforço está virando constância. Continue no seu ritmo.</p></div>
-    <button className="btn-primary w-full" onClick={() => setIds([])}>Continuar minha jornada</button>
+    <button className="btn-primary w-full" onClick={() => setIds([])}>Continuar</button>
   </BottomSheet>
 }

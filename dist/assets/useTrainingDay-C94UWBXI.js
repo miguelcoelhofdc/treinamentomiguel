@@ -1,0 +1,1 @@
+import{A as u,r as o,C as t,e as i}from"./index-wklfds7a.js";function g(s,n,a="base",r=!1){const e=u();return o.useMemo(()=>t(i,s,n??e,a,r),[s,n,e,a,r])}function l(s,n){const a=i.running.levels[s];return n==="qualidade"?a.qualidade:n==="longa"?a.longa:null}export{l as g,g as u};

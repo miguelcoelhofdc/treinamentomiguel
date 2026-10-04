@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import {
   ArrowRight,
   CaretDown,
@@ -20,19 +20,22 @@ interface DisclosureProps {
   description: string
   icon: ReactNode
   children: ReactNode
-  defaultOpen?: boolean
 }
 
-function HubDisclosure({ id, title, description, icon, children, defaultOpen = false }: DisclosureProps) {
-  const [open, setOpen] = useState(defaultOpen)
+const GuideContext = createContext<{ active: string | null; select: (id: string | null) => void }>({ active: null, select: () => {} })
+
+function HubDisclosure({ id, title, description, icon, children }: DisclosureProps) {
+  const { active, select } = useContext(GuideContext)
+  const open = active === id
   const contentId = `guide-${id}`
 
   return (
-    <section>
+    <section className="disclosure">
       <button
         type="button"
-        onClick={() => setOpen(value => !value)}
-        className="flex min-h-[82px] w-full items-center gap-3 px-4 py-3 text-left transition duration-200 hover:bg-surface-raised/70 active:translate-y-px sm:px-5"
+        aria-label={title}
+        onClick={() => select(open ? null : id)}
+        className="disclosure-trigger flex w-full items-center gap-3 text-left"
         aria-expanded={open}
         aria-controls={contentId}
       >
@@ -49,7 +52,7 @@ function HubDisclosure({ id, title, description, icon, children, defaultOpen = f
       </button>
 
       {open && (
-        <div id={contentId} role="region" className="reveal-item border-t border-line/80 px-4 pb-6 pt-5 sm:px-5">
+        <div id={contentId} role="region" className="disclosure-body reveal-item">
           {children}
         </div>
       )}
@@ -62,6 +65,7 @@ interface GuidesProps {
 }
 
 export default function Guides({ routineType }: GuidesProps) {
+  const [active, setActive] = useState<string | null>(null)
   const [checks, setChecks] = useState<Set<string>>(new Set())
   const [routineTab, setRoutineTab] = useState<'morning' | 'evening'>(routineType)
 
@@ -78,25 +82,25 @@ export default function Guides({ routineType }: GuidesProps) {
   const routine = plan.dailyRoutines[routineTab]
 
   return (
-    <div className="page-content page-enter">
+    <main className="page-content training-form-page page-enter">
       <PageHeader
         eyebrow="Base de apoio"
         title="Guias"
-        description="Protocolos práticos para sustentar treino, recuperação e alimentação ao longo do tempo."
+        description="Consulte um assunto quando precisar."
       />
 
-      <div className="list-surface divide-y divide-line/80">
+      <GuideContext.Provider value={{ active, select: setActive }}>
+      <div className="open-list">
         <HubDisclosure
           id="nutrition"
           title="Nutrição"
           description="Metas diárias, refeições e princípios simples"
           icon={<ForkKnife size={21} weight="duotone" />}
-          defaultOpen
         >
           <div className="space-y-7">
             <section>
               <p className="section-title">Metas diárias</p>
-              <div className="grid overflow-hidden rounded-[18px] border border-line bg-line/70 xs:grid-cols-2">
+              <div className="grid gap-6 xs:grid-cols-2">
                 {(['trainingDay', 'restDay'] as const).map(dayType => {
                   const target = nutrition.dailyTargets[dayType]
                   const metrics = [
@@ -107,7 +111,7 @@ export default function Guides({ routineType }: GuidesProps) {
                   ]
 
                   return (
-                    <div key={dayType} className="bg-surface-raised p-4 odd:border-b odd:border-line xs:odd:border-b-0 xs:odd:border-r">
+                    <div key={dayType} className="py-4">
                       <p className="mb-3 text-[13px] font-semibold text-ink">
                         {dayType === 'trainingDay' ? 'Dia de treino' : 'Dia de descanso'}
                       </p>
@@ -160,7 +164,7 @@ export default function Guides({ routineType }: GuidesProps) {
 
         <HubDisclosure
           id="shopping"
-          title="Lista de compras"
+          title="Compras"
           description="Checklist organizado por categoria"
           icon={<ShoppingCartSimple size={21} weight="duotone" />}
         >
@@ -241,7 +245,7 @@ export default function Guides({ routineType }: GuidesProps) {
 
         <HubDisclosure
           id="mobility"
-          title="Mobilidade e prehab"
+          title="Mobilidade"
           description="Preparação para parte superior e pernas"
           icon={<Heartbeat size={21} weight="duotone" />}
         >
@@ -289,7 +293,7 @@ export default function Guides({ routineType }: GuidesProps) {
                     onClick={() => setRoutineTab(tab)}
                     aria-pressed={active}
                     className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[12px] px-3 text-[13px] font-semibold transition duration-200 active:scale-[0.98] ${
-                      active ? 'bg-surface text-accent-strong shadow-sm' : 'text-ink-muted'
+                      active ? 'bg-accent-soft text-accent-strong' : 'text-ink-muted'
                     }`}
                   >
                     <Icon size={17} weight={active ? 'fill' : 'regular'} />
@@ -299,10 +303,9 @@ export default function Guides({ routineType }: GuidesProps) {
               })}
             </div>
 
-            <div className="relative mt-5 ml-2 border-l border-line">
+            <div className="mt-6">
               {routine.schedule.map(item => (
-                <div key={`${item.time}-${item.activity}`} className="relative grid grid-cols-[3.75rem_minmax(0,1fr)] gap-3 pb-4 pl-5 last:pb-0">
-                  <span className="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-surface bg-accent" />
+                <div key={`${item.time}-${item.activity}`} className="grid grid-cols-[3.75rem_minmax(0,1fr)] gap-3 pb-4 last:pb-0">
                   <time className="text-[12px] font-semibold tabular-nums text-accent-strong">{item.time}</time>
                   <p className="text-[13px] leading-5 text-ink-soft">{item.activity}</p>
                 </div>
@@ -311,6 +314,7 @@ export default function Guides({ routineType }: GuidesProps) {
           </div>
         </HubDisclosure>
       </div>
-    </div>
+      </GuideContext.Provider>
+    </main>
   )
 }

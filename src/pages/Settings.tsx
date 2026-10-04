@@ -1,4 +1,8 @@
+import { Link } from 'react-router-dom'
 import {
+  createContext,
+  useContext,
+  useId,
   useEffect,
   useRef,
   useState,
@@ -7,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  CaretDown,
   CalendarDots,
   CheckCircle,
   Clock,
@@ -31,7 +36,6 @@ import type { ProfileId } from '@/lib/auth'
 import { localDateKey } from '@/lib/date'
 import { isDateKey } from '@/lib/date'
 import plan from '@/data/activePlan'
-import GoalEditor from '@/components/journey/GoalEditor'
 import { isActivityLog, validateGoal } from '@/lib/continuousTraining'
 import TrainingControls from '@/components/journey/TrainingControls'
 import { parsePerformanceTargets, type UpdateTrainingSetting } from '@/lib/trainingSettings'
@@ -198,34 +202,25 @@ function recordCount(payload: BackupPayload): number {
     + payload.activities.length
 }
 
-function SettingsSection({
-  icon: SectionIcon,
-  title,
-  description,
-  children,
-}: {
-  icon: Icon
-  title: string
-  description: string
-  children: ReactNode
-}) {
-  return (
-    <section className="space-y-3">
-      <div className="flex items-start gap-3 px-1">
-        <span className="icon-tile mt-0.5" aria-hidden="true">
-          <SectionIcon size={21} weight="bold" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-ink">{title}</h2>
-          <p className="mt-1 text-[13px] leading-5 text-ink-muted">{description}</p>
-        </div>
-      </div>
-      {children}
-    </section>
-  )
+const GROUPS = ['Dados pessoais', 'Treino e rotina', 'Aparência', 'Conta', 'Dados e backup']
+const SettingsGroupContext = createContext<{ active: string | null; select: (title: string | null) => void }>({ active: null, select: () => {} })
+
+function SettingsSection({ icon: SectionIcon, title, description, children }: { icon: Icon; title: string; description: string; children: ReactNode }) {
+  const { active, select } = useContext(SettingsGroupContext)
+  const id = useId()
+  const open = active === title
+  return <section className={'settings-group ' + (open ? 'settings-group-active' : '')}>
+    <button className="settings-group-trigger" aria-expanded={open} aria-controls={id} onClick={() => select(open && !window.matchMedia('(min-width: 1024px)').matches ? null : title)}>
+      <SectionIcon size={22} className="shrink-0 text-ink-muted" />
+      <span className="flex-1 min-w-0"><span className="block text-[20px] font-semibold">{title}</span><span className="block mt-1 text-[13px] leading-5 text-ink-muted">{description}</span></span>
+      <CaretDown size={18} className={open ? 'rotate-180' : ''} />
+    </button>
+    <div id={id} className="settings-group-body" hidden={!open}>{children}</div>
+  </section>
 }
 
 export default function Settings({ settings, updateSetting, profileId, profileLabel, onLogout }: Props) {
+  const [activeGroup, setActiveGroup] = useState<string | null>(GROUPS[0])
   const [profileDraft, setProfileDraft] = useState<ProfileDraft>({
     name: settings.name,
     height: String(settings.height),
@@ -542,13 +537,14 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
   }
 
   return (
-    <div className="page-content page-enter space-y-8">
+    <div className="page-content page-enter">
       <PageHeader
         eyebrow="Preferências"
-        title="Seu perfil"
-        description="Personalize seu plano e mantenha seus dados sob controle."
+        title="Perfil"
+        description="Seu plano, suas preferências."
       />
 
+      <div className="settings-profile-summary"><span className="settings-avatar" aria-hidden="true">{settings.name.trim()[0] ?? 'P'}</span><div className="min-w-0 flex-1"><p className="text-[16px] font-medium">{settings.name}</p><p className="helper">Perfil de {profileLabel}</p></div><Link to="/progresso?aba=metas" className="inline-link">Minhas metas</Link></div>
       <div aria-live="polite" aria-atomic="true">
         {feedback && (
           <div
@@ -567,12 +563,13 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
         )}
       </div>
 
+      <SettingsGroupContext.Provider value={{ active: activeGroup, select: setActiveGroup }}>
+      <div className="settings-layout"><nav className="settings-group-nav" aria-label="Grupos de preferências">{GROUPS.map(group => <button key={group} aria-current={activeGroup === group ? 'true' : undefined} onClick={() => setActiveGroup(group)}>{group}</button>)}</nav><div className="min-w-0">
       <SettingsSection
         icon={UserCircle}
-        title="Perfil e metas"
+        title="Dados pessoais"
         description="Esses dados calibram seus indicadores de progresso."
       >
-        <GoalEditor settings={settings} updateSetting={updateSetting} />
         <form className="list-surface divide-y divide-line/80" onSubmit={handleProfileSubmit} noValidate>
           <div className="p-4 sm:p-5">
             <label className="label" htmlFor="settings-name">Como quer ser chamado</label>
@@ -662,7 +659,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
 
       <SettingsSection
         icon={CalendarDots}
-        title="Plano e rotina"
+        title="Treino e rotina"
         description="Defina a data de referência do acompanhamento e em qual período você costuma treinar."
       >
         <div className="list-surface divide-y divide-line/80">
@@ -724,9 +721,10 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             </div>
           </div>
         </div>
+      <TrainingControls settings={settings} updateSetting={updateSetting} />
       </SettingsSection>
 
-      <TrainingControls settings={settings} updateSetting={updateSetting} />
+
 
       <SettingsSection
         icon={Palette}
@@ -775,7 +773,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
 
       <SettingsSection
         icon={UserCircle}
-        title="Conta ativa"
+        title="Conta"
         description="Troque de pessoa sem misturar os dados armazenados."
       >
         <div className="list-surface p-4 sm:p-5">
@@ -799,7 +797,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
 
       <SettingsSection
         icon={Database}
-        title="Seus dados"
+        title="Dados e backup"
         description="Crie uma cópia portátil ou restaure o histórico neste aparelho."
       >
         <div className="list-surface divide-y divide-line/80">
@@ -827,6 +825,9 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             <label
               className={`btn-secondary w-full cursor-pointer ${busy !== null ? 'pointer-events-none opacity-50' : ''}`}
               aria-disabled={busy !== null}
+              role="button"
+              tabIndex={busy !== null ? -1 : 0}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.querySelector('input')?.click() } }}
             >
               {busy === 'import'
                 ? <SpinnerGap size={19} weight="bold" className="animate-spin" />
@@ -844,7 +845,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
         </div>
       </SettingsSection>
 
-      <section className="space-y-3">
+      <section className="space-y-3 mt-8" hidden={activeGroup !== "Dados e backup"}>
         <div className="flex items-start gap-3 px-1">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300" aria-hidden="true">
             <Warning size={21} weight="bold" />
@@ -910,6 +911,8 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
           )}
         </div>
       </section>
+      </div></div>
+      </SettingsGroupContext.Provider>
     </div>
   )
 }

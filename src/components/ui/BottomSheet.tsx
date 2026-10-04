@@ -6,13 +6,20 @@ export default function BottomSheet({ title, description, onClose, children }: {
   title: string; description?: string; onClose: () => void; children: ReactNode
 }) {
   const titleId = useId()
+  const descriptionId = useId()
   const ref = useRef<HTMLElement>(null)
   const closeRef = useRef(onClose)
   closeRef.current = onClose
   useEffect(() => {
     const previousFocus = document.activeElement as HTMLElement | null
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    const body = document.body
+    const scrollY = window.scrollY
+    const previousStyles = { overflow: body.style.overflow, position: body.style.position, top: body.style.top, left: body.style.left, right: body.style.right }
+    body.style.overflow = 'hidden'
+    body.style.position = 'fixed'
+    body.style.top = '-' + scrollY + 'px'
+    body.style.left = '0'
+    body.style.right = '0'
     const viewport = window.visualViewport
     const fitViewport = () => {
       const height = viewport?.height ?? window.innerHeight
@@ -36,7 +43,8 @@ export default function BottomSheet({ title, description, onClose, children }: {
     }
     document.addEventListener('keydown', onKey)
     return () => {
-      document.body.style.overflow = previousOverflow
+      Object.assign(body.style, previousStyles)
+      window.scrollTo({ top: scrollY, behavior: 'instant' })
       document.removeEventListener('keydown', onKey)
       viewport?.removeEventListener('resize', fitViewport)
       viewport?.removeEventListener('scroll', fitViewport)
@@ -46,10 +54,10 @@ export default function BottomSheet({ title, description, onClose, children }: {
   return createPortal(
     <div className="journey-sheet-root">
       <button className="sheet-overlay" aria-label="Fechar painel" onClick={onClose} />
-      <section ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} className="sheet-panel journey-sheet animate-slide-up">
+      <section ref={ref} role="dialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={description ? descriptionId : undefined} className="sheet-panel journey-sheet animate-slide-up">
         <div className="mx-auto mb-5 h-1.5 w-10 rounded-full bg-line" aria-hidden="true" />
         <div className="mb-5 flex items-start justify-between gap-3">
-          <div><h2 id={titleId} className="text-[26px] font-bold leading-tight tracking-tight">{title}</h2>{description && <p className="mt-2 text-[14px] leading-5 text-ink-muted">{description}</p>}</div>
+          <div><h2 id={titleId} className="text-[20px] font-semibold leading-tight tracking-tight">{title}</h2>{description && <p id={descriptionId} className="mt-2 text-[14px] leading-5 text-ink-muted">{description}</p>}</div>
           <button className="btn-icon shrink-0" onClick={onClose} aria-label="Fechar"><X size={22} weight="bold" /></button>
         </div>
         {children}

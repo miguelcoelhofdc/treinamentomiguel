@@ -1,0 +1,166 @@
+{
+  "checks": [
+    {
+      "name": "Histórico vazio orienta próximo passo",
+      "pass": true
+    },
+    {
+      "name": "Meta opcional mantém ação de definição",
+      "pass": true
+    },
+    {
+      "name": "Saúde vazia não inventa valores",
+      "pass": true
+    },
+    {
+      "name": "Erro de leitura preserva navegação",
+      "pass": true
+    },
+    {
+      "name": "Nova tentativa recupera registros",
+      "pass": true
+    },
+    {
+      "name": "Carregamento usa esqueleto localizado",
+      "pass": true
+    },
+    {
+      "name": "Salvar mostra andamento e bloqueia repetição",
+      "pass": true
+    },
+    {
+      "name": "Gravação lenta confirma após persistência",
+      "pass": true
+    },
+    {
+      "name": "miguel: atividade livre mantém check-in",
+      "pass": true
+    },
+    {
+      "name": "miguel: nível, volume e duração persistem",
+      "pass": true
+    },
+    {
+      "name": "miguel: formulário de meta minutes",
+      "pass": true
+    },
+    {
+      "name": "miguel: formulário de meta distance",
+      "pass": true
+    },
+    {
+      "name": "miguel: formulário de meta sessions",
+      "pass": true
+    },
+    {
+      "name": "miguel: formulário de meta runTime",
+      "pass": true
+    },
+    {
+      "name": "miguel: formulário de meta weight",
+      "pass": true
+    },
+    {
+      "name": "miguel: conquista aguarda formulário",
+      "pass": true
+    },
+    {
+      "name": "miguel: conquista aparece após fechar",
+      "pass": true
+    },
+    {
+      "name": "miguel: encerramento conserva histórico de metas",
+      "pass": true
+    },
+    {
+      "name": "miguel: tema escuro pela interface",
+      "pass": true
+    },
+    {
+      "name": "miguel: marcar compra funciona",
+      "pass": true
+    },
+    {
+      "name": "miguel: compra persiste ao trocar assunto",
+      "pass": true
+    },
+    {
+      "name": "miguel: gráfico de peso preservado",
+      "pass": true
+    },
+    {
+      "name": "miguel: gráfico de corrida preservado",
+      "pass": true
+    },
+    {
+      "name": "sintia: atividade livre mantém check-in",
+      "pass": true
+    },
+    {
+      "name": "sintia: nível, volume e duração persistem",
+      "pass": true
+    },
+    {
+      "name": "sintia: formulário de meta minutes",
+      "pass": true
+    },
+    {
+      "name": "sintia: formulário de meta distance",
+      "pass": true
+    },
+    {
+      "name": "sintia: formulário de meta sessions",
+      "pass": true
+    },
+    {
+      "name": "sintia: formulário de meta runTime",
+      "pass": true
+    },
+    {
+      "name": "sintia: formulário de meta weight",
+      "pass": true
+    },
+    {
+      "name": "sintia: conquista aguarda formulário",
+      "pass": true
+    },
+    {
+      "name": "sintia: conquista aparece após fechar",
+      "pass": true
+    },
+    {
+      "name": "sintia: encerramento conserva histórico de metas",
+      "pass": true
+    },
+    {
+      "name": "sintia: tema escuro pela interface",
+      "pass": true
+    },
+    {
+      "name": "sintia: marcar compra funciona",
+      "pass": true
+    },
+    {
+      "name": "sintia: compra persiste ao trocar assunto",
+      "pass": true
+    },
+    {
+      "name": "sintia: gráfico de peso preservado",
+      "pass": true
+    },
+    {
+      "name": "sintia: gráfico de corrida preservado",
+      "pass": true
+    },
+    {
+      "name": "Perfis mantêm atividades exclusivas",
+      "pass": true
+    },
+    {
+      "name": "Estados adicionais sem erros de execução",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

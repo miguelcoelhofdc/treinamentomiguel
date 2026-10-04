@@ -1,11 +1,12 @@
+import { Link } from 'react-router-dom'
+import BottomSheet from '@/components/ui/BottomSheet'
+import CollapsiblePanel from '@/components/ui/CollapsiblePanel'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
   Barbell,
   CaretDown,
-  Check,
   CheckCircle,
   Circle,
-  ClipboardText,
   Coffee,
   PersonSimpleRun,
   ShieldCheck,
@@ -19,8 +20,6 @@ import ViewMovementButton from '@/components/visualizer/ViewMovementButton'
 import DailyLogForm from '@/components/DailyLogForm'
 import RunningLogForm from '@/components/RunningLogForm'
 import PageHeader from '@/components/ui/PageHeader'
-import ProgressRing from '@/components/ui/ProgressRing'
-import SessionIcon from '@/components/ui/SessionIcon'
 import { getExerciseChecks, toggleExerciseCheck, getDailyLog, saveDailyLog } from '@/db'
 import { localDateKey } from '@/lib/date'
 import { saveDailyActivity } from '@/lib/trainingActivity'
@@ -64,7 +63,6 @@ export default function Today({ settings, updateSetting }: Props) {
   const today = useMemo(() => new Date(), [])
   const todayStr = localDateKey(today)
   const suggestion = useTrainingDay(settings.startDate, undefined, settings.trainingLevel, settings.lightVolume)
-  const completionButtonRef = useRef<HTMLButtonElement>(null)
   const completionPrompted = useRef(false)
 
   const [checks, setChecks] = useState<Map<string, boolean>>(new Map())
@@ -72,11 +70,12 @@ export default function Today({ settings, updateSetting }: Props) {
   const [actualMinutes, setActualMinutes] = useState('')
   const [pendingChecks, setPendingChecks] = useState<Set<string>>(new Set())
   const [showLog, setShowLog] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [showSessionPicker, setShowSessionPicker] = useState(false)
   const [showRunLog, setShowRunLog] = useState(false)
   const [showRestMobility, setShowRestMobility] = useState(false)
-  const [showPrehab, setShowPrehab] = useState(false)
-  const [showAlert, setShowAlert] = useState(false)
   const [showCompletionSheet, setShowCompletionSheet] = useState(false)
+  const [concluding, setConcluding] = useState(false)
   const [showUndo, setShowUndo] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -134,20 +133,6 @@ export default function Today({ settings, updateSetting }: Props) {
     }
   }, [doneExercises, totalExercises, workoutDone, isRest])
 
-  useEffect(() => {
-    if (!showCompletionSheet) return
-    document.body.style.overflow = 'hidden'
-    const focusTimer = window.setTimeout(() => completionButtonRef.current?.focus(), 50)
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setShowCompletionSheet(false)
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.clearTimeout(focusTimer)
-      document.body.style.overflow = ''
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [showCompletionSheet])
 
   useEffect(() => {
     if (!showUndo) return
@@ -184,6 +169,8 @@ export default function Today({ settings, updateSetting }: Props) {
   }
 
   const handleConclude = async () => {
+    if (concluding) return
+    setConcluding(true)
     try {
       await handleMarkDone()
       setShowCompletionSheet(false)
@@ -191,6 +178,7 @@ export default function Today({ settings, updateSetting }: Props) {
       setShowUndo(true)
       setShowLog(true)
     } catch { setMutationError('Não foi possível concluir o treino. Verifique o tempo informado e tente novamente.') }
+    finally { setConcluding(false) }
   }
 
   const handleUndo = async () => {
@@ -203,8 +191,6 @@ export default function Today({ settings, updateSetting }: Props) {
   }
 
   const dateLabel = `${DAY_NAMES[today.getDay()]}, ${today.getDate()} de ${MONTH_NAMES[today.getMonth()]}`
-  const firstName = settings.name.trim().split(' ')[0] || 'atleta'
-  const greeting = today.getHours() < 12 ? 'Bom dia' : today.getHours() < 18 ? 'Boa tarde' : 'Boa noite'
   const readiness = getReadiness(dailyLog)
   const hasJointCautions = [
     ...plan.exercises.forcaA,
@@ -238,135 +224,30 @@ export default function Today({ settings, updateSetting }: Props) {
     ? getRunningSession(phase, training.sessionType)
     : null
 
-  return (
-    <>
-      <main className="page-content page-enter space-y-5">
-        <PageHeader
-          eyebrow={`${greeting}, ${firstName}`}
-          title="Hoje"
-          description={dateLabel}
-          action={<span className="badge-fase">{plan.phases.find(level => level.id === phase)?.name}</span>}
-        />
-        <div className="surface p-4"><label className="label" htmlFor="today-activity">O que você quer fazer hoje?</label><select id="today-activity" className="input" value={training.sessionType} disabled={workoutDone} onChange={event => void changeSession(event.target.value)}>{['forcaA', 'forcaB', 'forcaC', 'qualidade', 'longa', 'calistenia', 'caminhada', 'mobilidade', 'descanso', ...settings.customActivities.map(name => 'custom:' + name)].map(type => <option key={type} value={type}>{activityName(type, plan)}{type === suggestion.sessionType ? ' · sugestão de hoje' : ''}</option>)}</select><p className="helper">Tempo disponível: {settings.sessionDurationMin} min. Você também pode registrar outras atividades.</p></div>
-        <ActivityRecorder settings={settings} updateSetting={updateSetting} defaultActivity={activityCategory(training.sessionType)} onSaved={() => void loadState()} />
-        {mutationError && <p className="rounded-[18px] border border-red-200 bg-red-50 p-4 text-[13px] text-red-700 dark:bg-red-950/30 dark:text-red-300" role="alert">{mutationError}</p>}
-
-        <section className="hero-surface p-5 sm:p-6" aria-labelledby="session-title">
-          <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-white/10" aria-hidden="true" />
-          <div className="absolute -right-5 -top-8 h-28 w-28 rounded-full border border-white/10" aria-hidden="true" />
-
-          <div className="relative flex items-start justify-between gap-4">
-            <div className="flex items-center gap-2 text-primary-200">
-              <span className="status-dot bg-primary-300" />
-              <span className="text-[11px] font-bold uppercase tracking-[0.15em]">Sessão do dia</span>
-            </div>
-            {training.isDeload && <span className="badge bg-white/10 text-primary-100">Volume leve</span>}
-          </div>
-
-          <div className="relative mt-7 flex items-end justify-between gap-5">
-            <div className="min-w-0">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[16px] border border-white/10 bg-white/10 text-primary-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)]">
-                <SessionIcon type={training.sessionType} size={25} weight="duotone" />
-              </div>
-              <h2 id="session-title" className="max-w-[14rem] text-[27px] font-semibold leading-[1.05] tracking-[-0.035em] text-white">
-                {training.sessionLabel}
-              </h2>
-              <p className="mt-2 text-[13px] font-medium text-white/60">
-                {workoutDone ? 'Sessão concluída' : totalExercises > 0 ? `${doneExercises} de ${totalExercises} movimentos` : 'Pronto quando você estiver'}
-              </p>
-            </div>
-            <ProgressRing
-              value={sessionProgress}
-              size={78}
-              stroke={7}
-              inverse
-              label={workoutDone ? 'feito' : totalExercises > 0 ? `${doneExercises}/${totalExercises}` : 'hoje'}
-            />
-          </div>
-
-          {workoutDone && (
-            <div className="relative mt-5 flex items-center gap-2 rounded-[15px] border border-white/10 bg-white/10 px-3.5 py-3 text-[13px] font-semibold text-primary-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-              <CheckCircle size={19} weight="fill" /> Feito. Mais um dia entregue.
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setShowAlert(current => !current)}
-            className="relative mt-4 flex min-h-11 w-full items-center gap-2 border-t border-white/10 pt-4 text-left text-[12px] font-semibold text-white/65"
-            aria-expanded={showAlert}
-          >
-            <ShieldCheck size={17} weight="duotone" className="text-primary-200" />
-            {hasJointCautions ? 'Ombro e joelho sob atenção' : 'Sinais do corpo sob atenção'}
-            <CaretDown size={15} weight="bold" className={`ml-auto transition-transform ${showAlert ? 'rotate-180' : ''}`} />
-          </button>
-          {showAlert && (
-            <p className="relative mt-1 text-[12px] leading-5 text-white/55 reveal-item">
-              {hasJointCautions
-                ? 'Respeite os avisos de cada exercício e ajuste a carga se houver desconforto. O app não substitui acompanhamento profissional.'
-                : 'Interrompa se houver dor aguda, tontura, mal-estar, falta de ar fora do esperado ou dor no peito. O app não substitui acompanhamento profissional.'}
-            </p>
-          )}
-        </section>
-
-        <section className="list-surface" aria-labelledby="checkin-title">
-          <button
-            type="button"
-            onClick={() => setShowLog(current => !current)}
-            className="flex min-h-[76px] w-full items-center gap-3 px-4 text-left"
-            aria-expanded={showLog}
-          >
-            <span className="icon-tile"><ClipboardText size={22} weight="duotone" /></span>
-            <span className="min-w-0 flex-1">
-              <span id="checkin-title" className="block text-[15px] font-semibold text-ink">Check-in diário</span>
-              <span className="mt-0.5 block text-[12px] font-medium text-ink-muted">
-                {readiness == null ? 'Sono, energia, dor e peso em dois minutos' : `Prontidão estimada em ${readiness}%`}
-              </span>
-            </span>
-            {readiness != null && <span className="metric-number text-[18px] text-accent-strong">{readiness}%</span>}
-            <CaretDown size={18} weight="bold" className={`text-ink-muted transition-transform ${showLog ? 'rotate-180' : ''}`} />
-          </button>
-
-          {dailyLog && !showLog && (
-            <div className="grid grid-cols-3 border-t border-line bg-surface-raised/65">
-              <QuickMetric label="Sono" value={dailyLog.sleepH != null ? `${dailyLog.sleepH}h` : '—'} />
-              <QuickMetric label="Energia" value={dailyLog.energy != null ? `${dailyLog.energy}/5` : '—'} />
-              <QuickMetric label="Dor máx." value={`${Math.max(dailyLog.shoulderPain ?? 0, dailyLog.kneePain ?? 0)}/3`} />
-            </div>
-          )}
-
-          {showLog && (
-            <div className="border-t border-line p-4 reveal-item">
-              <DailyLogForm date={todayStr} onSaved={() => { setShowLog(false); loadState() }} />
-            </div>
-          )}
-        </section>
-
-        {!isRest && (
-          <section className="list-surface">
-            <button
-              type="button"
-              onClick={() => setShowPrehab(current => !current)}
-              className="flex min-h-[72px] w-full items-center gap-3 px-4 text-left"
-              aria-expanded={showPrehab}
-            >
-              <span className="icon-tile"><ShieldCheck size={22} weight="duotone" /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold text-ink">Preparação articular</span>
-                <span className="block text-[12px] font-medium text-ink-muted">Faça antes da sessão principal</span>
-              </span>
-              <CaretDown size={18} weight="bold" className={`text-ink-muted transition-transform ${showPrehab ? 'rotate-180' : ''}`} />
-            </button>
-            {showPrehab && <div className="border-t border-line p-4 reveal-item"><MobilitySection compact /></div>}
-          </section>
-        )}
-
+  const freeSession = !isRest && !runSession && totalExercises === 0
+  return <>
+    <main className="page-content training-form-page page-enter space-y-6">
+      <PageHeader title="Treino" description={dateLabel} action={<Link to="/plano" className="btn-ghost">Rotina</Link>} />
+      {mutationError && <p className="subtle-alert text-red-700 dark:text-red-300" role="alert">{mutationError}</p>}
+      <section className="training-session-header" aria-labelledby="session-title">
+        <p className="page-kicker mb-2">{workoutDone ? 'Sessão concluída' : 'Sua sessão de hoje'}</p>
+        <h2 id="session-title" className="training-session-title">{training.sessionLabel}</h2>
+        <p className="mt-2 text-[14px] text-ink-muted">{workoutDone ? 'Atividade registrada. Continue no seu ritmo.' : totalExercises > 0 ? doneExercises + ' de ' + totalExercises + ' exercícios concluídos' : 'Escolha o que faz sentido para você hoje.'}</p>
+        {totalExercises > 0 && <div className="session-progress" role="progressbar" aria-label="Progresso da sessão" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(sessionProgress)}><span style={{ width: sessionProgress + '%' }} /></div>}
+        <div className="training-session-tools">
+          {workoutDone && totalExercises > 0 ? <button className="inline-link" onClick={handleUndo}>Desfazer conclusão</button> : <button className="inline-link" onClick={() => setShowSessionPicker(true)}>Trocar atividade</button>}
+          <button className="inline-link" onClick={() => setShowSettings(true)}>Ajustar treino</button>
+          <span className="text-[13px] text-ink-muted self-center">{plan.phases.find(level => level.id === phase)?.name}{training.isDeload ? ' · Volume leve' : ''}</span>
+        </div>
+      </section>
+      {freeSession && <section className="plain-section"><p className="mb-5 text-[14px] text-ink-muted">Registre o tempo e, se quiser, a distância da sua atividade.</p><ActivityRecorder settings={settings} updateSetting={updateSetting} defaultActivity={activityCategory(training.sessionType)} onSaved={() => void loadState()} primary /></section>}
+      {!isRest && <CollapsiblePanel id="preparation" title="Preparação articular" description="Consulte antes de começar"><MobilitySection compact /></CollapsiblePanel>}
         {isRest && (
-          <section className="surface p-5">
+          <section className="plain-section">
             <Coffee size={28} weight="duotone" className="text-accent-strong" />
             <h2 className="mt-4 text-title">Recuperar também é treinar.</h2>
             <p className="mt-2 text-body text-ink-muted">Caminhada leve, mobilidade ou descanso completo. Escolha o que devolve energia.</p>
-            <button onClick={() => setShowRestMobility(current => !current)} className="btn-secondary mt-5 w-full">
+            <button onClick={() => setShowRestMobility(current => !current)} className="btn-primary mt-5">
               {showRestMobility ? 'Ocultar mobilidade' : 'Ver rotina de mobilidade'}
               <CaretDown size={17} weight="bold" className={`transition-transform ${showRestMobility ? 'rotate-180' : ''}`} />
             </button>
@@ -380,7 +261,7 @@ export default function Today({ settings, updateSetting }: Props) {
               <div><h2 id="run-title">Roteiro da corrida</h2><p>{runSession.label}</p></div>
               <PersonSimpleRun size={24} weight="duotone" className="text-accent-strong" />
             </div>
-            <div className="surface p-5">
+            <div className="plain-section">
               <p className="text-[15px] leading-6 text-ink-soft">{runSession.detail}</p>
               {!workoutDone && !showRunLog && (
                 <button onClick={() => setShowRunLog(true)} className="btn-primary mt-5 w-full">
@@ -388,7 +269,7 @@ export default function Today({ settings, updateSetting }: Props) {
                 </button>
               )}
               {showRunLog && (
-                <div className="reveal-item">
+                <div className="reveal-item mt-6">
                   <div className="mb-4 flex items-center justify-between border-b border-line pb-3">
                     <p className="text-[14px] font-semibold text-ink">Resultado da sessão</p>
                     <button onClick={() => setShowRunLog(false)} className="btn-icon" aria-label="Fechar registro"><X size={18} /></button>
@@ -415,7 +296,7 @@ export default function Today({ settings, updateSetting }: Props) {
               <div><h2 id="strength-title">Sequência de força</h2><p>Marque, registre a carga e avance</p></div>
               <Barbell size={24} weight="duotone" className="text-accent-strong" />
             </div>
-            <div className="list-surface divide-y divide-line">
+            <div className="open-list divide-y divide-line">
               {getExercisesForType(training.sessionType).map((exercise, index) => (
                 <div key={exercise.id} className="reveal-item" style={{ '--index': index } as CSSProperties}>
                   <ExerciseCard
@@ -442,62 +323,35 @@ export default function Today({ settings, updateSetting }: Props) {
         )}
 
         {!isRest && totalExercises > 0 && !workoutDone && (
-          <div className="rounded-[18px] border border-dashed border-line px-4 py-3 text-center text-[13px] font-medium text-ink-muted">
+          <div className="py-4 text-[14px] text-ink-muted">
             {doneExercises === totalExercises
               ? 'Tudo marcado. Confirme a conclusão da sessão.'
               : `${totalExercises - doneExercises} ${totalExercises - doneExercises === 1 ? 'movimento restante' : 'movimentos restantes'}`}
             {doneExercises === totalExercises && <button className="btn-primary mt-3 w-full" onClick={() => setShowCompletionSheet(true)}>Concluir treino</button>}
           </div>
         )}
-        <TrainingControls settings={settings} updateSetting={updateSetting} />
-      </main>
 
-      {showUndo && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed left-4 right-4 mx-auto flex max-w-md items-center justify-between rounded-[18px] bg-ink p-4 text-canvas shadow-modal animate-slide-down"
-          style={{ zIndex: 60, top: 'calc(1rem + var(--safe-top))' }}
-        >
-          <span className="flex items-center gap-2 text-[14px] font-semibold"><Check size={18} weight="bold" /> Sessão concluída</span>
-          <button onClick={handleUndo} className="ml-4 text-[13px] font-bold text-primary-200">Desfazer</button>
-        </div>
-      )}
-
-      {showCompletionSheet && (
-        <>
-          <button
-            type="button"
-            className="sheet-overlay"
-            onClick={() => setShowCompletionSheet(false)}
-            aria-label="Fechar confirmação"
-          />
-          <section role="dialog" aria-modal="true" aria-labelledby="completion-title" className="sheet-panel animate-slide-up">
-            <div className="px-5 pt-4 sm:px-6">
-              <div className="mx-auto mb-6 h-1 w-11 rounded-full bg-line" />
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[16px] bg-accent-soft text-accent-strong">
-                <Sparkle size={25} weight="duotone" />
-              </div>
-              <h2 id="completion-title" className="text-[27px] font-semibold tracking-[-0.035em] text-ink">Sessão entregue.</h2>
-              <p className="mt-2 text-body text-ink-muted">Você completou {doneExercises} movimentos. Salve o dia e registre como o corpo respondeu.</p>
-              <div className="mb-4"><label className="label" htmlFor="completed-duration">Tempo realizado · minutos · opcional</label><input id="completed-duration" className="input" inputMode="decimal" value={actualMinutes} onChange={event => setActualMinutes(event.target.value)} placeholder="Informe o tempo real para acompanhar sua meta" /></div>
-              <button ref={completionButtonRef} onClick={handleConclude} className="btn-primary mt-6 w-full">Concluir e fazer check-out</button>
-              <button onClick={() => setShowCompletionSheet(false)} className="btn-ghost mb-1 mt-2 w-full">Revisar antes</button>
-            </div>
-          </section>
-        </>
-      )}
-    </>
-  )
-}
-
-function QuickMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-r border-line px-3 py-3 text-center last:border-r-0">
-      <p className="metric-number text-[17px]">{value}</p>
-      <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.09em] text-ink-muted">{label}</p>
-    </div>
-  )
+      <CollapsiblePanel id="training-wellness" title="Bem-estar e cuidados" description={dailyLog?.checkInDone ? 'Seu check-in está registrado' : 'Check-in e sinais do corpo'}>
+        {readiness != null && <p className="text-[14px] mb-4">Prontidão estimada: {readiness}%</p>}
+        <button className="btn-secondary mb-5" onClick={() => setShowLog(true)}>{dailyLog?.checkInDone ? 'Ver ou editar check-in' : 'Fazer check-in'}</button>
+        <p className="text-[13px] leading-6 text-ink-muted">{hasJointCautions ? 'Respeite os avisos de cada exercício e ajuste a carga se houver desconforto. O app não substitui acompanhamento profissional.' : 'Interrompa se houver dor aguda, tontura, mal-estar, falta de ar fora do esperado ou dor no peito. O app não substitui acompanhamento profissional.'}</p>
+      </CollapsiblePanel>
+      {!freeSession && <ActivityRecorder settings={settings} updateSetting={updateSetting} defaultActivity={activityCategory(training.sessionType)} onSaved={() => void loadState()} />}
+    </main>
+    {showSettings && <BottomSheet title="Ajustar treino" onClose={() => setShowSettings(false)}><TrainingControls settings={settings} updateSetting={updateSetting} /></BottomSheet>}
+    {showSessionPicker && <BottomSheet title="Escolher atividade" description="A sugestão é uma referência. Você escolhe seu treino." onClose={() => setShowSessionPicker(false)}>
+      <label className="label" htmlFor="today-activity">O que você quer fazer hoje?</label>
+      <select id="today-activity" className="input" value={training.sessionType} disabled={workoutDone} onChange={event => void changeSession(event.target.value)}>{['forcaA', 'forcaB', 'forcaC', 'qualidade', 'longa', 'calistenia', 'caminhada', 'mobilidade', 'descanso', ...settings.customActivities.map(name => 'custom:' + name)].map(type => <option key={type} value={type}>{activityName(type, plan)}{type === suggestion.sessionType ? ' · sugestão de hoje' : ''}</option>)}</select>
+      <p className="helper mt-3">{workoutDone ? 'A atividade registrada permanece vinculada a esta sessão.' : 'Tempo disponível: ' + settings.sessionDurationMin + ' min.'}</p><button className="btn-primary w-full mt-6" onClick={() => setShowSessionPicker(false)}>Voltar ao treino</button>
+    </BottomSheet>}
+    {showLog && <BottomSheet title="Check-in diário" onClose={() => setShowLog(false)}><DailyLogForm date={todayStr} onSaved={() => { setShowLog(false); void loadState() }} /></BottomSheet>}
+    {showUndo && <div role="status" aria-live="polite" className="fixed left-4 right-4 mx-auto flex max-w-md items-center justify-between rounded-[12px] bg-ink px-4 py-2 text-canvas shadow-modal" style={{ zIndex: 60, top: 'calc(1rem + var(--safe-top))' }}><span className="text-[14px]">Sessão concluída</span><button className="btn-ghost text-canvas" onClick={handleUndo}>Desfazer</button></div>}
+    {showCompletionSheet && <BottomSheet title="Concluir treino" description={'Você completou ' + doneExercises + ' exercícios. Registre o tempo e como seu corpo respondeu.'} onClose={() => setShowCompletionSheet(false)}>
+      <label className="label" htmlFor="completed-duration">Tempo realizado · minutos · opcional</label><input id="completed-duration" className="input" inputMode="decimal" value={actualMinutes} onChange={event => setActualMinutes(event.target.value)} placeholder="Informe o tempo real" />
+      {mutationError && <p className="helper text-red-600 mt-3" role="alert">{mutationError}</p>}
+      <button onClick={handleConclude} disabled={concluding} className="btn-primary mt-6 w-full">{concluding ? "Salvando…" : "Concluir e fazer check-out"}</button><button onClick={() => setShowCompletionSheet(false)} className="btn-ghost mt-2 w-full">Revisar antes</button>
+    </BottomSheet>}
+  </>
 }
 
 function MobilitySection({ compact }: { compact?: boolean }) {
@@ -581,6 +435,7 @@ function CalisteniaSection({ checks, onToggle, isDeload, data }: CalisteniaProps
             id={exercise.id}
             name={exercise.name}
             prescription={`${Math.max(1, exercise.sets - (isDeload ? 1 : 0))} × ${exercise.reps} · ${exercise.rest}`}
+            technique={exercise.technique}
             checked={checks.get(exercise.id) ?? false}
             onToggle={onToggle}
             index={mainItems.length + index}
@@ -602,46 +457,17 @@ function CalisteniaSection({ checks, onToggle, isDeload, data }: CalisteniaProps
 }
 
 function CalisthenicsRow({
-  id,
-  name,
-  prescription,
-  technique,
-  caution,
-  checked,
-  onToggle,
-  index,
+  id, name, prescription, checked, onToggle, technique, caution,
 }: {
-  id: string
-  name: string
-  prescription: string
-  technique?: string
-  caution?: string | null
-  checked: boolean
-  onToggle: (id: string) => void
-  index: number
+  id: string; name: string; prescription: string; checked: boolean; onToggle: (id: string) => void;
+  technique?: string; caution?: string | null; index: number;
 }) {
-  return (
-    <div className={`reveal-item flex items-start gap-2 p-3.5 ${checked ? 'bg-accent-soft/45' : 'bg-surface'}`} style={{ '--index': index } as CSSProperties}>
-      <button
-        type="button"
-        onClick={() => onToggle(id)}
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] active:scale-[0.94]"
-        aria-label={checked ? `${name} concluído` : `Marcar ${name} como concluído`}
-        aria-pressed={checked}
-      >
-        {checked
-          ? <CheckCircle size={29} weight="fill" className="text-accent" />
-          : <Circle size={29} className="text-line" />}
-      </button>
-      <div className="min-w-0 flex-1 py-1.5">
-        <div className="flex items-center gap-2">
-          <p className={`text-[15px] font-semibold leading-5 ${checked ? 'text-ink-muted' : 'text-ink'}`}>{name}</p>
-          {caution && <Warning size={16} weight="fill" className="shrink-0 text-amber-600 dark:text-amber-300" />}
-        </div>
-        <p className="mt-0.5 text-[13px] font-medium leading-5 text-ink-muted">{prescription}</p>
-        {technique && <p className="mt-1 text-[12px] leading-5 text-ink-muted">{technique}</p>}
-      </div>
-      <ViewMovementButton exerciseId={id} exerciseName={name} variant="icon" className="mt-1.5" />
+  const [expanded, setExpanded] = useState(false)
+  return <article>
+    <div className="flex items-center gap-2 py-4">
+      <button type="button" className="flex h-12 w-12 shrink-0 items-center justify-center" onClick={() => onToggle(id)} aria-label={checked ? name + ' concluído' : 'Marcar ' + name + ' como concluído'} aria-pressed={checked}>{checked ? <CheckCircle size={29} weight="fill" className="text-accent" /> : <Circle size={29} className="text-line" />}</button>
+      <button className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => setExpanded(value => !value)} aria-expanded={expanded} aria-label={(expanded ? 'Recolher' : 'Abrir') + ' detalhes de ' + name}><span className="min-w-0 flex-1"><span className={'block text-[16px] font-medium ' + (checked ? 'text-ink-muted' : 'text-ink')}>{name}</span><span className="block mt-1 text-[13px] text-ink-muted">{prescription}</span>{caution && <span className="mt-1 flex items-center gap-1 text-[12px] text-amber-700 dark:text-amber-300"><Warning size={14} />Atenção ao {caution}</span>}</span><CaretDown size={18} className={'text-ink-muted shrink-0 ' + (expanded ? 'rotate-180' : '')} /></button>
     </div>
-  )
+    {expanded && <div className="exercise-detail">{technique && <p className="text-[14px] leading-6 text-ink-soft mb-3">{technique}</p>}<ViewMovementButton exerciseId={id} exerciseName={name} /></div>}
+  </article>
 }

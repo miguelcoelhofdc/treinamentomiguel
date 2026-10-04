@@ -10,7 +10,7 @@ import type { TrainingGoal, TrainingSettings } from '@/types'
 export default function GoalEditor({ settings, updateSetting, compact = false }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting; compact?: boolean }) {
   const [open, setOpen] = useState(false)
   return <>
-    <button type="button" className={compact ? 'btn-icon' : 'btn-secondary w-full'} aria-label={settings.primaryGoal ? 'Editar minha meta' : 'Definir minha meta'} onClick={() => setOpen(true)}><PencilSimple size={19} weight="bold" />{!compact && (settings.primaryGoal ? 'Editar minha meta' : 'Definir minha meta')}</button>
+    <button type="button" className={compact ? 'btn-icon' : 'btn-primary'} aria-label={settings.primaryGoal ? 'Editar minha meta' : 'Definir minha meta'} onClick={() => setOpen(true)}><PencilSimple size={19} weight="bold" />{!compact && (settings.primaryGoal ? 'Editar minha meta' : 'Definir minha meta')}</button>
     {open && <GoalsForm settings={settings} updateSetting={updateSetting} onClose={() => setOpen(false)} />}
   </>
 }

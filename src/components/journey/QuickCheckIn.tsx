@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle, Fire, Plus, SpinnerGap } from '@phosphor-icons/react'
+import { CheckCircle, Plus, SpinnerGap } from '@phosphor-icons/react'
 import BottomSheet from '@/components/ui/BottomSheet'
 import DailyLogForm from '@/components/DailyLogForm'
 import { saveDailyActivity } from '@/lib/trainingActivity'
@@ -7,14 +7,14 @@ import type { DailyLog } from '@/types'
 
 export const ENERGY_LABELS = ['Exausto', 'Baixa', 'Estável', 'Boa', 'Ótima']
 
-export default function QuickCheckIn({ date, checkedIn, log }: { date: string; checkedIn: boolean; log?: DailyLog }) {
+export default function QuickCheckIn({ date, checkedIn, log, prominent = false }: { date: string; checkedIn: boolean; log?: DailyLog; prominent?: boolean }) {
   const [open, setOpen] = useState(false)
+  const title = checkedIn ? 'Check-in feito' : 'Como você está hoje?'
   return <>
-    <button type="button" className={`checkin-banner ${checkedIn ? 'checkin-done' : ''}`} onClick={() => setOpen(true)}>
-      <span className="checkin-icon">{checkedIn ? <CheckCircle size={25} weight="fill" /> : <Fire size={25} weight="fill" />}</span>
-      <span className="flex-1 text-left"><span className="block text-[15px] font-bold">{checkedIn ? 'Você marcou presença!' : 'Como está sua energia hoje?'}</span><span className="mt-0.5 block text-[12px] text-ink-muted">{checkedIn ? 'Check-in feito · ver ou adicionar detalhes' : 'Faça seu check-in e mantenha a sequência'}</span></span>
-      <span className="text-[12px] font-bold text-accent-strong">{checkedIn ? 'Ver' : 'Check-in'}</span>
-    </button>
+    {prominent ? <section className={checkedIn ? 'mb-4' : 'home-checkin'} aria-label="Bem-estar de hoje">
+      {checkedIn ? <button className="checkin-banner" aria-label="Editar check-in de hoje" onClick={() => setOpen(true)}><CheckCircle size={21} className="text-accent" /><span className="flex-1 text-left"><span className="block text-[16px] font-medium">{title}</span><span className="helper">{log?.energy ? 'Energia: ' + ENERGY_LABELS[log.energy - 1] : 'Sua presença está registrada.'}</span></span><span className="text-[13px] text-accent-strong">Editar</span></button>
+      : <><p className="page-kicker mb-2">Bem-estar de hoje</p><h2>{title}</h2><p className="mt-2 text-[14px] leading-6 text-ink-muted">Registre sua energia e cuide do seu ritmo.</p><button className="btn-primary mt-6" onClick={() => setOpen(true)}>Fazer check-in</button></>}
+    </section> : <button type="button" className="checkin-banner" onClick={() => setOpen(true)}><span className="checkin-icon"><CheckCircle size={22} /></span><span className="flex-1"><span className="block text-[16px] font-medium">{title}</span><span className="helper">{checkedIn ? 'Ver ou adicionar detalhes' : 'Energia, sono e sinais do corpo'}</span></span><span className="text-[13px] text-accent-strong">{checkedIn ? 'Ver' : 'Check-in'}</span></button>}
     {open && <CheckInPanel date={date} initialEnergy={log?.energy} onClose={() => setOpen(false)} />}
   </>
 }

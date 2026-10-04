@@ -103,7 +103,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
           aria-expanded={expanded}
         >
           <span className="min-w-0 flex-1">
-            <span className={`block truncate text-[15px] font-semibold leading-5 ${checked ? 'text-ink-muted' : 'text-ink'}`}>
+            <span className={`exercise-name block text-[15px] font-semibold leading-5 ${checked ? 'text-ink-muted' : 'text-ink'}`}>
               {exercise.name}
             </span>
             <span className="mt-0.5 block text-[13px] font-medium leading-5 text-ink-muted">
@@ -115,13 +115,13 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
               </span>
             )}
           </span>
-          {exercise.caution && <Warning size={18} weight="fill" className="shrink-0 text-amber-600 dark:text-amber-300" />}
+          {exercise.caution && <Warning size={18} weight="fill" aria-label={"Atenção ao " + exercise.caution} className="shrink-0 text-amber-600 dark:text-amber-300" />}
           <CaretDown size={18} weight="bold" className={`shrink-0 text-ink-muted transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
       {expanded && (
-        <div className="reveal-item border-t border-line px-4 pb-4 pt-4">
+        <div className="exercise-detail reveal-item">
           <div className="space-y-3 text-[13px] leading-5">
             <div>
               <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-muted">Execução</p>
@@ -160,14 +160,14 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
           </div>
 
           {date && (
-            <div className="mt-5 rounded-[18px] border border-line bg-surface-raised p-3.5">
+            <div className="exercise-load mt-5">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Barbell size={19} weight="duotone" className="text-accent-strong" />
                   <p className="text-[13px] font-bold text-ink">Carga de hoje</p>
                 </div>
                 {loggedSets.length > 0 && (
-                  <button type="button" onClick={undoLastSet} className="btn-ghost min-h-9 px-2.5 py-1 text-[12px]">
+                  <button type="button" onClick={undoLastSet} className="btn-ghost px-2.5 text-[13px]">
                     <ArrowCounterClockwise size={15} /> Desfazer
                   </button>
                 )}

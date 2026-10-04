@@ -55,7 +55,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
     if (!loaded) return
     const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
     const previous = metas.map(meta => meta.content)
-    metas.forEach(meta => { meta.content = settings.darkMode ? '#131B14' : '#FAFBF9' })
+    metas.forEach(meta => { meta.content = settings.darkMode ? '#121916' : '#F7F9F7' })
     return () => metas.forEach((meta, index) => { meta.content = previous[index] })
   }, [settings.darkMode, loaded])
 

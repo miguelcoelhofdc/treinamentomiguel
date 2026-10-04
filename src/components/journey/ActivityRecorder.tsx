@@ -7,9 +7,9 @@ import { localDateKey } from '@/lib/date'
 import type { ActivityLog, TrainingSettings } from '@/types'
 import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
 
-export default function ActivityRecorder({ settings, updateSetting, defaultActivity = 'caminhada', onSaved }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting; defaultActivity?: string; onSaved?: () => void }) {
+export default function ActivityRecorder({ settings, updateSetting, defaultActivity = 'caminhada', onSaved, primary = false }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting; defaultActivity?: string; onSaved?: () => void; primary?: boolean }) {
   const [open, setOpen] = useState(false)
-  return <><button className="btn-secondary w-full" onClick={() => setOpen(true)}><Plus size={19} weight="bold" />Registrar atividade</button>{open && <ActivityForm settings={settings} updateSetting={updateSetting} defaultActivity={defaultActivity} onClose={() => setOpen(false)} onSaved={onSaved} />}</>
+  return <><button className={primary ? "btn-primary" : "btn-ghost"} onClick={() => setOpen(true)}><Plus size={19} weight="bold" />Registrar atividade</button>{open && <ActivityForm settings={settings} updateSetting={updateSetting} defaultActivity={defaultActivity} onClose={() => setOpen(false)} onSaved={onSaved} />}</>
 }
 
 function ActivityForm({ settings, updateSetting, defaultActivity, onClose, onSaved }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting; defaultActivity: string; onClose: () => void; onSaved?: () => void }) {
