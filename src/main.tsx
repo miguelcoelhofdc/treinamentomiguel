@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import '@fontsource-variable/caveat/wght.css'
 import '@fontsource-variable/outfit/wght.css'
 import './index.css'
+import './training.css'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(

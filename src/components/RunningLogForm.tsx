@@ -7,7 +7,7 @@ import type { RunningLog } from '@/types'
 interface Props {
   defaultDate?: string
   defaultType?: 'qualidade' | 'longa'
-  onSaved?: () => void
+  onSaved?: (log: RunningLog) => void | Promise<void>
 }
 
 export default function RunningLogForm({ defaultDate, defaultType = 'qualidade', onSaved }: Props) {
@@ -54,7 +54,7 @@ export default function RunningLogForm({ defaultDate, defaultType = 'qualidade',
     try {
       await saveRunningLog(log)
       setStatus('saved')
-      onSaved?.()
+      await onSaved?.(log)
     } catch {
       setStatus('error')
     }

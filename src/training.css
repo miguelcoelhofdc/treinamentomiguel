@@ -1,0 +1,165 @@
+/* Training-only tokens: sales and whiteboard keep their existing design. */
+.training-theme {
+  --color-canvas: 90 24% 98%;
+  --color-surface: 0 0% 100%;
+  --color-surface-raised: 94 24% 95%;
+  --color-ink: 112 28% 17%;
+  --color-ink-soft: 107 15% 32%;
+  --color-ink-muted: 100 7% 44%;
+  --color-line: 100 16% 87%;
+  --color-accent: 103 68% 32%;
+  --color-accent-strong: 110 68% 25%;
+  --color-accent-soft: 96 68% 92%;
+  --training-action: #68d52a;
+  --training-action-edge: #45a417;
+  background: hsl(var(--color-canvas));
+  color: hsl(var(--color-ink));
+}
+.dark .training-theme {
+  --color-canvas: 124 17% 9%;
+  --color-surface: 123 16% 13%;
+  --color-surface-raised: 122 16% 17%;
+  --color-ink: 90 26% 94%;
+  --color-ink-soft: 100 15% 79%;
+  --color-ink-muted: 100 12% 66%;
+  --color-line: 121 13% 25%;
+  --color-accent: 95 68% 61%;
+  --color-accent-strong: 95 75% 70%;
+  --color-accent-soft: 116 31% 20%;
+}
+.training-theme .page-title { font-weight: 750; letter-spacing: -.04em; }
+.training-theme .page-kicker { letter-spacing: .1em; }
+.training-theme .btn-primary {
+  background: var(--training-action); color: #19370d; font-weight: 800;
+  border: 1px solid #5ac923; border-bottom: 0; box-shadow: 0 4px 0 var(--training-action-edge);
+  border-radius: 16px; min-height: 48px;
+}
+.training-theme .btn-primary:hover { background: #77df38; }
+.training-theme .btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--training-action-edge); }
+.training-theme .btn-secondary { border-width: 2px; font-weight: 700; box-shadow: 0 2px 0 hsl(var(--color-line)); }
+.training-theme button:not(.sheet-overlay), .training-theme .btn-ghost { min-height: 44px; }
+.training-theme .hero-surface { background: #214b31; color: #fff; box-shadow: 0 5px 0 #173a26; }
+.training-theme .hero-surface .text-canvas, .training-theme .hero-surface .accent-canvas { color: #fff; }
+.training-theme .hero-surface .text-primary-200 { color: #d9f6c8; }
+.training-theme .hero-surface .text-primary-300 { color: #a7ef74; }
+.training-theme .hero-surface .text-canvas\/55 { color: #ffffffb3; }
+.training-theme .card, .training-theme .surface, .training-theme .list-surface { box-shadow: none; }
+.training-theme button[role="switch"] > span { top: calc(50% - 10px); }
+.training-nav { position: fixed; inset: auto 0 0; z-index: 20; background: hsl(var(--color-surface)); border-top: 2px solid hsl(var(--color-line)); padding-bottom: var(--safe-bottom); }
+.training-nav-inner { margin-inline: auto; max-width: 520px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 5px 9px 8px; }
+.training-nav-item { min-height: 62px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; font-size: 11px; font-weight: 700; color: hsl(var(--color-ink-muted)); }
+.nav-icon { display: flex; align-items: center; justify-content: center; width: 44px; height: 34px; border-radius: 12px; }
+.nav-active { color: hsl(var(--color-accent-strong)); }
+.nav-active .nav-icon { background: hsl(var(--color-accent-soft)); }
+.journey-page { max-width: 480px; padding-bottom: calc(7rem + var(--safe-bottom)); }
+.journey-header { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.journey-avatar { display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; flex-shrink: 0; border-radius: 15px; background: #e5f3d9; color: #447b25; border: 2px solid #d0e8b9; font-size: 21px; font-weight: 800; }
+.streak-pill { display: flex; align-items: center; gap: 5px; padding-inline: 11px; border: 2px solid #eadbc7; border-radius: 15px; color: #b95c14; font-size: 22px; font-weight: 800; background: #fff4e4; }
+.streak-active { background: #fff0dd; color: #b9520a; border-color: #f6d19f; }
+.dark .streak-pill { background: #372a1c; border-color: #604226; color: #ffc26d; }
+.presence-section { padding: 0 1px 16px; }
+.presence-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.presence-week li { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; color: hsl(var(--color-ink-muted)); }
+.presence-day { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; color: hsl(var(--color-ink-muted)); border: 2px solid hsl(var(--color-line)); background: hsl(var(--color-surface)); font-size: 12px; font-weight: 750; }
+.presence-done { color: #26690d; border-color: #a2dc77; background: #ddf5ce; }
+.presence-today { outline: 2px solid #ffc078; outline-offset: 3px; }
+.dark .presence-done { color: #bef798; background: #294422; border-color: #4d7d32; }
+.checkin-banner { display: flex; width: 100%; align-items: center; gap: 10px; padding: 13px 12px; border: 2px solid #f0d6b5; border-radius: 18px; margin-bottom: 16px; background: #fff8ed; }
+.checkin-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 38px; height: 42px; color: #cb7412; }
+.checkin-done { border-color: hsl(var(--color-line)); background: hsl(var(--color-accent-soft) / .6); }
+.checkin-done .checkin-icon { color: hsl(var(--color-accent-strong)); }
+.dark .checkin-banner { border-color: #674626; background: #2b251a; }
+.dark .checkin-done { border-color: #446236; background: #223a23; }
+.weekly-goal { padding: 14px 15px 16px; border: 2px solid hsl(var(--color-line)); border-radius: 20px; margin-bottom: 16px; background: hsl(var(--color-surface)); }
+.goal-symbol { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; background: #e8f4dc; color: #3f871f; border-radius: 14px; }
+.goal-done { background: #dff7cf; }
+.goal-track { height: 10px; background: hsl(var(--color-line)); border-radius: 8px; overflow: hidden; margin-top: 13px; }
+.goal-track > span { display: block; height: 100%; width: 100%; transform-origin: left; background: var(--training-action); border-radius: inherit; box-shadow: inset 0 3px 0 #ffffff38; transition: transform 350ms ease; }
+.today-shortcut { display: flex; align-items: center; gap: 13px; margin-bottom: 22px; padding: 16px 14px; border: 2px solid #c9e6b8; border-radius: 20px; background: hsl(var(--color-accent-soft) / .5); box-shadow: 0 3px 0 #c1d9b2; }
+.session-shortcut-icon { display: flex; align-items: center; justify-content: center; width: 43px; height: 46px; flex-shrink: 0; border-radius: 14px; background: #d7efc6; color: #3f7c20; }
+.today-arrow { display: flex; align-items: center; justify-content: center; width: 35px; height: 35px; border-radius: 11px; background: var(--training-action); color: #234c13; flex-shrink: 0; box-shadow: 0 3px 0 var(--training-action-edge); }
+.dark .today-shortcut { border-color: #456b35; box-shadow: 0 3px 0 #354f2d; }
+.cycle-message { display: flex; align-items: flex-start; gap: 14px; border: 2px solid hsl(var(--color-line)); border-radius: 20px; padding: 18px; margin-bottom: 22px; background: hsl(var(--color-surface)); }
+.journey-unit { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 19px 16px; border-radius: 20px; color: #fff; background: #408b22; box-shadow: 0 4px 0 #2b6e17; }
+.journey-unit[data-phase="desenvolvimento"] { background: #2d81ab; box-shadow: 0 4px 0 #216589; }
+.journey-unit[data-phase="performance"] { background: #7860b3; box-shadow: 0 4px 0 #5b458e; }
+.unit-button { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #ffffff40; border-radius: 13px; background: #ffffff0f; }
+.unit-button:disabled { opacity: .35; }
+.journey-week-tools { display: flex; align-items: center; justify-content: space-between; gap: 4px; padding-top: 8px; }
+.journey-week-tools select { background: transparent; color: hsl(var(--color-ink-muted)); min-height: 44px; max-width: 45%; font-size: 12px; font-weight: 650; padding: 0 4px; }
+.journey-week-tools .btn-ghost { padding-inline: 6px; gap: 4px; }
+.journey-path { padding-top: 30px; padding-bottom: 14px; }
+.journey-step { width: 180px; height: 168px; display: flex; flex-direction: column; align-items: center; position: relative; margin-inline: auto; transform: translateX(var(--step-offset)); text-align: center; }
+.journey-node { display: inline-flex; align-items: center; justify-content: center; width: 76px; height: 69px; border-radius: 50%; border: 3px solid #dce3d7; background: #eff3eb; color: #7c8c74; box-shadow: 0 7px 0 #cdd6c6, inset 0 3px 0 #ffffffb3; flex-shrink: 0; transition: transform 180ms ease, box-shadow 180ms ease; }
+.journey-node:active { transform: translateY(4px); box-shadow: 0 3px 0 #cdd6c6; }
+.step-done .journey-node { background: #75d842; border-color: #7cd84e; color: #285b14; box-shadow: 0 7px 0 #4ca226, inset 0 3px 0 #baf498; }
+.step-today .journey-node { background: #68d52a; border-color: #5cc722; color: #245210; box-shadow: 0 7px 0 #45a417, inset 0 3px 0 #aeed8b; outline: 4px solid #daf3c9; outline-offset: 6px; }
+.step-rest .journey-node { background: #ddeef7; border-color: #c7e0ef; color: #477f99; box-shadow: 0 7px 0 #accddd, inset 0 3px 0 #f0faff; }
+.step-rest.step-today .journey-node { outline-color: #d5eaf4; }
+.step-future .journey-node { opacity: .78; }
+.dark .journey-node { border-color: #3d4d38; background: #2d3b28; color: #a8b79e; box-shadow: 0 7px 0 #202c1d, inset 0 3px 0 #405137; }
+.dark .step-done .journey-node, .dark .step-today .journey-node { background: #70ce38; border-color: #70ce38; color: #245210; box-shadow: 0 7px 0 #469d21, inset 0 3px 0 #b1eb8e; }
+.dark .step-today .journey-node { outline-color: #314b25; }
+.dark .step-rest .journey-node { background: #284b5b; border-color: #355e6d; color: #b8e2f2; box-shadow: 0 7px 0 #1d3944; }
+.today-marker { position: absolute; top: -32px; white-space: nowrap; padding: 5px 9px; border: 2px solid #b7dda0; border-radius: 9px; color: hsl(var(--color-accent-strong)); background: hsl(var(--color-surface)); font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+.step-caption { width: 100%; padding-top: 17px; }
+.step-state { display: block; margin-top: 5px; font-size: 10px; color: hsl(var(--color-ink-muted)); }
+.step-done .step-state, .step-today .step-state { font-weight: 700; color: hsl(var(--color-accent-strong)); }
+.step-presence { display: flex; align-items: center; justify-content: center; gap: 3px; color: #b86213; font-size: 10px; font-weight: 600; margin-top: 3px; }
+.journey-milestones { padding-top: 20px; border-top: 2px solid hsl(var(--color-line)); }
+.personal-goals { border: 2px solid hsl(var(--color-line)); border-radius: 20px; background: hsl(var(--color-surface)); overflow: hidden; }
+.personal-goal { display: flex; align-items: center; gap: 10px; padding: 15px 13px; }
+.personal-goal > div { flex: 1; min-width: 0; }
+.personal-goal + .personal-goal { border-top: 1px solid hsl(var(--color-line)); }
+.goal-mini-icon { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 11px; flex-shrink: 0; color: hsl(var(--color-accent-strong)); background: hsl(var(--color-accent-soft)); }
+.journey-achievements { display: flex; align-items: center; gap: 13px; padding-block: 24px; }
+.achievement-teaser-icon { display: flex; align-items: center; justify-content: center; width: 51px; height: 56px; border-radius: 17px; color: #b78214; background: #fff0be; flex-shrink: 0; }
+.adherence-summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; border-top: 2px solid hsl(var(--color-line)); padding-block: 20px; }
+.journey-footer { display: flex; align-items: center; justify-content: center; gap: 7px; color: hsl(var(--color-ink-muted)); font-size: 11px; padding-top: 7px; }
+.journey-footer > span { width: 6px; height: 6px; border-radius: 50%; background: #71b945; }
+.journey-sheet-root { position: fixed; inset: 0; z-index: 70; }
+.training-theme .journey-sheet { max-width: 480px; max-height: calc(var(--sheet-visible-height, 100dvh) - 24px - var(--safe-top)); bottom: var(--sheet-keyboard-offset, 0px); border-radius: 28px 28px 0 0; border-width: 2px; padding: 17px 22px calc(24px + var(--safe-bottom)); overscroll-behavior: contain; }
+.energy-picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.energy-picker button { min-width: 0; padding: 12px 2px; border: 2px solid hsl(var(--color-line)); border-radius: 15px; background: hsl(var(--color-surface-raised)); }
+.energy-picker .energy-selected { border-color: #70c243; background: hsl(var(--color-accent-soft)); box-shadow: 0 2px 0 #70c243; }
+.energy-face { display: block; font-size: 25px; margin-bottom: 6px; }
+.achievement-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding-bottom: 5px; }
+.achievement-item { padding: 18px 12px; border: 2px solid hsl(var(--color-line)); border-radius: 20px; background: hsl(var(--color-surface-raised)); text-align: center; }
+.achievement-item.earned { border-color: #e4d49b; background: #fffbed; }
+.achievement-medal { display: flex; justify-content: center; align-items: center; width: 62px; height: 65px; margin-inline: auto; border-radius: 19px; background: hsl(var(--color-line) / .5); color: hsl(var(--color-ink-muted)); }
+.earned .achievement-medal { background: #ffdf7c; color: #936010; box-shadow: 0 4px 0 #e4b849; }
+.dark .achievement-item.earned { border-color: #736035; background: #322d1d; }
+.celebration-art { display: flex; align-items: center; justify-content: center; position: relative; height: 160px; color: #b47a0e; margin-bottom: 12px; border-radius: 25px; background: #fff3c7; }
+.celebration-spark { position: absolute; color: #e5a826; animation: check-bounce 900ms ease 2; }
+.dark .celebration-art { background: #3b321b; color: #f4cb60; }
+.evolution-consistency { border: 2px solid hsl(var(--color-line)); border-radius: 20px; padding: 14px 17px 20px; background: hsl(var(--color-surface)); }
+.evolution-consistency strong { display: block; font-size: 26px; letter-spacing: -.04em; color: hsl(var(--color-accent-strong)); }
+.evolution-consistency span { display: block; font-size: 11px; line-height: 16px; color: hsl(var(--color-ink-muted)); padding-top: 4px; }
+.training-access section:first-child { background: #285636; }
+.training-access .page-kicker { color: hsl(var(--color-accent-strong)); }
+@media (max-width: 390px) {
+  .journey-header { gap: 9px; }
+  .journey-header h1 { font-size: 24px; }
+  .checkin-banner { gap: 7px; padding-inline: 9px; }
+  .checkin-banner > span:last-child { font-size: 11px; }
+  .journey-unit { padding-inline: 13px; }
+  .journey-sheet { padding-inline: 17px !important; }
+}
+@media (max-width: 767px) {
+  .journey-header { margin-bottom: 14px; }
+  .presence-section { padding-bottom: 12px; }
+  .presence-week li { gap: 5px; }
+  .presence-day { width: 32px; height: 32px; }
+  .checkin-banner { padding-block: 10px; margin-bottom: 12px; }
+  .weekly-goal { padding: 10px 13px 12px; margin-bottom: 12px; }
+  .weekly-goal .goal-track { margin-top: 9px; height: 8px; }
+  .today-shortcut { padding-block: 12px; margin-bottom: 16px; }
+  .journey-unit { padding-block: 15px; }
+  .journey-week-tools { padding-top: 0; }
+  .journey-path { padding-top: 24px; }
+}
+@media (min-width: 768px) {
+  .journey-page { padding-top: 40px; }
+  .journey-header { margin-bottom: 26px; }
+  .training-theme .journey-sheet { bottom: 24px; border-radius: 28px; }
+}

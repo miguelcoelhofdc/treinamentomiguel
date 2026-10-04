@@ -1,0 +1,186 @@
+{
+  "flows": [
+    "layout access-mobile: no horizontal overflow",
+    "layout after-mobile: no horizontal overflow",
+    "layout journey-path-mobile: no horizontal overflow",
+    "layout after-mobile-375: no horizontal overflow",
+    "layout after-mobile-430: no horizontal overflow",
+    "layout after-desktop: no horizontal overflow",
+    "layout checkin-mobile: no horizontal overflow",
+    "check-in sheet covers the bottom navigation",
+    "layout achievement-mobile: no horizontal overflow",
+    "check-in extends streak once",
+    "repeated check-in has no duplicate celebration",
+    "one daily row after repeated check-in",
+    "layout today-mobile: no horizontal overflow",
+    "today contains the prescribed strength exercises",
+    "workout completion preserves daily presence",
+    "detailed check-in preserves completed workout",
+    "undo preserves check-in",
+    "layout future-week-mobile: no horizontal overflow",
+    "future step opens the correct week prescription",
+    "layout plan-mobile: no horizontal overflow",
+    "layout evolution-mobile: no horizontal overflow",
+    "layout goals-mobile: no horizontal overflow",
+    "goal sheet covers the navigation and restores keyboard focus",
+    "goal submission remains reachable in a reduced keyboard viewport",
+    "invalid numeric target is displayed beside its field",
+    "targets are persisted for the active profile",
+    "layout profile-mobile: no horizontal overflow",
+    "backup retains new fields and goals",
+    "legacy backup imports successfully",
+    "invalid new check-in field is rejected without writes",
+    "backup from another profile is rejected",
+    "layout dark-mobile: no horizontal overflow",
+    "theme metadata follows the in-app setting",
+    "layout guides-mobile: no horizontal overflow",
+    "return after midnight refreshes the date and preserves yesterday’s streak",
+    "a whole missed day resets the active streak",
+    "storage failure shows a retry and keeps navigation available",
+    "storage retry recovers the journey",
+    "Sintia has independent data and her four-session weekly goal",
+    "layout sintia-mobile: no horizontal overflow",
+    "sales remains outside the training theme",
+    "whiteboard remains outside the training theme",
+    "no uncaught browser exceptions"
+  ],
+  "screenshots": [
+    {
+      "name": "access-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "TREINO PESSOAL\n\nUm passo por dia. Uma nova versão de você.\n\nSeu treino de hoje, sua sequência e cada pequena conquista. Sua jornada começa aqui.\n\nAcesso local simples, sem e-mail. O código identifica "
+    },
+    {
+      "name": "after-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n6\n\nSeu check-in de hoje está pendente\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\n5\nComo está sua energia hoje?\nFaça seu check-in e mantenha a sequência\nCheck-in\nS"
+    },
+    {
+      "name": "journey-path-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n6\n\nSeu check-in de hoje está pendente\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\n5\nComo está sua energia hoje?\nFaça seu check-in e mantenha a sequência\nCheck-in\nS"
+    },
+    {
+      "name": "after-mobile-375",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 375,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n6\n\nSeu check-in de hoje está pendente\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\n5\nComo está sua energia hoje?\nFaça seu check-in e mantenha a sequência\nCheck-in\nS"
+    },
+    {
+      "name": "after-mobile-430",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 430,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n6\n\nSeu check-in de hoje está pendente\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\n5\nComo está sua energia hoje?\nFaça seu check-in e mantenha a sequência\nCheck-in\nS"
+    },
+    {
+      "name": "after-desktop",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 1440,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n6\n\nSeu check-in de hoje está pendente\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\n5\nComo está sua energia hoje?\nFaça seu check-in e mantenha a sequência\nCheck-in\nS"
+    },
+    {
+      "name": "checkin-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 1,
+      "width": 390,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n6\n\nSeu check-in de hoje está pendente\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\n5\nComo está sua energia hoje?\nFaça seu check-in e mantenha a sequência\nCheck-in\nS"
+    },
+    {
+      "name": "achievement-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 1,
+      "width": 390,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n7\n\nMais um dia no foco\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\nVocê marcou presença!\nCheck-in feito · ver ou adicionar detalhes\nVer\nSua meta da semana\n\n0 de 6 "
+    },
+    {
+      "name": "today-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "BOM DIA, MIGUEL\n\nHoje\n\nSegunda-feira, 5 de out\n\nSEMANA 5\nSESSÃO DO DIA\nForça A — Inferior\n\n0 de 6 movimentos\n\n0/6\nOmbro e joelho sob atenção\nCheck-in diário\nProntidão estimada em 100%\n100%\n\n—\n\nSONO\n\n5"
+    },
+    {
+      "name": "future-week-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n7\n\nMais um dia no foco\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\nVocê marcou presença!\nCheck-in feito · ver ou adicionar detalhes\nVer\nSua meta da semana\n\n0 de 6 "
+    },
+    {
+      "name": "plan-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "CICLO DE 26 SEMANAS\n\nPlano de treino\n\nNavegue pela progressão e abra cada sessão para revisar o que vem pela frente.\n\nSEMANA\n\n6\n\nBase\n01\n26\nVoltar à semana atual\n\nConstrução aeróbica e adaptação técni"
+    },
+    {
+      "name": "evolution-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "PERFORMANCE\n\nEvolução\n\nO que mudou, onde você está e qual é o próximo marco.\n\nSeu ritmo, seus marcos\n7\nDias de sequência\n9\nTreinos realizados\n38%\nCumprimento do plano\n\nTRAJETÓRIA CORPORAL\n\n78,4\nkg\n\n1,"
+    },
+    {
+      "name": "goals-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 1,
+      "width": 390,
+      "text": "PERFORMANCE\n\nEvolução\n\nO que mudou, onde você está e qual é o próximo marco.\n\nSeu ritmo, seus marcos\n7\nDias de sequência\n9\nTreinos realizados\n38%\nCumprimento do plano\n\nTRAJETÓRIA CORPORAL\n\n78,4\nkg\n\n1,"
+    },
+    {
+      "name": "profile-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "PREFERÊNCIAS\n\nSeu perfil\n\nPersonalize seu plano e mantenha seus dados sob controle.\n\nPerfil e metas\n\nEsses dados calibram seus indicadores de progresso.\n\nEditar minhas metas\nComo quer ser chamado\nAltu"
+    },
+    {
+      "name": "dark-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "M\n\nVamos nessa, Miguel!\n\nSua jornada\n7\n\nMais um dia no foco\n\nÚltimos 7 dias\nter\nqua\nqui\nsex\nsáb\ndom\nseg\nVocê marcou presença!\nCheck-in feito · ver ou adicionar detalhes\nVer\nSua meta da semana\n\n0 de 3 "
+    },
+    {
+      "name": "guides-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "BASE DE APOIO\n\nGuias\n\nProtocolos práticos para sustentar treino, recuperação e alimentação ao longo da semana.\n\nNutrição\nMetas diárias, refeições e princípios simples\n\nMETAS DIÁRIAS\n\nDia de treino\n\nCa"
+    },
+    {
+      "name": "sintia-mobile",
+      "horizontalScroll": false,
+      "smallButtons": [],
+      "dialogs": 0,
+      "width": 390,
+      "text": "S\n\nVamos nessa, Sintia!\n\nSua jornada\n0\n\nSeu check-in de hoje está pendente\n\nÚltimos 7 dias\nter\n29\nqua\n30\nqui\n1\nsex\n2\nsáb\n3\ndom\n4\nseg\n5\nComo está sua energia hoje?\nFaça seu check-in e mantenha a sequên"
+    }
+  ],
+  "errors": []
+}

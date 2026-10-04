@@ -42,7 +42,7 @@ export default function Access() {
   }
 
   return (
-    <main className="relative min-h-[100dvh] overflow-hidden bg-canvas px-4 py-6 sm:px-6 sm:py-10">
+    <main className="training-theme training-access relative min-h-[100dvh] overflow-hidden bg-canvas px-4 py-6 sm:px-6 sm:py-10">
       <div className="pointer-events-none absolute -right-24 -top-32 h-80 w-80 rounded-full border border-accent/15" aria-hidden="true" />
       <div className="pointer-events-none absolute -right-8 -top-16 h-52 w-52 rounded-full border border-accent/10" aria-hidden="true" />
 
@@ -57,10 +57,10 @@ export default function Access() {
             </span>
             <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.2em] text-primary-200">Treino pessoal</p>
             <h1 className="mt-3 max-w-[12ch] text-[2.4rem] font-semibold leading-[0.98] tracking-[-0.05em] text-white sm:text-[3rem]">
-              Seu plano começa no perfil certo.
+              Um passo por dia. Uma nova versão de você.
             </h1>
             <p className="mt-5 max-w-[34ch] text-[15px] leading-6 text-white/62">
-              Cada acesso abre um plano, histórico e conjunto de preferências independentes neste dispositivo.
+              Seu treino de hoje, sua sequência e cada pequena conquista. Sua jornada começa aqui.
             </p>
           </div>
 

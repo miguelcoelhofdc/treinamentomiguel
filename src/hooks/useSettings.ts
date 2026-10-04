@@ -1,60 +1,36 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getSetting, setSetting } from '@/db'
+import { liveQuery } from 'dexie'
+import { db, setSetting } from '@/db'
 import plan from '@/data/activePlan'
+import { plannedWorkouts } from '@/lib/journey'
+import { decodeTrainingSettings, type UpdateTrainingSetting } from '@/lib/trainingSettings'
+import type { TrainingSettings } from '@/types'
 
-interface Settings {
-  startDate: string
-  name: string
-  height: number
-  initialWeight: number
-  goalWeight: number
-  darkMode: boolean
-  routineType: 'morning' | 'evening'
-}
-
-const DEFAULTS: Settings = {
-  startDate: plan.profile.startDate,
-  name: plan.profile.name,
-  height: plan.profile.height,
-  initialWeight: plan.profile.initialWeight,
-  goalWeight: Number(plan.profile.goals.weight),
-  darkMode: false,
-  routineType: 'morning',
+const DEFAULTS: TrainingSettings = {
+  startDate: plan.profile.startDate, name: plan.profile.name,
+  height: plan.profile.height, initialWeight: plan.profile.initialWeight,
+  goalWeight: Number(plan.profile.goals.weight), darkMode: false, routineType: 'morning',
+  weeklyWorkoutGoal: plannedWorkouts(plan), performanceTargets: {},
 }
 
 export function useSettings() {
-  const [settings, setSettings] = useState<Settings>(DEFAULTS)
+  const [settings, setSettings] = useState<TrainingSettings>(DEFAULTS)
   const [loaded, setLoaded] = useState(false)
-
+  const [error, setError] = useState(false)
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
-    async function load() {
-      const keys = Object.keys(DEFAULTS) as (keyof Settings)[]
-      const loaded: Partial<Settings> = {}
-      for (const key of keys) {
-        const val = await getSetting(key)
-        if (val !== null) {
-          if (typeof DEFAULTS[key] === 'boolean') (loaded as Record<string, unknown>)[key] = val === 'true'
-          else if (typeof DEFAULTS[key] === 'number') (loaded as Record<string, unknown>)[key] = Number(val)
-          else (loaded as Record<string, unknown>)[key] = val
-        }
-      }
-      setSettings(s => ({ ...s, ...loaded }))
-      setLoaded(true)
-    }
-    load()
-  }, [])
-
+    setError(false)
+    const subscription = liveQuery(() => db.settings.toArray()).subscribe({
+      next: rows => { setSettings(decodeTrainingSettings(rows, DEFAULTS, plan)); setLoaded(true) },
+      error: () => { setError(true); setLoaded(true) },
+    })
+    return () => subscription.unsubscribe()
+  }, [attempt])
   useEffect(() => {
-    if (!loaded) return
-    const html = document.documentElement
-    if (settings.darkMode) html.classList.add('dark')
-    else html.classList.remove('dark')
+    if (loaded) document.documentElement.classList.toggle('dark', settings.darkMode)
   }, [settings.darkMode, loaded])
-
-  const updateSetting = useCallback(async <K extends keyof Settings>(key: K, value: Settings[K]) => {
-    setSettings(s => ({ ...s, [key]: value }))
-    await setSetting(key, String(value))
+  const updateSetting: UpdateTrainingSetting = useCallback(async (key, value) => {
+    await setSetting(key, typeof value === 'object' ? JSON.stringify(value) : String(value))
   }, [])
-
-  return { settings, updateSetting, loaded }
+  return { settings, updateSetting, loaded, error, retry: () => setAttempt(value => value + 1) }
 }

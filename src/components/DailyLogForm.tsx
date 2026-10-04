@@ -1,22 +1,24 @@
 import { useEffect, useId, useState, type FormEvent } from 'react'
 import { Check, FloppyDisk, WarningCircle } from '@phosphor-icons/react'
-import { getDailyLog, saveDailyLog } from '@/db'
+import { getDailyLog } from '@/db'
+import { saveDailyActivity } from '@/lib/trainingActivity'
 import type { DailyLog } from '@/types'
 
 interface Props {
   date: string
   onSaved?: () => void
+  initialEnergy?: number
 }
 
 const energyLabels = ['', 'Exausto', 'Baixo', 'Estável', 'Bom', 'Ótimo']
 const painLabels = ['Sem dor', 'Leve', 'Moderada', 'Forte']
 
-export default function DailyLogForm({ date, onSaved }: Props) {
+export default function DailyLogForm({ date, onSaved, initialEnergy }: Props) {
   const id = useId()
   const [form, setForm] = useState<Omit<DailyLog, 'id' | 'date'>>({
     weightKg: undefined,
     sleepH: undefined,
-    energy: undefined,
+    energy: initialEnergy,
     shoulderPain: 0,
     kneePain: 0,
     rpe: undefined,
@@ -24,6 +26,7 @@ export default function DailyLogForm({ date, onSaved }: Props) {
     workoutDone: false,
   })
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [errorText, setErrorText] = useState('')
 
   useEffect(() => {
     let active = true
@@ -31,12 +34,12 @@ export default function DailyLogForm({ date, onSaved }: Props) {
       .then(log => {
         if (!active || !log) return
         const { id: _id, date: _date, ...rest } = log
-        setForm(rest)
+        setForm({ ...rest, energy: initialEnergy ?? rest.energy })
         setStatus('saved')
       })
       .catch(() => active && setStatus('error'))
     return () => { active = false }
-  }, [date])
+  }, [date, initialEnergy])
 
   const set = <K extends keyof typeof form>(key: K, value: typeof form[K]) => {
     setStatus('idle')
@@ -45,12 +48,20 @@ export default function DailyLogForm({ date, onSaved }: Props) {
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (status === 'saving') return
+    if (!form.energy || form.energy < 1 || form.energy > 5) {
+      setErrorText('Escolha sua energia para confirmar o check-in.')
+      setStatus('error')
+      return
+    }
     setStatus('saving')
     try {
-      await saveDailyLog({ date, ...form })
+      const { workoutDone: _workoutDone, checkInDone: _checkInDone, ...wellness } = form
+      await saveDailyActivity({ date, ...wellness, checkInDone: true })
       setStatus('saved')
       onSaved?.()
     } catch {
+      setErrorText('Não foi possível salvar. Tente novamente.')
       setStatus('error')
     }
   }
@@ -165,7 +176,7 @@ export default function DailyLogForm({ date, onSaved }: Props) {
 
       {status === 'error' && (
         <p className="flex items-center gap-2 text-[13px] font-medium text-red-700 dark:text-red-300" role="alert">
-          <WarningCircle size={17} weight="fill" /> Não foi possível salvar. Tente novamente.
+          <WarningCircle size={17} weight="fill" /> {errorText || 'Não foi possível carregar o check-in. Tente novamente.'}
         </p>
       )}
 

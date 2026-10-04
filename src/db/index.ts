@@ -49,16 +49,17 @@ export async function setSetting(key: string, value: string): Promise<void> {
 
 // Daily log helpers
 export async function getDailyLog(date: string): Promise<DailyLog | undefined> {
-  return db.dailyLogs.where('date').equals(date).first()
+  const rows = await db.dailyLogs.where('date').equals(date).sortBy('id')
+  return rows.length ? Object.assign({}, ...rows) : undefined
 }
 
 export async function saveDailyLog(log: DailyLog): Promise<void> {
-  const existing = await getDailyLog(log.date)
-  if (existing?.id) {
-    await db.dailyLogs.update(existing.id, log)
-  } else {
-    await db.dailyLogs.add(log)
-  }
+  await db.transaction('rw', db.dailyLogs, async () => {
+    const existing = await getDailyLog(log.date)
+    const { id: _id, ...patch } = log
+    if (existing?.id) await db.dailyLogs.update(existing.id, patch)
+    else await db.dailyLogs.add(patch)
+  })
 }
 
 // Exercise check helpers

@@ -22,11 +22,17 @@ import PaceChart from '@/components/charts/PaceChart'
 import RunningLogForm from '@/components/RunningLogForm'
 import { getWeightHistory, getAllRunningLogs, getStrengthPRs, getDailyLog, saveDailyLog } from '@/db'
 import plan from '@/data/activePlan'
-import type { RunningLog, TestDefinition } from '@/types'
+import type { RunningLog, TestDefinition, TrainingSettings } from '@/types'
+import GoalEditor from '@/components/journey/GoalEditor'
+import { useJourney } from '@/hooks/useJourney'
+import { effectiveTarget, testGoalProgress } from '@/lib/journey'
+import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
 
 interface ProgressProps {
   initialWeight: number
   goalWeight: number
+  settings: TrainingSettings
+  updateSetting: UpdateTrainingSetting
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -136,7 +142,7 @@ function ChartEmpty({
 function ProgressLoading() {
   return (
     <div className="page-content" aria-label="Carregando progresso" aria-busy="true">
-      <PageHeader eyebrow="Performance" title="Progresso" description="Organizando seus registros mais recentes." />
+      <PageHeader eyebrow="Performance" title="Evolução" description="Organizando seus registros mais recentes." />
       <div className="space-y-6">
         <div className="skeleton h-56 w-full rounded-[28px]" />
         <div className="grid grid-cols-2 gap-5 border-y border-line py-5">
@@ -150,7 +156,8 @@ function ProgressLoading() {
   )
 }
 
-export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
+export default function Progress({ initialWeight, goalWeight, settings, updateSetting }: ProgressProps) {
+  const journey = useJourney(settings.startDate)
   const [weightData, setWeightData] = useState<{ date: string; weight: number }[]>([])
   const [runData, setRunData] = useState<RunningLog[]>([])
   const [prs, setPrs] = useState<Map<string, { weightKg: number; reps: number; date: string }>>(new Map())
@@ -185,7 +192,7 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
 
   useEffect(() => {
     void load(true)
-  }, [load])
+  }, [load, journey.logs])
 
   const sortedWeights = useMemo(
     () => [...weightData].sort((a, b) => a.date.localeCompare(b.date)),
@@ -268,7 +275,7 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
     <div className="page-content page-enter">
       <PageHeader
         eyebrow="Performance"
-        title="Progresso"
+        title="Evolução"
         description="O que mudou, onde você está e qual é o próximo marco."
         action={(
           <span className="icon-tile" aria-hidden="true">
@@ -276,6 +283,11 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
           </span>
         )}
       />
+
+      <section className="evolution-consistency mb-6" aria-label="Sua constância">
+        <div className="mb-4 flex items-center justify-between"><h2 className="text-[18px] font-bold">Seu ritmo, seus marcos</h2><GoalEditor settings={settings} updateSetting={updateSetting} compact /></div>
+        {journey.error ? <p role="alert" className="text-[13px] text-red-600">Não foi possível carregar a constância. <button className="btn-ghost" onClick={journey.retry}>Tentar novamente</button></p> : <div className="grid grid-cols-3 gap-2"><div><strong>{journey.loaded ? journey.stats.streak : '—'}</strong><span>Dias de sequência</span></div><div><strong>{journey.loaded ? journey.stats.workouts : '—'}</strong><span>Treinos realizados</span></div><div><strong>{journey.loaded && journey.stats.adherence != null ? `${journey.stats.adherence}%` : '—'}</strong><span>Cumprimento do plano</span></div></div>}
+      </section>
 
       {loadError && (
         <div className="mb-5 flex items-start gap-3 rounded-[18px] border border-red-200 bg-red-50 p-4 text-red-900 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200" role="alert">
@@ -454,6 +466,8 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
             const error = testErrors[test.id]
             const inputId = `test-${test.id}`
             const helperId = `${inputId}-helper`
+            const target = effectiveTarget(test, settings.performanceTargets, goalWeight)
+            const goalProgress = testGoalProgress(test, currentValue, target)
 
             return (
               <div key={test.id} className="px-4 py-5 sm:px-5">
@@ -461,7 +475,7 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
                   <div className="min-w-0">
                     <p className="text-[15px] font-semibold text-ink">{test.name}</p>
                     <p className="mt-1 text-[12px] leading-4 text-ink-muted">
-                      Inicial {test.initial} {test.unit} · meta {test.target} {test.unit}
+                      Inicial {test.initial} {test.unit} · meta {target} {test.unit}
                     </p>
                   </div>
                   {comparison && (
@@ -477,6 +491,8 @@ export default function Progress({ initialWeight, goalWeight }: ProgressProps) {
                 </div>
 
                 <p className="mt-2 text-[13px] leading-5 text-ink-soft">{test.description}</p>
+                {goalProgress.percent != null && <div className="goal-track mt-3" role="progressbar" aria-label={`Progresso de ${test.name}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(goalProgress.percent)}><span style={{ transform: `scaleX(${goalProgress.percent / 100})` }} /></div>}
+                {goalProgress.achieved && <p className="mt-2 text-[12px] font-bold text-accent-strong">Meta alcançada!</p>}
 
                 <div className="mt-4">
                   <label htmlFor={inputId} className="label">Resultado atual</label>

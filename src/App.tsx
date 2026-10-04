@@ -3,6 +3,8 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from '@/components/BottomNav'
 import { useSettings } from '@/hooks/useSettings'
 import Access from '@/pages/Access'
+import { useLocalDay } from '@/hooks/useLocalDay'
+import { AchievementCelebration } from '@/components/journey/Achievements'
 import {
   ACCESS_PROFILES,
   clearStoredProfile,
@@ -11,6 +13,7 @@ import {
 } from '@/lib/auth'
 
 const Today = lazy(() => import('@/pages/Today'))
+const Journey = lazy(() => import('@/pages/Journey'))
 const Plan = lazy(() => import('@/pages/Plan'))
 const Progress = lazy(() => import('@/pages/Progress'))
 const Guides = lazy(() => import('@/pages/Guides'))
@@ -44,26 +47,37 @@ function AppSkeleton() {
 }
 
 function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
-  const { settings, updateSetting, loaded } = useSettings()
+  const { settings, updateSetting, loaded, error, retry } = useSettings()
+  const today = useLocalDay()
   const activeProfile = ACCESS_PROFILES[profileId]
+
+  useEffect(() => {
+    if (!loaded) return
+    const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
+    const previous = metas.map(meta => meta.content)
+    metas.forEach(meta => { meta.content = settings.darkMode ? '#131B14' : '#FAFBF9' })
+    return () => metas.forEach((meta, index) => { meta.content = previous[index] })
+  }, [settings.darkMode, loaded])
 
   const handleLogout = () => {
     clearStoredProfile()
     window.location.assign('/')
   }
 
-  if (!loaded) return <div className="app-shell"><AppSkeleton /></div>
+  if (!loaded) return <div className="app-shell training-theme"><AppSkeleton /></div>
+  if (error) return <div className="app-shell training-theme"><div className="page-content"><h1 className="page-title">Não foi possível abrir seu perfil.</h1><button className="btn-primary mt-5" onClick={retry}>Tentar novamente</button></div></div>
 
   return (
-    <div className="app-shell">
+    <div className="app-shell training-theme">
       <ScrollToTop />
       <Suspense fallback={<AppSkeleton />}>
         <Routes>
-          <Route path="/" element={<Today startDate={settings.startDate} name={settings.name} />} />
+          <Route path="/" element={<Journey settings={settings} updateSetting={updateSetting} />} />
+          <Route path="/hoje" element={<Today key={today} startDate={settings.startDate} name={settings.name} />} />
           <Route path="/plano" element={<Plan startDate={settings.startDate} />} />
           <Route
             path="/progresso"
-            element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} />}
+            element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} settings={settings} updateSetting={updateSetting} />}
           />
           <Route path="/guias" element={<Guides routineType={settings.routineType} />} />
           <Route
@@ -82,7 +96,9 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      <div id="training-overlays" />
       <BottomNav />
+      <AchievementCelebration />
     </div>
   )
 }

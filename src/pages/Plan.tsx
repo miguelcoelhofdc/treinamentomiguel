@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   ArrowCounterClockwise,
   CaretDown,
@@ -11,9 +12,10 @@ import SessionIcon from '@/components/ui/SessionIcon'
 import { useTrainingDay, getRunningSession } from '@/hooks/useTrainingDay'
 import plan from '@/data/activePlan'
 import type { Exercise, PhaseId, WeekDayTemplate } from '@/types'
+import { formatShortDate, weekday } from '@/lib/date'
+import { planWeekDates } from '@/lib/journey'
 
 const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
-const WEEK_DAYS = [1, 2, 3, 4, 5, 6, 0]
 
 interface Props {
   startDate: string
@@ -29,8 +31,12 @@ function getExercises(subtype: string): Exercise[] {
 export default function Plan({ startDate }: Props) {
   const todayTraining = useTrainingDay(startDate)
   const currentWeek = Math.min(26, Math.max(1, todayTraining.weekNumber || 1))
-  const [week, setWeek] = useState(currentWeek)
-  const [expandedDay, setExpandedDay] = useState<number | null>(todayTraining.dayOfWeek ?? null)
+  const [searchParams] = useSearchParams()
+  const requestedWeek = Number(searchParams.get('semana'))
+  const requestedDay = searchParams.get('dia')
+  const [week, setWeek] = useState(Number.isInteger(requestedWeek) && requestedWeek >= 1 && requestedWeek <= 26 ? requestedWeek : currentWeek)
+  const [expandedDay, setExpandedDay] = useState<number | null>(requestedDay != null && /^[0-6]$/.test(requestedDay) ? Number(requestedDay) : todayTraining.dayOfWeek)
+  const dates = planWeekDates(startDate, week)
 
   const isDeload = plan.deloadWeeks.includes(week)
   const phase: PhaseId = week <= 8 ? 'base' : week <= 17 ? 'desenvolvimento' : 'performance'
@@ -127,16 +133,17 @@ export default function Plan({ startDate }: Props) {
         </div>
 
         <ol className="relative ml-[22px] border-l border-line">
-          {WEEK_DAYS.map((dayOfWeek, index) => {
+          {dates.map((date, index) => {
+            const dayOfWeek = weekday(date)
             const template = (plan.weekTemplate as Record<string, WeekDayTemplate>)[String(dayOfWeek)]
-            const isToday = dayOfWeek === todayTraining.dayOfWeek && isCurrentWeek
+            const isToday = date === todayTraining.date && isCurrentWeek
             const isExpanded = expandedDay === dayOfWeek
             const contentId = `plan-day-${dayOfWeek}`
             const sessionType = template.subtype ?? template.type
 
             return (
               <li
-                key={dayOfWeek}
+                key={date}
                 className="relative pl-8 reveal-item"
                 style={{ '--index': index } as CSSProperties}
               >
@@ -151,7 +158,7 @@ export default function Plan({ startDate }: Props) {
                   <SessionIcon type={sessionType} size={21} weight="duotone" />
                 </span>
 
-                <div className={index < WEEK_DAYS.length - 1 ? 'border-b border-line/85' : ''}>
+                <div className={index < dates.length - 1 ? 'border-b border-line/85' : ''}>
                   <button
                     type="button"
                     onClick={() => setExpandedDay(isExpanded ? null : dayOfWeek)}
@@ -161,7 +168,7 @@ export default function Plan({ startDate }: Props) {
                   >
                     <span className="min-w-0">
                       <span className="flex items-center gap-2 text-[12px] font-semibold text-ink-muted">
-                        {DAY_NAMES[dayOfWeek]}
+                        {DAY_NAMES[dayOfWeek]} · {formatShortDate(date)}
                         {isToday && <span className="badge-fase">Hoje</span>}
                       </span>
                       <span className="mt-0.5 block text-[16px] font-semibold leading-5 text-ink">{template.label}</span>

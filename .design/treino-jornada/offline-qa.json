@@ -1,0 +1,9 @@
+{
+  "flows": [
+    "installed production app reloads offline",
+    "training route is available offline",
+    "no uncaught browser exceptions"
+  ],
+  "screenshots": [],
+  "errors": []
+}

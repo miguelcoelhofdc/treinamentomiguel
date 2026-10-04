@@ -29,30 +29,25 @@ import PageHeader from '@/components/ui/PageHeader'
 import { db } from '@/db'
 import type { ProfileId } from '@/lib/auth'
 import { localDateKey } from '@/lib/date'
+import { isDateKey } from '@/lib/date'
+import plan from '@/data/activePlan'
+import GoalEditor from '@/components/journey/GoalEditor'
+import { plannedWorkouts } from '@/lib/journey'
+import { parsePerformanceTargets, type UpdateTrainingSetting } from '@/lib/trainingSettings'
 import type {
   AppSettings,
   DailyLog,
   ExerciseCheck,
   RunningLog,
   StrengthLog,
+  TrainingSettings,
 } from '@/types'
 
-type SettingsData = {
-  startDate: string
-  name: string
-  height: number
-  initialWeight: number
-  goalWeight: number
-  darkMode: boolean
-  routineType: 'morning' | 'evening'
-}
+type SettingsData = TrainingSettings
 
 interface Props {
   settings: SettingsData
-  updateSetting: <K extends keyof SettingsData>(
-    key: K,
-    value: SettingsData[K],
-  ) => void | Promise<void>
+  updateSetting: UpdateTrainingSetting
   profileId: ProfileId
   profileLabel: string
   onLogout: () => void
@@ -95,6 +90,7 @@ function isDailyLog(value: unknown): value is DailyLog {
     isOptionalNumber(value[key]),
   ) && (value.notes == null || typeof value.notes === 'string')
     && (value.workoutDone == null || typeof value.workoutDone === 'boolean')
+    && (value.checkInDone == null || typeof value.checkInDone === 'boolean')
 }
 
 function isRunningLog(value: unknown): value is RunningLog {
@@ -165,6 +161,11 @@ function parseBackup(raw: string): BackupPayload {
     throw new Error('Há registros corrompidos ou incompatíveis no backup.')
   }
 
+  for (const { key, value } of payload.settings) {
+    if (key === 'performanceTargets') parsePerformanceTargets(value, plan)
+    if (key === 'startDate' && !isDateKey(value)) throw new Error('Data do ciclo inválida no backup.')
+    if (key === 'weeklyWorkoutGoal' && (!Number.isInteger(Number(value)) || Number(value) < 1 || Number(value) > plannedWorkouts(plan))) throw new Error('Meta semanal inválida no backup.')
+  }
   return payload
 }
 
@@ -302,6 +303,10 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     value: SettingsData[K],
     successMessage: string,
   ) => {
+    if (key === 'startDate' && typeof value === 'string' && !isDateKey(value)) {
+      showFeedback('Escolha uma data válida para o início do ciclo.', 'error')
+      return
+    }
     setBusy('preference')
     try {
       await commitSetting(key, value)
@@ -359,6 +364,8 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     const goalWeight = Number(imported.get('goalWeight'))
     const routineType = imported.get('routineType')
     const darkMode = imported.get('darkMode')
+    const weeklyWorkoutGoal = imported.get('weeklyWorkoutGoal')
+    const performanceTargets = imported.get('performanceTargets')
 
     if (name) await commitSetting('name', name)
     if (startDate) await commitSetting('startDate', startDate)
@@ -371,6 +378,8 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     if (darkMode === 'true' || darkMode === 'false') {
       await commitSetting('darkMode', darkMode === 'true')
     }
+    if (weeklyWorkoutGoal != null) await commitSetting('weeklyWorkoutGoal', Number(weeklyWorkoutGoal))
+    if (performanceTargets != null) await commitSetting('performanceTargets', parsePerformanceTargets(performanceTargets, plan))
   }
 
   const handleImport = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -505,7 +514,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     <div className="page-content page-enter space-y-8">
       <PageHeader
         eyebrow="Preferências"
-        title="Ajustes"
+        title="Seu perfil"
         description="Personalize seu plano e mantenha seus dados sob controle."
       />
 
@@ -532,6 +541,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
         title="Perfil e metas"
         description="Esses dados calibram seus indicadores de progresso."
       >
+        <GoalEditor settings={settings} updateSetting={updateSetting} />
         <form className="list-surface divide-y divide-line/80" onSubmit={handleProfileSubmit} noValidate>
           <div className="p-4 sm:p-5">
             <label className="label" htmlFor="settings-name">Como quer ser chamado</label>

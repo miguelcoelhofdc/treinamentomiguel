@@ -26,6 +26,7 @@ import ProgressRing from '@/components/ui/ProgressRing'
 import SessionIcon from '@/components/ui/SessionIcon'
 import { getExerciseChecks, toggleExerciseCheck, getDailyLog, saveDailyLog } from '@/db'
 import { localDateKey } from '@/lib/date'
+import { saveDailyActivity } from '@/lib/trainingActivity'
 import plan from '@/data/activePlan'
 import type { DailyLog, Exercise, PhaseId } from '@/types'
 
@@ -75,6 +76,7 @@ export default function Today({ startDate, name }: Props) {
   const [showUndo, setShowUndo] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [mutationError, setMutationError] = useState('')
 
   const loadState = useCallback(async () => {
     setLoadError(false)
@@ -146,6 +148,9 @@ export default function Today({ startDate, name }: Props) {
     try {
       await toggleExerciseCheck(todayStr, id)
       setChecks(await getExerciseChecks(todayStr))
+      setMutationError('')
+    } catch {
+      setMutationError('Não foi possível salvar a marcação. Tente novamente.')
     } finally {
       setPendingChecks(current => {
         const next = new Set(current)
@@ -156,21 +161,27 @@ export default function Today({ startDate, name }: Props) {
   }
 
   const handleMarkDone = async () => {
-    await saveDailyLog({ date: todayStr, workoutDone: true })
+    await saveDailyActivity({ date: todayStr, workoutDone: true })
     setDailyLog(current => ({ ...current, date: todayStr, workoutDone: true }))
   }
 
   const handleConclude = async () => {
     setShowCompletionSheet(false)
-    await handleMarkDone()
-    setShowUndo(true)
-    setShowLog(true)
+    try {
+      await handleMarkDone()
+      setMutationError('')
+      setShowUndo(true)
+      setShowLog(true)
+    } catch { setMutationError('Não foi possível concluir o treino. Tente novamente.') }
   }
 
   const handleUndo = async () => {
-    await saveDailyLog({ date: todayStr, workoutDone: false })
-    setDailyLog(current => ({ ...current, date: todayStr, workoutDone: false }))
-    setShowUndo(false)
+    try {
+      await saveDailyLog({ date: todayStr, workoutDone: false })
+      setDailyLog(current => ({ ...current, date: todayStr, workoutDone: false }))
+      setShowUndo(false)
+      setMutationError('')
+    } catch { setMutationError('Não foi possível desfazer o treino. Tente novamente.') }
   }
 
   const dateLabel = `${DAY_NAMES[today.getDay()]}, ${today.getDate()} de ${MONTH_NAMES[today.getMonth()]}`
@@ -200,8 +211,8 @@ export default function Today({ startDate, name }: Props) {
       <div className="page-content flex min-h-[78dvh] flex-col items-start justify-center page-enter">
         <div className="icon-tile mb-5 h-14 w-14 rounded-[18px]"><Trophy size={28} weight="duotone" /></div>
         <p className="page-kicker mb-2">Ciclo concluído</p>
-        <h1 className="page-title max-w-sm">Você construiu seis meses de consistência.</h1>
-        <p className="mt-3 max-w-sm text-body text-ink-muted">Parabéns, {firstName}. Compare seus testes e escolha o próximo marco.</p>
+        <h1 className="page-title max-w-sm">Você chegou ao fim deste ciclo.</h1>
+        <p className="mt-3 max-w-sm text-body text-ink-muted">Confira seus registros, {firstName}. Compare os testes e escolha o próximo marco.</p>
         <Link to="/progresso" className="btn-primary mt-6">Ver meu progresso</Link>
       </div>
     )
@@ -242,6 +253,7 @@ export default function Today({ startDate, name }: Props) {
           description={dateLabel}
           action={<span className="badge-fase">Semana {training.weekNumber}</span>}
         />
+        {mutationError && <p className="rounded-[18px] border border-red-200 bg-red-50 p-4 text-[13px] text-red-700 dark:bg-red-950/30 dark:text-red-300" role="alert">{mutationError}</p>}
 
         <section className="hero-surface p-5 sm:p-6" aria-labelledby="session-title">
           <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-white/10" aria-hidden="true" />
@@ -388,7 +400,12 @@ export default function Today({ startDate, name }: Props) {
                   <RunningLogForm
                     defaultDate={todayStr}
                     defaultType={training.sessionType === 'qualidade' ? 'qualidade' : 'longa'}
-                    onSaved={() => { setShowRunLog(false); handleMarkDone() }}
+                    onSaved={async log => {
+                      setShowRunLog(false)
+                      if (log.date !== todayStr) return
+                      try { await handleMarkDone(); setMutationError('') }
+                      catch { setMutationError('Corrida salva. Não foi possível concluir a sessão; tente novamente.'); setShowRunLog(true) }
+                    }}
                   />
                 </div>
               )}
@@ -433,6 +450,7 @@ export default function Today({ startDate, name }: Props) {
             {doneExercises === totalExercises
               ? 'Tudo marcado. Confirme a conclusão da sessão.'
               : `${totalExercises - doneExercises} ${totalExercises - doneExercises === 1 ? 'movimento restante' : 'movimentos restantes'}`}
+            {doneExercises === totalExercises && <button className="btn-primary mt-3 w-full" onClick={() => setShowCompletionSheet(true)}>Concluir treino</button>}
           </div>
         )}
       </main>

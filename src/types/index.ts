@@ -180,6 +180,19 @@ export interface DailyLog {
   rpe?: number // 1-10
   notes?: string
   workoutDone?: boolean
+  checkInDone?: boolean
+}
+
+export interface TrainingSettings {
+  startDate: string
+  name: string
+  height: number
+  initialWeight: number
+  goalWeight: number
+  darkMode: boolean
+  routineType: 'morning' | 'evening'
+  weeklyWorkoutGoal: number
+  performanceTargets: Record<string, string | number>
 }
 
 export interface RunningLog {
