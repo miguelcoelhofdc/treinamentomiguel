@@ -2,6 +2,7 @@ import type { AppSettings, Plan, TrainingSettings } from '../types/index.ts'
 import { isDateKey } from './date.ts'
 import { isWeightTest, validateTarget } from './journey.ts'
 import { validateGoal } from './continuousTraining.ts'
+import { validateCoaching } from './coaching.ts'
 
 export type UpdateTrainingSetting = <K extends keyof TrainingSettings>(key: K, value: TrainingSettings[K]) => Promise<void>
 
@@ -21,6 +22,9 @@ export function parsePerformanceTargets(raw: string, plan: Plan): Record<string,
 export function decodeTrainingSettings(rows: AppSettings[], defaults: TrainingSettings, plan: Plan): TrainingSettings {
   const result = { ...defaults }
   for (const { key, value } of rows) {
+    if (key === 'coaching') {
+      try { const parsed: unknown = JSON.parse(value); if (parsed === null || validateCoaching(parsed)) result.coaching = parsed } catch { /* Preserve usable preferences when a stored configuration is invalid. */ }
+    }
     if (key === 'startDate' && isDateKey(value)) result.startDate = value
     if (key === 'name' && value.trim()) result.name = value
     if (key === 'height' && Number(value) >= 100 && Number(value) <= 250) result.height = Number(value)

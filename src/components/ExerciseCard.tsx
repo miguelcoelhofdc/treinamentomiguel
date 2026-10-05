@@ -10,7 +10,7 @@ import {
 } from '@phosphor-icons/react'
 import { getStrengthLog, saveStrengthLog } from '@/db'
 import ViewMovementButton from '@/components/visualizer/ViewMovementButton'
-import type { Exercise, PhaseId, StrengthSet } from '@/types'
+import type { Exercise, ExercisePhaseData, PhaseId, StrengthSet } from '@/types'
 
 interface Props {
   exercise: Exercise
@@ -19,9 +19,11 @@ interface Props {
   onToggle: () => void
   isDeload?: boolean
   date?: string
+  prescription?: ExercisePhaseData
+  disabled?: boolean
 }
 
-export default function ExerciseCard({ exercise, phase, checked, onToggle, isDeload, date }: Props) {
+export default function ExerciseCard({ exercise, phase, checked, onToggle, isDeload, date, prescription, disabled }: Props) {
   const formId = useId()
   const [expanded, setExpanded] = useState(false)
   const [animating, setAnimating] = useState(false)
@@ -30,7 +32,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
   const [reps, setReps] = useState('')
   const [savingSet, setSavingSet] = useState(false)
   const [setError, setSetError] = useState(false)
-  const phaseData = exercise.phases[phase]
+  const phaseData = prescription ?? exercise.phases[phase]
 
   useEffect(() => {
     if (!date) return
@@ -43,7 +45,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
 
   if (!phaseData) return null
 
-  const sets = isDeload ? Math.max(1, phaseData.sets - 1) : phaseData.sets
+  const sets = !prescription && isDeload ? Math.max(1, phaseData.sets - 1) : phaseData.sets
   const repsLabel = phaseData.reps
 
   const handleCheck = () => {
@@ -84,6 +86,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
         <button
           type="button"
           onClick={handleCheck}
+          disabled={disabled}
           aria-label={checked ? `${exercise.name} concluído` : `Marcar ${exercise.name} como concluído`}
           aria-pressed={checked}
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] transition duration-200 active:scale-[0.94]"
@@ -167,7 +170,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
                   <p className="text-[13px] font-bold text-ink">Carga de hoje</p>
                 </div>
                 {loggedSets.length > 0 && (
-                  <button type="button" onClick={undoLastSet} className="btn-ghost px-2.5 text-[13px]">
+                  <button type="button" disabled={disabled} onClick={undoLastSet} className="btn-ghost px-2.5 text-[13px]">
                     <ArrowCounterClockwise size={15} /> Desfazer
                   </button>
                 )}
@@ -195,6 +198,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
                     className="input px-2.5 text-center"
                     placeholder="kg"
                     value={weight}
+                    disabled={disabled}
                     onChange={event => setWeight(event.target.value)}
                   />
                 </div>
@@ -208,6 +212,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
                     className="input px-2.5 text-center"
                     placeholder="reps"
                     value={reps}
+                    disabled={disabled}
                     onChange={event => setReps(event.target.value)}
                   />
                 </div>
@@ -215,7 +220,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
                   type="submit"
                   className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-accent text-canvas transition active:scale-[0.96] disabled:opacity-50"
                   aria-label="Adicionar série"
-                  disabled={!weight || !reps || savingSet}
+                  disabled={disabled || !weight || !reps || savingSet}
                 >
                   <Plus size={20} weight="bold" />
                 </button>

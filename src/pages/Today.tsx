@@ -30,6 +30,7 @@ import TrainingControls from '@/components/journey/TrainingControls'
 import ActivityRecorder from '@/components/journey/ActivityRecorder'
 import { activityCategory, activityName } from '@/lib/continuousTraining'
 import { db } from '@/db'
+import CoachTraining from '@/components/coaching/CoachTraining'
 
 const DAY_NAMES = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
 const MONTH_NAMES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
@@ -59,7 +60,10 @@ interface Props {
   updateSetting: UpdateTrainingSetting
 }
 
-export default function Today({ settings, updateSetting }: Props) {
+export default function Today(props: Props) {
+  return props.settings.coaching ? <CoachTraining settings={props.settings} /> : <LegacyToday {...props} />
+}
+function LegacyToday({ settings, updateSetting }: Props) {
   const today = useMemo(() => new Date(), [])
   const todayStr = localDateKey(today)
   const suggestion = useTrainingDay(settings.startDate, undefined, settings.trainingLevel, settings.lightVolume)

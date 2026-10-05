@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { Check, PencilSimple, SpinnerGap } from '@phosphor-icons/react'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { db } from '@/db'
@@ -9,6 +10,7 @@ import type { TrainingGoal, TrainingSettings } from '@/types'
 
 export default function GoalEditor({ settings, updateSetting, compact = false }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting; compact?: boolean }) {
   const [open, setOpen] = useState(false)
+  if (settings.coaching) return <Link to="/coaching" className={compact ? 'btn-ghost' : 'btn-primary'} aria-label="Ajustar objetivo e disponibilidade">{compact ? 'Editar' : 'Ajustar objetivo e disponibilidade'}</Link>
   return <>
     <button type="button" className={compact ? 'btn-icon' : 'btn-primary'} aria-label={settings.primaryGoal ? 'Editar minha meta' : 'Definir minha meta'} onClick={() => setOpen(true)}><PencilSimple size={19} weight="bold" />{!compact && (settings.primaryGoal ? 'Editar minha meta' : 'Definir minha meta')}</button>
     {open && <GoalsForm settings={settings} updateSetting={updateSetting} onClose={() => setOpen(false)} />}

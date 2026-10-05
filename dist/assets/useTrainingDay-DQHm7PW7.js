@@ -1,0 +1,1 @@
+import{b as e,r as o,N as t,q as u}from"./index-Cadry0SQ.js";function g(s,n,a="base",r=!1){const i=e();return o.useMemo(()=>t(u,s,n??i,a,r),[s,n,i,a,r])}function l(s,n){const a=u.running.levels[s];return n==="qualidade"?a.qualidade:n==="longa"?a.longa:null}export{l as g,g as u};

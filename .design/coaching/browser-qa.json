@@ -1,0 +1,116 @@
+{
+  "checks": [
+    {
+      "name": "layout setup-preview",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "miguel configuration saved",
+      "pass": true
+    },
+    {
+      "name": "miguel calendar persisted",
+      "pass": true
+    },
+    {
+      "name": "miguel optional target",
+      "pass": true
+    },
+    {
+      "name": "layout miguel home",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "miguel starts from home in one action",
+      "pass": true
+    },
+    {
+      "name": "layout miguel training",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "miguel actual activity linked",
+      "pass": true
+    },
+    {
+      "name": "miguel undo preserves snapshot",
+      "pass": true
+    },
+    {
+      "name": "miguel started prescription preserved after switch",
+      "pass": true
+    },
+    {
+      "name": "layout miguel week",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout miguel month",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "miguel execution and result separate",
+      "pass": true
+    }
+  ],
+  "audits": [
+    {
+      "label": "setup-preview",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "miguel home",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "miguel training",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "miguel week",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "miguel month",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    }
+  ],
+  "errors": [
+    "Error: Error: Missing: Dados e backup\n    at <anonymous>:1:274\n    at <anonymous>:1:319\n    at run (file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/coaching/qa.mjs:18:38)\n    at async click (file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/coaching/qa.mjs:22:31)\n    at async file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/coaching/qa.mjs:85:5"
+  ]
+}

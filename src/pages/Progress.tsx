@@ -29,6 +29,7 @@ import { goalProgress, goalUnit } from '@/lib/continuousTraining'
 import { useJourney } from '@/hooks/useJourney'
 import { effectiveTarget, hasCheckIn } from '@/lib/journey'
 import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
+import CoachSummary from '@/components/coaching/CoachSummary'
 
 interface ProgressProps {
   initialWeight: number
@@ -173,15 +174,14 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
 
   const qualityPaces = useMemo(
     () => runData
-      .filter((run) => run.type === 'qualidade' && Number.isFinite(run.paceMinKm) && (run.paceMinKm ?? 0) > 0)
+      .filter((run) => Number.isFinite(run.paceMinKm) && (run.paceMinKm ?? 0) > 0)
       .map((run) => run.paceMinKm as number),
     [runData],
   )
 
   const chartableRuns = useMemo(
     () => runData.filter((run) =>
-      (run.type === 'qualidade' || run.type === 'longa')
-      && Number.isFinite(run.paceMinKm)
+      Number.isFinite(run.paceMinKm)
       && (run.paceMinKm ?? 0) > 0,
     ),
     [runData],
@@ -238,6 +238,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
     {journey.error && <div role="alert" className="subtle-alert mb-6"><p>Não foi possível carregar as atividades.</p><button className="btn-ghost" onClick={journey.retry}>Tentar novamente</button></div>}
     <div role="tabpanel" id="evolution-panel" aria-labelledby={'evolution-tab-' + section}>
     {section === 'resumo' && <>
+      {settings.coaching && <CoachSummary settings={settings} />}
       <section className="evolution-metric" aria-label="Resumo da sua evolução"><p className="page-kicker mb-3">Seu movimento até aqui</p><h2 className="evolution-metric-value">{journey.loaded ? journey.stats.workouts : '—'}</h2><p className="evolution-metric-label">dias ativos</p><p className="mt-4 text-[14px] text-ink-muted">{minutes.toLocaleString('pt-BR')} minutos registrados</p><div className="mt-5"><ActivityRecorder settings={settings} updateSetting={updateSetting} primary /></div></section>
       <CollapsiblePanel id="running-progress" title="Corrida" description="Distância, ritmo e registros">
         <div className="flex flex-wrap gap-6 mb-6"><div><p className="text-[24px] font-medium">{distanceFormatter.format(totalKm)} km</p><p className="helper">{runData.length} sessões</p></div><div><p className="text-[24px] font-medium">{formatPace(bestPace)}</p><p className="helper">Melhor pace de qualidade · min/km</p></div></div>
@@ -358,6 +359,7 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
       {journey.activities.length ? <ActivityHistory activities={journey.activities} /> : <div className="state-block"><h2>Seu histórico começa com um passo</h2><p>Registre uma atividade ou conclua seu treino. Os registros aparecerão aqui.</p><Link to="/hoje" className="btn-secondary">Abrir treino</Link></div>}
     </>}
     {section === 'metas' && <>
+      {settings.coaching && <CoachSummary settings={settings} />}
       <GoalCard settings={settings} updateSetting={updateSetting} activities={journey.activities} logs={journey.logs} today={journey.today} editable={false} />
       <div className="mb-8"><GoalEditor settings={settings} updateSetting={updateSetting} /></div>
       {settings.goalHistory.length > 0 && <CollapsiblePanel id="previous-goals" title="Metas anteriores" description="O caminho que você já percorreu"><ol className="divide-y divide-line">{[...settings.goalHistory].reverse().map(goal => { const result = goalProgress(goal, journey.activities, journey.logs, journey.today); return <li key={goal.id} className="py-4"><p className="text-[16px] font-medium">{goal.title}</p><p className="helper">{result.current == null ? 'Sem resultado registrado' : result.current.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' ' + goalUnit(goal)} · alvo {goal.target} {goalUnit(goal)} · {result.achieved ? 'Alcançada' : 'Encerrada'}</p></li> })}</ol></CollapsiblePanel>}

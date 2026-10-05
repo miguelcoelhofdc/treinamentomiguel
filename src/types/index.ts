@@ -198,6 +198,58 @@ export interface TrainingSettings {
   primaryGoal: TrainingGoal | null
   goalHistory: TrainingGoal[]
   customActivities: string[]
+  coaching: CoachingSettings | null
+}
+
+export type CoachingObjective = 'consistency' | 'muscle' | 'running' | 'active'
+export type CoachingEquipment = 'gym' | 'dumbbells' | 'band' | 'bench'
+export type CoachingFeedback = 'easy' | 'okay' | 'hard'
+export interface CoachingSettings {
+  version: 1
+  id: string
+  revision: number
+  objective: CoachingObjective
+  startDate: string
+  effectiveDate: string
+  weekdays: number[]
+  minutes: number
+  level: PhaseId
+  location: 'gym' | 'home' | 'outdoors'
+  equipment: CoachingEquipment[]
+  restrictions: ('shoulder' | 'knee')[]
+  runningAbility: 'new' | 'intervals' | 'continuous'
+}
+export interface SessionBlock {
+  id: string
+  label: string
+  instruction: string
+  durationSeconds: number
+  exercise?: Exercise
+  prescription?: ExercisePhaseData
+}
+export interface PlannedSession {
+  id: string
+  date: string
+  coachingId: string
+  revision: number
+  objective: CoachingObjective
+  templateKey: string
+  stage: number
+  phase: PhaseId
+  activity: 'forca' | 'corrida' | 'caminhada' | 'mobilidade' | 'descanso'
+  label: string
+  reason: string
+  blocks: SessionBlock[]
+  estimatedMinutes: number
+  isTraining: boolean
+  light: boolean
+  status: 'planned' | 'started' | 'completed' | 'missed' | 'recovery'
+  startedAt?: string
+  feedback?: CoachingFeedback
+  pain?: boolean
+  actualDurationMin?: number
+  distanceKm?: number
+  activityLogId?: string
 }
 
 export interface ActivityLog {
@@ -208,6 +260,7 @@ export interface ActivityLog {
   durationMin?: number
   distanceKm?: number
   completed: boolean
+  plannedSessionId?: string
 }
 
 export interface TrainingGoal {

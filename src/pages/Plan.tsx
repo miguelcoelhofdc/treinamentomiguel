@@ -18,6 +18,7 @@ import { addCalendarDays, isDateKey } from '@/lib/date'
 import TrainingControls from '@/components/journey/TrainingControls'
 import type { TrainingSettings } from '@/types'
 import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
+import CoachPlan from '@/components/coaching/CoachPlan'
 
 const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
@@ -33,7 +34,10 @@ function getExercises(subtype: string): Exercise[] {
   return []
 }
 
-export default function Plan({ settings, updateSetting }: Props) {
+export default function Plan(props: Props) {
+  return props.settings.coaching ? <CoachPlan settings={props.settings} /> : <LegacyPlan {...props} />
+}
+function LegacyPlan({ settings, updateSetting }: Props) {
   const todayTraining = useTrainingDay(settings.startDate, undefined, settings.trainingLevel, settings.lightVolume)
   const [searchParams] = useSearchParams()
   const requestedDate = searchParams.get('data')

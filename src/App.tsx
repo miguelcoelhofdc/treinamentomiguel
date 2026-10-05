@@ -4,6 +4,7 @@ import BottomNav from '@/components/BottomNav'
 import { useSettings } from '@/hooks/useSettings'
 import Access from '@/pages/Access'
 import { useLocalDay } from '@/hooks/useLocalDay'
+import { CoachingProvider } from '@/hooks/useCoaching'
 import { AchievementCelebration } from '@/components/journey/Achievements'
 import {
   ACCESS_PROFILES,
@@ -15,6 +16,7 @@ import {
 const Today = lazy(() => import('@/pages/Today'))
 const Journey = lazy(() => import('@/pages/Journey'))
 const Plan = lazy(() => import('@/pages/Plan'))
+const CoachingSetup = lazy(() => import('@/pages/CoachingSetup'))
 const Progress = lazy(() => import('@/pages/Progress'))
 const Guides = lazy(() => import('@/pages/Guides'))
 const Settings = lazy(() => import('@/pages/Settings'))
@@ -70,11 +72,12 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
   return (
     <div className="app-shell training-theme">
       <ScrollToTop />
-      <Suspense fallback={<AppSkeleton />}>
+      <CoachingProvider settings={settings}><Suspense fallback={<AppSkeleton />}>
         <Routes>
           <Route path="/" element={<Journey settings={settings} updateSetting={updateSetting} />} />
           <Route path="/hoje" element={<Today key={today} settings={settings} updateSetting={updateSetting} />} />
           <Route path="/plano" element={<Plan settings={settings} updateSetting={updateSetting} />} />
+          <Route path="/coaching" element={<CoachingSetup settings={settings} />} />
           <Route
             path="/progresso"
             element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} settings={settings} updateSetting={updateSetting} />}
@@ -95,7 +98,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
           {DevVisualizer && <Route path="/dev/viz" element={<DevVisualizer />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Suspense>
+      </Suspense></CoachingProvider>
       <div id="training-overlays" />
       <BottomNav />
       <AchievementCelebration />

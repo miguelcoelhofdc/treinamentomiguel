@@ -39,6 +39,7 @@ import plan from '@/data/activePlan'
 import { isActivityLog, validateGoal } from '@/lib/continuousTraining'
 import TrainingControls from '@/components/journey/TrainingControls'
 import { parsePerformanceTargets, type UpdateTrainingSetting } from '@/lib/trainingSettings'
+import { validateCoaching, validatePlannedSession } from '@/lib/coaching'
 import type {
   ActivityLog,
   AppSettings,
@@ -47,6 +48,7 @@ import type {
   RunningLog,
   StrengthLog,
   TrainingSettings,
+  PlannedSession,
 } from '@/types'
 
 type SettingsData = TrainingSettings
@@ -69,6 +71,7 @@ interface BackupPayload {
   settings: AppSettings[]
   exerciseChecks: ExerciseCheck[]
   activities: ActivityLog[]
+  plannedSessions: PlannedSession[]
 }
 
 type Feedback = { message: string; type: 'success' | 'error' }
@@ -81,7 +84,7 @@ type ProfileDraft = {
 }
 type ProfileField = keyof ProfileDraft
 
-const BACKUP_FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks', 'activities'] as const
+const BACKUP_FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks', 'activities', 'plannedSessions'] as const
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -163,6 +166,7 @@ function parseBackup(raw: string): BackupPayload {
     settings: (parsed.settings ?? []) as AppSettings[],
     exerciseChecks: (parsed.exerciseChecks ?? []) as ExerciseCheck[],
     activities: (parsed.activities ?? []) as ActivityLog[],
+    plannedSessions: (parsed.plannedSessions ?? []) as PlannedSession[],
   }
 
   if (!payload.daily.every(isDailyLog)
@@ -170,11 +174,14 @@ function parseBackup(raw: string): BackupPayload {
     || !payload.strength.every(isStrengthLog)
     || !payload.settings.every(isAppSetting)
     || !payload.exerciseChecks.every(isExerciseCheck)
-    || !payload.activities.every(isActivityLog)) {
+    || !payload.activities.every(isActivityLog)
+    || !payload.plannedSessions.every(validatePlannedSession)
+    || new Set(payload.plannedSessions.map(item => item.id)).size !== payload.plannedSessions.length) {
     throw new Error('Há registros corrompidos ou incompatíveis no backup.')
   }
 
   for (const { key, value } of payload.settings) {
+    if (key === 'coaching' && JSON.parse(value) !== null && !validateCoaching(JSON.parse(value))) throw new Error('Configuração de coaching inválida no backup.')
     if (key === 'performanceTargets') parsePerformanceTargets(value, plan)
     if (key === 'primaryGoal' && JSON.parse(value) !== null && !validateGoal(JSON.parse(value))) throw new Error('Meta principal inválida no backup.')
     if (key === 'goalHistory' && (!Array.isArray(JSON.parse(value)) || !JSON.parse(value).every(validateGoal))) throw new Error('Histórico de metas inválido no backup.')
@@ -200,6 +207,7 @@ function recordCount(payload: BackupPayload): number {
     + payload.settings.length
     + payload.exerciseChecks.length
     + payload.activities.length
+    + payload.plannedSessions.length
 }
 
 const GROUPS = ['Dados pessoais', 'Treino e rotina', 'Aparência', 'Conta', 'Dados e backup']
@@ -331,17 +339,18 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
   const handleExport = async () => {
     setBusy('export')
     try {
-      const [daily, running, strength, storedSettings, exerciseChecks, activities] = await Promise.all([
+      const [daily, running, strength, storedSettings, exerciseChecks, activities, plannedSessions] = await Promise.all([
         db.dailyLogs.toArray(),
         db.runningLogs.toArray(),
         db.strengthLogs.toArray(),
         db.settings.toArray(),
         db.exerciseChecks.toArray(),
         db.activityLogs.toArray(),
+        db.plannedSessions.toArray(),
       ])
       const payload: BackupPayload = {
         kind: `treino-${profileId}-backup`,
-        schemaVersion: 2,
+        schemaVersion: 3,
         exportedAt: new Date().toISOString(),
         daily,
         running,
@@ -349,6 +358,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
         settings: storedSettings,
         exerciseChecks,
         activities,
+        plannedSessions,
       }
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -389,7 +399,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     if (darkMode === 'true' || darkMode === 'false') {
       await commitSetting('darkMode', darkMode === 'true')
     }
-    for (const key of ['primaryGoal', 'goalHistory', 'customActivities', 'lightVolume'] as const) {
+    for (const key of ['primaryGoal', 'goalHistory', 'customActivities', 'lightVolume', 'coaching'] as const) {
       const value = imported.get(key)
       if (value != null) await commitSetting(key, JSON.parse(value))
     }
@@ -416,7 +426,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
 
       await db.transaction(
         'rw',
-        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs],
+        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions],
         async () => {
           for (const importedLog of payload.daily) {
             const log = stripId(importedLog)
@@ -453,6 +463,11 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             const sourceId = /^run:(\d+)$/.exec(activity.id)
             const restoredId = sourceId ? runIdMap.get(Number(sourceId[1])) : undefined
             await db.activityLogs.put({ ...activity, id: restoredId == null ? activity.id : 'run:' + restoredId })
+          }
+          for (const session of payload.plannedSessions) {
+            const sourceId = /^run:(\d+)$/.exec(session.activityLogId ?? '')
+            const restoredId = sourceId ? runIdMap.get(Number(sourceId[1])) : undefined
+            await db.plannedSessions.put({ ...session, activityLogId: restoredId == null ? session.activityLogId : `run:${restoredId}` })
           }
           for (const importedLog of payload.strength) {
             const log = stripId(importedLog)
@@ -516,7 +531,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     try {
       await db.transaction(
         'rw',
-        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.exerciseChecks, db.activityLogs],
+        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.exerciseChecks, db.activityLogs, db.plannedSessions],
         async () => {
           await Promise.all([
             db.dailyLogs.clear(),
@@ -524,6 +539,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             db.strengthLogs.clear(),
             db.exerciseChecks.clear(),
             db.activityLogs.clear(),
+            db.plannedSessions.clear(),
           ])
         },
       )

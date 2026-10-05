@@ -10,10 +10,14 @@ import { hasCheckIn, planDates } from '@/lib/journey'
 import { goalProgress } from '@/lib/continuousTraining'
 import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
 import type { TrainingSettings } from '@/types'
+import CoachHome from '@/components/coaching/CoachHome'
 
 const DAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 
-export default function Journey({ settings, updateSetting: _updateSetting }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting }) {
+export default function Journey(props: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting }) {
+  return props.settings.coaching ? <CoachHome settings={props.settings} /> : <LegacyJourney {...props} />
+}
+function LegacyJourney({ settings, updateSetting: _updateSetting }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting }) {
   const { today, logs, activities, stats, loaded, error, retry } = useJourney(settings.startDate)
   const suggestion = useTrainingDay(settings.startDate, today, settings.trainingLevel, settings.lightVolume)
   const log = stats.byDate.get(today)
@@ -26,6 +30,7 @@ export default function Journey({ settings, updateSetting: _updateSetting }: { s
     {!loaded ? <div aria-busy="true" aria-label="Carregando início" className="space-y-6"><div className="skeleton h-48" /><div className="skeleton h-20" /><div className="skeleton h-16" /></div>
     : error ? <div className="state-block" role="alert"><h2>Não foi possível abrir seus registros</h2><p>Tente carregar novamente para continuar.</p><button className="btn-primary" onClick={retry}>Tentar novamente</button></div>
     : <>
+      <section className="coach-invitation"><h2 className="text-title">Um plano para o seu objetivo</h2><p className="mt-2 text-[14px] text-ink-muted">Conte o que quer e quanto tempo tem. Receba seu treino de hoje, da semana e do mês.</p><Link to="/coaching" className="btn-primary mt-4">Montar meu plano<ArrowRight size={18} /></Link></section>
       <QuickCheckIn date={today} checkedIn={stats.todayCheckedIn} log={log} prominent />
       <section className="home-session" aria-label="Seu treino de hoje">
         <span className="session-shortcut-icon" aria-hidden="true"><SessionIcon type={session.type} size={28} /></span>

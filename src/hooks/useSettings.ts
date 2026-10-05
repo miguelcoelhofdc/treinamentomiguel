@@ -10,7 +10,7 @@ const DEFAULTS: TrainingSettings = {
   height: plan.profile.height, initialWeight: plan.profile.initialWeight,
   goalWeight: Number(plan.profile.goals.weight), darkMode: false, routineType: 'morning',
   performanceTargets: {}, trainingLevel: 'base', lightVolume: false,
-  sessionDurationMin: 30, primaryGoal: null, goalHistory: [], customActivities: [],
+  sessionDurationMin: 30, primaryGoal: null, goalHistory: [], customActivities: [], coaching: null,
 }
 
 export function useSettings() {

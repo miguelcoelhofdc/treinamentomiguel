@@ -7,6 +7,7 @@ import type { UpdateTrainingSetting } from '@/lib/trainingSettings'
 
 export default function GoalCard({ settings, updateSetting, activities, logs, today, editable = true }: { settings: TrainingSettings; updateSetting: UpdateTrainingSetting; activities: ActivityLog[]; logs: DailyLog[]; today: string; editable?: boolean }) {
   const goal = settings.primaryGoal
+  if (settings.coaching && !goal) return null
   const progress = goal ? goalProgress(goal, activities, logs, today) : null
   const format = (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
   return <section className="personal-target" aria-labelledby="primary-goal-title">
