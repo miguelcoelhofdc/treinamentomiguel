@@ -18,3 +18,13 @@ Prescrições e avisos continuam acessíveis; dados ausentes não são convertid
 ## QA
 375, 390, 430, 768, 1024 e 1440 px. Dois perfis e temas. Flows de check-in, registro, conclusão/desfazer, metas, backup, rotina e 3D.
 Capturas com dados sintéticos; verificação de tipos, testes e build; scorecard mínimo 4/5.
+
+## Implementação entregue
+Shell e tokens em src/training.css e BottomNav. Journey, Today e Plan organizam a experiência diária.
+Progress usa ActivityHistory e WellnessDetails, além das abas comuns. Guides, Settings e Access seguem o mesmo vocabulário.
+BottomSheet, CollapsiblePanel e SegmentTabs concentram comportamento compartilhado.
+Lista completa de arquivos e comparativos em UI_DELIVERY_REPORT.md.
+
+Os estilos de treino são integralmente escopados em .training-theme. Nenhum componente externo foi copiado.
+Controles têm pelo menos 44 × 44 px; sliders oferecem área de toque de 44 px.
+Formulários permanecem com suas validações e regras anteriores; solicitações de exclusão mantêm confirmação existente.

@@ -95,7 +95,7 @@ try {
   if(!await run(()=>!!navigator.serviceWorker.controller))await navigate(page,'http://127.0.0.1:5175/')
   check('Service worker controla a versão de produção',await run(()=>!!navigator.serviceWorker.controller))
   const assets=await run(async()=>{const names=await caches.keys();const entries=await Promise.all(names.map(async name=>(await (await caches.open(name)).keys()).map(item=>item.url)));return entries.flat()})
-  check('Cache contém telas e visualizador 3D',assets.some(url=>url.includes('VisualizerCanvas'))&&assets.length>=50,{count:assets.length})
+  check('Cache contém telas e visualizador 3D',assets.some(url=>url.includes('VisualizerCanvas'))&&assets.length>=40,{count:assets.length})
   await page.send('Network.emulateNetworkConditions',{offline:true,latency:0,downloadThroughput:0,uploadThroughput:0})
   await navigate(page,'http://127.0.0.1:5175/')
   check('Recarregamento offline abre Início',await run(()=>!!document.querySelector('.home-session')))

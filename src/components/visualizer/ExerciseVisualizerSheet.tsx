@@ -116,7 +116,7 @@ export default function ExerciseVisualizerSheet({ exerciseId, exerciseName, phas
               <button
                 type="button"
                 onClick={() => setSpeed(current => (current === 1 ? 0.5 : 1))}
-                className="btn-secondary min-h-12 shrink-0 px-3 text-[13px] tabular-nums"
+                className="btn-secondary min-h-12 min-w-11 shrink-0 px-3 text-[13px] tabular-nums"
                 aria-label={`Velocidade ${speed === 1 ? 'normal' : 'metade'}. Alternar.`}
               >
                 {speed === 1 ? '1×' : '0.5×'}

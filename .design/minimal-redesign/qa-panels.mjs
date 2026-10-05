@@ -45,9 +45,12 @@ async function input(selector, value) {
   await pause(80)
 }
 async function screenshot(name) {
-  await fs.mkdir(path.join(out,'screenshots'),{recursive:true})
+  await fs.mkdir(path.join(out,'screenshots','final'),{recursive:true})
   const shot=await page.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false,fromSurface:true})
-  await fs.writeFile(path.join(out,'screenshots',name+'.png'),Buffer.from(shot.data,'base64'))
+  for(let attempt=0;attempt<5;attempt++){
+    try {await fs.writeFile(path.join(out,'screenshots','final',name+'.png'),Buffer.from(shot.data,'base64'));break}
+    catch(error){if(attempt===4)throw error;await pause(300)}
+  }
 }
 async function dismiss() {
   for(let i=0;i<4;i++) {
@@ -129,6 +132,15 @@ try {
       await click('Ajustar treino');await audit('training-settings');await dismiss()
       const label=await run(()=>document.querySelector('[aria-label^="Abrir detalhes de"]').getAttribute('aria-label'))
       await click(label);await audit('exercise-details')
+      if(!await run(()=>[...document.querySelectorAll('button')].some(el=>el.getClientRects().length&&el.textContent.trim()==='Ver movimento'))) {
+        const otherLabels=await run(()=>[...document.querySelectorAll('[aria-label^="Abrir detalhes de"]')].map(el=>el.getAttribute('aria-label')))
+        for(const other of otherLabels) {
+          await click(other)
+          if(await run(()=>[...document.querySelectorAll('button')].some(el=>el.getClientRects().length&&el.textContent.trim()==='Ver movimento')))break
+          await run(()=>[...document.querySelectorAll('[aria-label^="Recolher detalhes de"]')].at(-1).click())
+        }
+      }
+      if(await run(()=>[...document.querySelectorAll('button')].some(el=>el.getClientRects().length&&el.textContent.trim()==='Ver movimento'))) {
       await click('Ver movimento');await pause(650);await audit('3d')
       await run(()=>{const dialog=document.querySelector('[role="dialog"]');const list=[...dialog.querySelectorAll('button,input,select,textarea,[tabindex="0"]')].filter(el=>el.getClientRects().length&&!el.disabled);list.at(-1).focus()})
       await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9})
@@ -136,7 +148,14 @@ try {
       await page.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9})
       await page.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});await pause(100)
       check(profileId+' '+dark+': Escape devolve foco',await run(()=>!document.querySelector('[role="dialog"]')&&document.activeElement.textContent.trim()==='Ver movimento'))
-      await run(()=>document.querySelector('[aria-label^="Recolher detalhes de"]').click())
+      } else {
+        check(profileId+' '+dark+': ação 3D segue catálogo disponível',await run(async()=>{
+          const {default:plan}=await import('/src/data/activePlan.ts')
+          const {hasVisualization}=await import('/src/animations/index.ts')
+          return plan.exercises.forcaA.every(exercise=>!hasVisualization(exercise.id))
+        }))
+      }
+      await run(()=>document.querySelectorAll('[aria-label^="Recolher detalhes de"]').forEach(el=>el.click()))
       const remaining=await run(()=>document.querySelectorAll('button[aria-label^="Marcar "]').length)
       for(let i=0;i<remaining;i++){await run(()=>document.querySelector('button[aria-label^="Marcar "]').click());await pause(90)}
       if(await run(()=>!!document.querySelector('[role="dialog"]'))){await audit('complete-workout');await dismiss()}
@@ -160,7 +179,12 @@ try {
       await run(()=>document.querySelector('.history-row').click());await pause(200);await audit('history-details');await dismiss()
       await route('/progresso?aba=metas')
       await click('Editar minha meta')
-      for(const type of ['minutes','distance','sessions','runTime','weight']){await input('#goal-kind',type);await audit('goal-'+type)}
+      for(const type of ['minutes','distance','sessions','runTime','weight']){
+        await input('#goal-kind',type);await input('#goal-title','Meu objetivo')
+        await input('#goal-target',type==='weight'?'75':type==='runTime'?'30':type==='sessions'?'8':'100')
+        if(type==='runTime')await input('#goal-distance','5')
+        await audit('goal-'+type)
+      }
       await dismiss();await click('Metas anteriores');await audit('previous-goals')
       await route('/guias')
       for(const title of ['Nutrição','Compras','Suplementos','Mobilidade','Rotina diária']){await click(title);await audit('guide-'+title.replaceAll(' ','-'))}

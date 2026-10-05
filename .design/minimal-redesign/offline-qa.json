@@ -1,0 +1,73 @@
+{
+  "checks": [
+    {
+      "name": "Service worker controla a versão de produção",
+      "pass": true
+    },
+    {
+      "name": "Cache contém telas e visualizador 3D",
+      "pass": true,
+      "detail": {
+        "count": 48
+      }
+    },
+    {
+      "name": "Recarregamento offline abre Início",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /hoje",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /plano",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /guias",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /ajustes",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /progresso?aba=resumo",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /progresso?aba=saude",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /progresso?aba=historico",
+      "pass": true
+    },
+    {
+      "name": "Rota offline /progresso?aba=metas",
+      "pass": true
+    },
+    {
+      "name": "Check-in salva sem rede",
+      "pass": true
+    },
+    {
+      "name": "3D carrega sem rede",
+      "pass": true
+    },
+    {
+      "name": "URL direta funciona sem rede",
+      "pass": true
+    },
+    {
+      "name": "Check-in persiste após recarregar offline",
+      "pass": true
+    },
+    {
+      "name": "Produção offline sem erros de execução",
+      "pass": true,
+      "detail": []
+    }
+  ],
+  "errors": []
+}

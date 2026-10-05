@@ -17,9 +17,32 @@
       "pass": true
     },
     {
-      "name": "Matriz completa de painéis",
-      "pass": false,
-      "detail": "Error: Error: Control missing: Ver movimento\n    at <anonymous>:1:224\n    at <anonymous>:1:297\n    at run (file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/minimal-redesign/qa-panels.mjs:16:36)\n    at async click (file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/minimal-redesign/qa-panels.mjs:40:3)\n    at async file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/minimal-redesign/qa-panels.mjs:132:7"
+      "name": "sintia false: ação 3D segue catálogo disponível",
+      "pass": true
+    },
+    {
+      "name": "sintia true: ação 3D segue catálogo disponível",
+      "pass": true
+    },
+    {
+      "name": "Páginas e painéis sem rolagem horizontal",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "Todos os alvos de ação medem pelo menos 44 × 44 px",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "Diálogos centralizados no desktop",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "name": "Painéis sem erros de execução",
+      "pass": true,
+      "detail": []
     }
   ],
   "audits": [
@@ -517,9 +540,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 462.5,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 381.5,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -531,9 +554,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 462.5,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 381.5,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -545,9 +568,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 462.5,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 381.5,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -559,9 +582,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 458.5,
+        "top": 453.40625,
         "bottom": 820,
-        "height": 361.5,
+        "height": 366.59375,
         "centered": false
       }
     },
@@ -573,9 +596,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 319.25,
-        "bottom": 680.75,
-        "height": 361.5,
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
         "centered": true
       }
     },
@@ -587,9 +610,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 319.25,
-        "bottom": 680.75,
-        "height": 361.5,
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
         "centered": true
       }
     },
@@ -643,9 +666,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 96,
+        "top": 70,
         "bottom": 820,
-        "height": 724,
+        "height": 750,
         "centered": false
       }
     },
@@ -657,9 +680,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138,
-        "bottom": 862,
-        "height": 724,
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
         "centered": true
       }
     },
@@ -671,9 +694,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138,
-        "bottom": 862,
-        "height": 724,
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
         "centered": true
       }
     },
@@ -905,13 +928,7 @@
       "width": 375,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 228.28125,
         "bottom": 844,
@@ -925,13 +942,7 @@
       "width": 390,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 228.28125,
         "bottom": 844,
@@ -945,13 +956,7 @@
       "width": 430,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 248.28125,
         "bottom": 844,
@@ -965,13 +970,7 @@
       "width": 768,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 224.28125,
         "bottom": 820,
@@ -985,13 +984,7 @@
       "width": 1024,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 172.5,
         "bottom": 827.5,
@@ -1005,13 +998,7 @@
       "width": 1440,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 172.5,
         "bottom": 827.5,
@@ -1165,9 +1152,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1179,9 +1166,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1193,9 +1180,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1207,9 +1194,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 105,
+        "top": 79,
         "bottom": 820,
-        "height": 715,
+        "height": 741,
         "centered": false
       }
     },
@@ -1221,9 +1208,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -1235,9 +1222,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -1603,9 +1590,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 27.5,
+        "top": 24,
         "bottom": 844,
-        "height": 816.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1617,9 +1604,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 27.5,
+        "top": 24,
         "bottom": 844,
-        "height": 816.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1631,9 +1618,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 27.5,
+        "top": 24,
         "bottom": 844,
-        "height": 816.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1645,9 +1632,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 97,
+        "top": 85,
         "bottom": 820,
-        "height": 723,
+        "height": 735,
         "centered": false
       }
     },
@@ -1659,9 +1646,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138.5,
-        "bottom": 861.5,
-        "height": 723,
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
         "centered": true
       }
     },
@@ -1673,9 +1660,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138.5,
-        "bottom": 861.5,
-        "height": 723,
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
         "centered": true
       }
     },
@@ -1933,9 +1920,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1947,9 +1934,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1961,9 +1948,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -1975,9 +1962,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 105,
+        "top": 79,
         "bottom": 820,
-        "height": 715,
+        "height": 741,
         "centered": false
       }
     },
@@ -1989,9 +1976,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -2003,9 +1990,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -3709,9 +3696,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 462.5,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 381.5,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -3723,9 +3710,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 462.5,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 381.5,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -3737,9 +3724,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 462.5,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 381.5,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -3751,9 +3738,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 458.5,
+        "top": 453.40625,
         "bottom": 820,
-        "height": 361.5,
+        "height": 366.59375,
         "centered": false
       }
     },
@@ -3765,9 +3752,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 319.25,
-        "bottom": 680.75,
-        "height": 361.5,
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
         "centered": true
       }
     },
@@ -3779,9 +3766,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 319.25,
-        "bottom": 680.75,
-        "height": 361.5,
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
         "centered": true
       }
     },
@@ -3835,9 +3822,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 96,
+        "top": 70,
         "bottom": 820,
-        "height": 724,
+        "height": 750,
         "centered": false
       }
     },
@@ -3849,9 +3836,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138,
-        "bottom": 862,
-        "height": 724,
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
         "centered": true
       }
     },
@@ -3863,9 +3850,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138,
-        "bottom": 862,
-        "height": 724,
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
         "centered": true
       }
     },
@@ -4097,13 +4084,7 @@
       "width": 375,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 228.28125,
         "bottom": 844,
@@ -4117,13 +4098,7 @@
       "width": 390,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 228.28125,
         "bottom": 844,
@@ -4137,13 +4112,7 @@
       "width": 430,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 248.28125,
         "bottom": 844,
@@ -4157,13 +4126,7 @@
       "width": 768,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 224.28125,
         "bottom": 820,
@@ -4177,13 +4140,7 @@
       "width": 1024,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 172.5,
         "bottom": 827.5,
@@ -4197,13 +4154,7 @@
       "width": 1440,
       "name": "3d",
       "overflow": false,
-      "small": [
-        {
-          "text": "1×",
-          "width": 40.78125,
-          "height": 45.5
-        }
-      ],
+      "small": [],
       "panel": {
         "top": 172.5,
         "bottom": 827.5,
@@ -4357,9 +4308,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -4371,9 +4322,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -4385,9 +4336,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -4399,9 +4350,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 105,
+        "top": 79,
         "bottom": 820,
-        "height": 715,
+        "height": 741,
         "centered": false
       }
     },
@@ -4413,9 +4364,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -4427,9 +4378,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -4795,9 +4746,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 27.5,
+        "top": 24,
         "bottom": 844,
-        "height": 816.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -4809,9 +4760,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 27.5,
+        "top": 24,
         "bottom": 844,
-        "height": 816.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -4823,9 +4774,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 27.5,
+        "top": 24,
         "bottom": 844,
-        "height": 816.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -4837,9 +4788,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 97,
+        "top": 85,
         "bottom": 820,
-        "height": 723,
+        "height": 735,
         "centered": false
       }
     },
@@ -4851,9 +4802,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138.5,
-        "bottom": 861.5,
-        "height": 723,
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
         "centered": true
       }
     },
@@ -4865,9 +4816,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138.5,
-        "bottom": 861.5,
-        "height": 723,
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
         "centered": true
       }
     },
@@ -5125,9 +5076,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -5139,9 +5090,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -5153,9 +5104,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 41.5,
+        "top": 24,
         "bottom": 844,
-        "height": 802.5,
+        "height": 820,
         "centered": false
       }
     },
@@ -5167,9 +5118,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 105,
+        "top": 79,
         "bottom": 820,
-        "height": 715,
+        "height": 741,
         "centered": false
       }
     },
@@ -5181,9 +5132,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -5195,9 +5146,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 142.5,
-        "bottom": 857.5,
-        "height": 715,
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
         "centered": true
       }
     },
@@ -6901,9 +6852,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 452.90625,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 391.09375,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -6915,9 +6866,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 452.90625,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 391.09375,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -6929,9 +6880,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 452.90625,
+        "top": 457.40625,
         "bottom": 844,
-        "height": 391.09375,
+        "height": 386.59375,
         "centered": false
       }
     },
@@ -6943,9 +6894,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 448.90625,
+        "top": 453.40625,
         "bottom": 820,
-        "height": 371.09375,
+        "height": 366.59375,
         "centered": false
       }
     },
@@ -6957,9 +6908,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 314.453125,
-        "bottom": 685.546875,
-        "height": 371.09375,
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
         "centered": true
       }
     },
@@ -6971,9 +6922,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 314.453125,
-        "bottom": 685.546875,
-        "height": 371.09375,
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
         "centered": true
       }
     },
@@ -7027,9 +6978,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 96,
+        "top": 70,
         "bottom": 820,
-        "height": 724,
+        "height": 750,
         "centered": false
       }
     },
@@ -7041,9 +6992,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138,
-        "bottom": 862,
-        "height": 724,
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
         "centered": true
       }
     },
@@ -7055,9 +7006,9 @@
       "overflow": false,
       "small": [],
       "panel": {
-        "top": 138,
-        "bottom": 862,
-        "height": 724,
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
         "centered": true
       }
     },
@@ -7279,6 +7230,5274 @@
       "dark": false,
       "width": 1440,
       "name": "exercise-details",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 461,
+        "bottom": 820,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 320.5,
+        "bottom": 679.5,
+        "height": 359,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 320.5,
+        "bottom": 679.5,
+        "height": 359,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 79,
+        "bottom": 820,
+        "height": 741,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 167,
+        "bottom": 844,
+        "height": 677,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 167,
+        "bottom": 844,
+        "height": 677,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 167,
+        "bottom": 844,
+        "height": 677,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 163,
+        "bottom": 820,
+        "height": 657,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 171.5,
+        "bottom": 828.5,
+        "height": 657,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 171.5,
+        "bottom": 828.5,
+        "height": 657,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 85,
+        "bottom": 820,
+        "height": 735,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 12,
+        "bottom": 988,
+        "height": 976,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 12,
+        "bottom": 988,
+        "height": 976,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 79,
+        "bottom": 820,
+        "height": 741,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 347.5,
+        "bottom": 844,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 347.5,
+        "bottom": 844,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 347.5,
+        "bottom": 844,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 323.5,
+        "bottom": 820,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 251.75,
+        "bottom": 748.25,
+        "height": 496.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 251.75,
+        "bottom": 748.25,
+        "height": 496.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 42.75,
+        "bottom": 957.25,
+        "height": 914.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 42.75,
+        "bottom": 957.25,
+        "height": 914.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 89.5,
+        "bottom": 910.5,
+        "height": 821,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 89.5,
+        "bottom": 910.5,
+        "height": 821,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 375,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 390,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 430,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 768,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1024,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": false,
+      "width": 1440,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--hoje",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--hoje",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--hoje",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--hoje",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--hoje",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--hoje",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--plano",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--plano",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--plano",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--plano",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--plano",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--plano",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--guias",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--guias",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--guias",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--guias",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--guias",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--guias",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--ajustes",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--ajustes",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--ajustes",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--ajustes",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--ajustes",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--ajustes",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--progresso-aba-resumo",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--progresso-aba-resumo",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--progresso-aba-resumo",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--progresso-aba-resumo",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--progresso-aba-resumo",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--progresso-aba-resumo",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--progresso-aba-saude",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--progresso-aba-saude",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--progresso-aba-saude",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--progresso-aba-saude",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--progresso-aba-saude",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--progresso-aba-saude",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--progresso-aba-historico",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--progresso-aba-historico",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--progresso-aba-historico",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--progresso-aba-historico",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--progresso-aba-historico",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--progresso-aba-historico",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "page--progresso-aba-metas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "page--progresso-aba-metas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "page--progresso-aba-metas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "page--progresso-aba-metas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "page--progresso-aba-metas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "page--progresso-aba-metas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "checkin-quick",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 457.40625,
+        "bottom": 844,
+        "height": 386.59375,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "checkin-quick",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 457.40625,
+        "bottom": 844,
+        "height": 386.59375,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "checkin-quick",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 457.40625,
+        "bottom": 844,
+        "height": 386.59375,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "checkin-quick",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 453.40625,
+        "bottom": 820,
+        "height": 366.59375,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "checkin-quick",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "checkin-quick",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 316.703125,
+        "bottom": 683.296875,
+        "height": 366.59375,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "checkin-complete",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "checkin-complete",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "checkin-complete",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "checkin-complete",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 70,
+        "bottom": 820,
+        "height": 750,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "checkin-complete",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "checkin-complete",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 125,
+        "bottom": 875,
+        "height": 750,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "activity-picker",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 507.5,
+        "bottom": 844,
+        "height": 336.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "activity-picker",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 507.5,
+        "bottom": 844,
+        "height": 336.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "activity-picker",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 527.5,
+        "bottom": 844,
+        "height": 316.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "activity-picker",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 503.5,
+        "bottom": 820,
+        "height": 316.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "activity-picker",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 341.75,
+        "bottom": 658.25,
+        "height": 316.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "activity-picker",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 341.75,
+        "bottom": 658.25,
+        "height": 316.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "training-settings",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "training-settings",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "training-settings",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "training-settings",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 461,
+        "bottom": 820,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "training-settings",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 320.5,
+        "bottom": 679.5,
+        "height": 359,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "training-settings",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 320.5,
+        "bottom": 679.5,
+        "height": 359,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "exercise-details",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "exercise-details",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "exercise-details",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "exercise-details",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "exercise-details",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "exercise-details",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 485,
+        "bottom": 844,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 461,
+        "bottom": 820,
+        "height": 359,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 320.5,
+        "bottom": 679.5,
+        "height": 359,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "complete-workout",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 320.5,
+        "bottom": 679.5,
+        "height": 359,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "training-wellness",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 79,
+        "bottom": 820,
+        "height": 741,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "training-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "session-calistenia",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "session-qualidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "session-caminhada",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "session-descanso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 167,
+        "bottom": 844,
+        "height": 677,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 167,
+        "bottom": 844,
+        "height": 677,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 167,
+        "bottom": 844,
+        "height": 677,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 163,
+        "bottom": 820,
+        "height": 657,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 171.5,
+        "bottom": 828.5,
+        "height": 657,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "free-activity",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 171.5,
+        "bottom": 828.5,
+        "height": 657,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "evolution-Corrida",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 85,
+        "bottom": 820,
+        "height": 735,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "running-form",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 132.5,
+        "bottom": 867.5,
+        "height": 735,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "evolution-Recordes-de-força",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "evolution-Testes-de-performance",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "evolution-Constância-e-conquistas",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 12,
+        "bottom": 988,
+        "height": 976,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "achievements",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 12,
+        "bottom": 988,
+        "height": 976,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 79,
+        "bottom": 820,
+        "height": 741,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "health-checkin",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 129.5,
+        "bottom": 870.5,
+        "height": 741,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "health-Evolução-do-peso",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "health-Último-check-in",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 347.5,
+        "bottom": 844,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 347.5,
+        "bottom": 844,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 347.5,
+        "bottom": 844,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 323.5,
+        "bottom": 820,
+        "height": 496.5,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 251.75,
+        "bottom": 748.25,
+        "height": 496.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "history-details",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 251.75,
+        "bottom": 748.25,
+        "height": 496.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "goal-minutes",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "goal-distance",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "goal-sessions",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 43.75,
+        "bottom": 956.25,
+        "height": 912.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 42.75,
+        "bottom": 957.25,
+        "height": 914.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "goal-runTime",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 42.75,
+        "bottom": 957.25,
+        "height": 914.5,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 24,
+        "bottom": 844,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 0,
+        "bottom": 820,
+        "height": 820,
+        "centered": false
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 89.5,
+        "bottom": 910.5,
+        "height": 821,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "goal-weight",
+      "overflow": false,
+      "small": [],
+      "panel": {
+        "top": 89.5,
+        "bottom": 910.5,
+        "height": 821,
+        "centered": true
+      }
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "previous-goals",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "guide-Nutrição",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "guide-Compras",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "guide-Suplementos",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "guide-Mobilidade",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "guide-Rotina-diária",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "settings-Dados-pessoais",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "settings-Treino-e-rotina",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "settings-Aparência",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "settings-Conta",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 375,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 390,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 430,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 768,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1024,
+      "name": "settings-Dados-e-backup",
+      "overflow": false,
+      "small": [],
+      "panel": null
+    },
+    {
+      "profile": "sintia",
+      "dark": true,
+      "width": 1440,
+      "name": "settings-Dados-e-backup",
       "overflow": false,
       "small": [],
       "panel": null
