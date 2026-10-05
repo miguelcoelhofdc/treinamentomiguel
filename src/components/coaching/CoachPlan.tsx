@@ -22,7 +22,7 @@ export default function CoachPlan({ settings }: { settings: TrainingSettings }) 
   const start = view === 'month' ? monthStart(anchor) : anchor, end = view === 'month' ? monthEnd(anchor) : addCalendarDays(anchor, 6)
   const projection = useMemo(() => buildCoachingPlan(settings.coaching!, plan, sessions, logs, today, end > today ? end : today), [settings.coaching, sessions, logs, today, end])
   const visible = projection.filter(item => item.date >= start && item.date <= end), training = visible.filter(item => item.isTraining)
-  const plannedMinutes = training.reduce((sum, item) => sum + item.estimatedMinutes, 0), actualMinutes = training.filter(item => item.status === 'completed').reduce((sum, item) => sum + (item.actualDurationMin ?? 0), 0)
+  const plannedMinutes = training.reduce((sum, item) => sum + item.estimatedMinutes, 0), actualMinutes = training.filter(item => item.status === 'completed' && item.date <= today).reduce((sum, item) => sum + (item.actualDurationMin ?? 0), 0)
   const stats = coachingAdherence(visible, today, start, end)
   const move = (delta: number) => { setParams({ data: view === 'week' ? addCalendarDays(anchor, delta * 7) : shiftMonth(anchor, delta), visao: view === 'month' ? 'mes' : 'semana' }); setExpanded(null) }
   return <main className="page-content training-form-page page-enter">

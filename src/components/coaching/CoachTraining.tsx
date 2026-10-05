@@ -7,6 +7,7 @@ import { checkCoachingExercise, completeCoachingSession, startCoachingSession, u
 import { useCoaching } from '@/hooks/useCoaching'
 import { useLocalDay } from '@/hooks/useLocalDay'
 import { formatShortDate } from '@/lib/date'
+import { hasSessionPain } from '@/lib/coaching'
 import PageHeader from '@/components/ui/PageHeader'
 import BottomSheet from '@/components/ui/BottomSheet'
 import ExerciseCard from '@/components/ExerciseCard'
@@ -41,6 +42,7 @@ export default function CoachTraining({ settings: _settings }: { settings: Train
     <main className="page-content training-form-page page-enter space-y-6">
       <PageHeader title="Seu treino de hoje" description={formatShortDate(today)} action={<Link to="/plano" className="btn-ghost">Meu plano</Link>} />
       {mutationError && <p role="alert" className="coach-error">{mutationError}</p>}
+      {started && hasSessionPain(log) && <p className="coach-error" role="alert">Você registrou dor. Pause a sessão e evite os movimentos dolorosos. Sua prescrição fica salva e a progressão será pausada.</p>}
       <section className="training-session-header"><p className="page-kicker">{completed ? 'Sessão concluída' : started ? 'Sessão em andamento' : 'Seu próximo passo'}</p><h2 id="session-title" className="training-session-title mt-2">{session.label}</h2>{session.estimatedMinutes > 0 && <p className="coach-duration"><Clock size={18} />{session.estimatedMinutes} min estimados{session.light ? ' · Versão leve' : ''}</p>}<p className="mt-4 text-[14px] leading-6 text-ink-muted">{session.reason}</p>
         {completed ? <><p className="mt-4 flex items-center gap-2 text-accent-strong"><CheckCircle size={22} />Treino registrado{session.actualDurationMin ? ' · ' + session.actualDurationMin + ' min realizados' : ''}</p><button className="inline-link mt-3" disabled={busy} onClick={() => void action(() => undoCoachingSession(session.id))}>Desfazer conclusão</button></> : session.isTraining && !started ? <button className="btn-primary mt-5 w-full" disabled={busy} onClick={() => void action(() => startCoachingSession(session.id))}>{busy ? <SpinnerGap size={20} className="animate-spin" /> : <Play size={20} />}Começar treino</button> : null}
         <div className="mt-3"><Link to="/coaching" className="inline-link">Ajustar objetivo e disponibilidade</Link>{started && <p className="helper mt-1">Este treino já começou e ficará preservado. Ajustes valem para as próximas sessões.</p>}</div>

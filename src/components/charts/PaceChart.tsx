@@ -18,6 +18,7 @@ interface PaceDatum {
   label: string
   qualidade?: number
   longa?: number
+  livre?: number
 }
 
 interface TooltipPayload {
@@ -85,7 +86,6 @@ export default function PaceChart({ data }: PaceChartProps) {
       pace == null
       || !Number.isFinite(pace)
       || pace <= 0
-      || (run.type !== 'qualidade' && run.type !== 'longa')
     ) continue
 
     const point = grouped.get(run.date) ?? {
@@ -101,7 +101,7 @@ export default function PaceChart({ data }: PaceChartProps) {
   const chartData = Array.from(grouped.values()).sort((a, b) => a.date.localeCompare(b.date))
   if (chartData.length === 0) return null
 
-  const paceValues = chartData.flatMap((point) => [point.qualidade, point.longa])
+  const paceValues = chartData.flatMap((point) => [point.qualidade, point.longa, point.livre])
     .filter((value): value is number => value != null && Number.isFinite(value))
   const rawMin = Math.min(...paceValues)
   const rawMax = Math.max(...paceValues)
@@ -111,15 +111,18 @@ export default function PaceChart({ data }: PaceChartProps) {
   const showDots = chartData.length <= 10
 
   return (
-    <div role="img" aria-label="Gráfico cronológico do pace das corridas de qualidade e longas">
+    <div role="img" aria-label="Gráfico cronológico do pace das corridas registradas">
       <div className="flex flex-wrap items-center justify-between gap-3 px-2 pb-2">
         <p className="text-[11px] font-semibold text-ink-muted">Quanto menor o pace, mais rápido.</p>
-        <div className="flex items-center gap-4 text-[11px] font-semibold text-ink-muted" aria-hidden="true">
+        <div className="flex flex-wrap items-center gap-4 text-[11px] font-semibold text-ink-muted" aria-hidden="true">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-0.5 w-4 rounded-full bg-accent" /> Qualidade
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="w-4 border-t-2 border-dashed border-ink-soft" /> Longa
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-4 border-t-2 border-dotted border-accent" /> Livre
           </span>
         </div>
       </div>
@@ -173,6 +176,7 @@ export default function PaceChart({ data }: PaceChartProps) {
             connectNulls
             isAnimationActive={false}
           />
+          <Line type="monotone" dataKey="livre" name="Livre" stroke={accentColor} strokeWidth={2.5} strokeDasharray="2 4" dot={showDots ? { r: 3, fill: surfaceColor, stroke: accentColor, strokeWidth: 2 } : false} connectNulls isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>

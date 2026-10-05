@@ -56,7 +56,7 @@ describe('coaching setup and calendar', () => {
   it('offers an explained short alternative rather than a misleading full strength workout', () => {
     const row = generate({ objective: 'muscle', minutes: 5 })[0]
     assert.equal(row.activity, 'mobilidade'); assert.equal(row.templateKey, 'preparation')
-    assert.match(row.reason, /não comporta/)
+    assert.match(row.reason, /não comportam/)
     assert.equal(generate({ objective: 'running', minutes: 5 })[0].templateKey, 'walk:preparation')
   })
   it('never schedules consecutive full-body strength or runs, even for seven days', () => {
@@ -65,6 +65,18 @@ describe('coaching setup and calendar', () => {
       for (let i = 1; i < rows.length; i++) if (['forca', 'corrida'].includes(rows[i].activity)) assert.notEqual(rows[i - 1].activity, rows[i].activity)
       assert.equal(rows.slice(0, 7).filter(item => item.isTraining).length, 7)
     }
+  })
+  it('respects newly reported gym limitations even when the original exercise has no caution', () => {
+    const row = generate({ location: 'gym', equipment: ['gym'], restrictions: ['shoulder'] }, [], [], today, sintiaPlan)[0]
+    assert.ok(row.blocks.every(item => !/supino|remada|puxada|pallof/i.test(item.label)))
+  })
+  it('does not create another workout over a legacy activity already completed today', () => {
+    const row = generate({}, [], [{ date: today, workoutDone: true }])[0]
+    assert.equal(row.isTraining, false); assert.match(row.reason, /já registrou/)
+  })
+  it('starts continuous running at the declared capacity rather than filling all available time', () => {
+    const row = generate({ objective: 'running', minutes: 90, runningAbility: 'continuous' })[0]
+    assert.equal(row.blocks.find(item => item.id === 'run').durationSeconds, 20 * 60)
   })
 })
 
@@ -132,5 +144,23 @@ describe('adaptive coaching and stable prescriptions', () => {
     const session = generate()[0]
     assert.ok(validatePlannedSession(JSON.parse(JSON.stringify(session))))
     for (const patch of [{ date: '2026-02-30' }, { blocks: [{ id: 'a', label: 'a', instruction: 'a', durationSeconds: -1 }] }, { feedback: 'unknown' }, { stage: 9 }, { actualDurationMin: NaN }]) assert.equal(validatePlannedSession({ ...session, ...patch }), false)
+  })
+  it('respects recovery after an extra strength activity logged outside the coaching', () => {
+    const row = generate({ objective: 'muscle' }, [], [{ date: '2026-10-04', workoutDone: true, sessionType: 'forcaA' }])[0]
+    assert.notEqual(row.activity, 'forca')
+  })
+  it('pain reported in another completed template also pauses progression', () => {
+    const first = generate({ objective: 'muscle' })[0]
+    const stored = [done(first, '2026-10-01'), done(first, '2026-10-02'), done(first, '2026-10-03', { templateKey: 'strength:B', pain: true })]
+    const next = generate({ objective: 'muscle' }, stored).find(item => item.date >= today && item.templateKey === first.templateKey)
+    assert.equal(next.stage, 0); assert.equal(next.light, true)
+  })
+  it('does not count future completion records toward current or monthly adherence', () => {
+    const session = generate()[0]
+    assert.deepEqual(coachingAdherence([done(session, '2026-10-10')], today, '2026-10-01', '2026-10-31'), { due: 0, completed: 0, percent: null })
+  })
+  it('shows a dated explanation instead of an endless loader for a future configuration', () => {
+    const row = generate({ startDate: '2026-11-01', effectiveDate: '2026-11-01' })[0]
+    assert.equal(row.date, today); assert.equal(row.isTraining, false); assert.match(row.reason, /01\/11\/2026/)
   })
 })

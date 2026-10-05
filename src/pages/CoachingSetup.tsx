@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, SpinnerGap } from '@phosphor-icons/react'
 import PageHeader from '@/components/ui/PageHeader'
@@ -9,6 +9,7 @@ import { COACHING_LEVELS, COACHING_OBJECTIVES, buildCoachingPlan, objectiveTitle
 import { validateGoal } from '@/lib/continuousTraining'
 import { formatShortDate, localDateKey } from '@/lib/date'
 import type { CoachingSettings, CoachingObjective, TrainingGoal, TrainingSettings } from '@/types'
+import { useCoaching } from '@/hooks/useCoaching'
 
 const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const STEPS = ['Objetivo', 'Disponibilidade', 'Condições', 'Meu plano']
@@ -16,7 +17,13 @@ const METRICS: Record<TrainingGoal['kind'], string> = { sessions: 'Sessões no p
 const number = (text: string) => Number(text.replace(',', '.'))
 export default function CoachingSetup({ settings }: { settings: TrainingSettings }) {
   const navigate = useNavigate(), today = localDateKey(), current = settings.coaching
+  const existing = useCoaching()
   const [step, setStep] = useState(0), [objective, setObjective] = useState<CoachingObjective | null>(current?.objective ?? null)
+  const formRef = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => { const heading = formRef.current?.querySelector('h2'); if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }) } })
+    return () => cancelAnimationFrame(frame)
+  }, [step])
   const [weekdays, setWeekdays] = useState(current?.weekdays ?? suggestedWeekdays(3, today))
   const [minutes, setMinutes] = useState(String(current?.minutes ?? Math.max(5, Math.min(180, settings.sessionDurationMin))))
   const [level, setLevel] = useState(current?.level ?? settings.trainingLevel)
@@ -36,8 +43,9 @@ export default function CoachingSetup({ settings }: { settings: TrainingSettings
   const config: CoachingSettings = { version: 1, id: changedObjective ? configId : current.id, revision: (current?.revision ?? 0) + 1, objective: objective ?? 'consistency', startDate: changedObjective ? today : current.startDate, effectiveDate: today, weekdays: [...weekdays].sort((a, b) => a - b), minutes: number(minutes), level, location, equipment: location === 'gym' ? [...new Set([...equipment, 'gym' as const])] : equipment.filter(item => item !== 'gym'), restrictions, runningAbility }
   function makeGoal(): TrainingGoal | null {
     if (!useTarget) return null
-    const existing = !changedObjective ? settings.primaryGoal : null
-    return { id: existing?.id ?? configId, title: `${objectiveTitle(config.objective)} · ${METRICS[kind].toLowerCase()}`, activity: kind === 'weight' ? 'peso' : kind === 'runTime' || config.objective === 'running' ? 'corrida' : config.objective === 'muscle' ? 'forca' : 'all', kind, target: number(target), startDate: existing?.startDate ?? today, ...(deadline ? { endDate: deadline } : {}), ...(kind === 'runTime' ? { distanceKm: number(distance) } : {}), ...(kind === 'weight' ? { baseline: existing?.kind === 'weight' ? existing.baseline : settings.initialWeight } : {}) }
+    const existingGoal = !changedObjective ? settings.primaryGoal : null
+    const latestWeight = [...existing.logs].filter(log => log.date <= today && log.weightKg != null && Number.isFinite(log.weightKg)).sort((a, b) => a.date.localeCompare(b.date)).at(-1)?.weightKg ?? settings.initialWeight
+    return { id: existingGoal?.id ?? configId, title: `${objectiveTitle(config.objective)} · ${METRICS[kind].toLowerCase()}`, activity: kind === 'weight' ? 'peso' : kind === 'runTime' || config.objective === 'running' ? 'corrida' : config.objective === 'muscle' ? 'forca' : 'all', kind, target: number(target), startDate: existingGoal?.startDate ?? today, ...(deadline ? { endDate: deadline } : {}), ...(kind === 'runTime' ? { distanceKm: number(distance) } : {}), ...(kind === 'weight' ? { baseline: existingGoal?.kind === 'weight' ? existingGoal.baseline : latestWeight } : {}) }
   }
   function next() {
     setError('')
@@ -56,16 +64,16 @@ export default function CoachingSetup({ settings }: { settings: TrainingSettings
     try { await configureCoaching(config, goal, settings); navigate('/') }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível salvar. Tente novamente.'); setBusy(false) }
   }
-  const preview = step === 3 && validateCoaching(config) ? buildCoachingPlan(config, plan, [], [], today).slice(0, 7) : []
+  const preview = step === 3 && validateCoaching(config) ? buildCoachingPlan(config, plan, existing.sessions, existing.logs, today).filter(item => item.date >= today).slice(0, 7) : []
   return <main className="page-content coaching-setup page-enter">
     <PageHeader title={current ? 'Ajustar meu plano' : 'Vamos montar seu plano'} description="Você conta o que quer. Seu coaching organiza o caminho." action={<Link to="/" className="btn-ghost">Fechar</Link>} />
     <ol className="coach-steps" aria-label="Etapas da configuração">{STEPS.map((title, index) => <li key={title} aria-current={index === step ? 'step' : undefined} className={index === step ? 'coach-step-current' : index < step ? 'coach-step-done' : ''}><span>{index < step ? <Check size={16} /> : index + 1}</span><p>{title}</p></li>)}</ol>
-    <form onSubmit={event => void save(event)} noValidate>
+    <form ref={formRef} onSubmit={event => void save(event)} noValidate>
       <fieldset disabled={busy} className="space-y-6">
         {step === 0 && <>
           <div><p className="page-kicker">Um foco por vez</p><h2 className="text-title mt-2">O que você quer alcançar?</h2></div>
           <div className="coach-objectives">{COACHING_OBJECTIVES.map(item => <button type="button" key={item.id} aria-pressed={objective === item.id} className={'coach-objective ' + (objective === item.id ? 'coach-selected' : '')} onClick={() => { setObjective(item.id); if (objective !== item.id) { setUseTarget(false); setTarget(''); setDeadline(''); setKind(item.id === 'active' ? 'minutes' : item.id === 'running' ? 'distance' : 'sessions') } }}><SessionIcon type={item.icon} size={28} /><span><strong>{item.title}</strong><span>{item.description}</span></span>{objective === item.id && <Check size={20} />}</button>)}</div>
-          <label className="coach-checkbox"><input type="checkbox" checked={useTarget} onChange={event => setUseTarget(event.target.checked)} />Quero definir uma quantidade ou um prazo</label>
+          <label className="coach-checkbox"><input type="checkbox" checked={useTarget} onChange={event => setUseTarget(event.target.checked)} />Quero definir uma meta numérica</label>
           {useTarget && <div className="coach-target space-y-4"><div><label className="label" htmlFor="coach-metric">Como acompanhar o resultado?</label><select id="coach-metric" className="input" value={kind} onChange={event => setKind(event.target.value as TrainingGoal['kind'])}>{Object.entries(METRICS).filter(([id]) => (objective === 'running' || !['distance', 'runTime'].includes(id))).map(([id, title]) => <option key={id} value={id}>{title}</option>)}</select></div><div><label className="label" htmlFor="coach-target">{kind === 'sessions' ? 'Quantidade de sessões' : kind === 'weight' ? 'Peso corporal desejado · kg' : kind === 'distance' ? 'Distância acumulada · km' : 'Tempo · minutos'}</label><input id="coach-target" className="input" inputMode="decimal" value={target} onChange={event => setTarget(event.target.value)} /></div>{kind === 'runTime' && <div><label className="label" htmlFor="coach-distance">Distância da tentativa · km</label><input id="coach-distance" className="input" inputMode="decimal" value={distance} onChange={event => setDistance(event.target.value)} /></div>}<div><label className="label" htmlFor="coach-deadline">Prazo · opcional</label><input id="coach-deadline" type="date" className="input" min={today} value={deadline} onChange={event => setDeadline(event.target.value)} /></div><p className="helper">{kind === 'weight' ? 'Peso corporal não mede massa muscular. Cargas e repetições serão acompanhadas separadamente.' : 'A meta usa apenas resultados registrados. O plano se adapta ao seu nível e ao tempo disponível.'}</p></div>}
           {!useTarget && <p className="helper">Seu plano já funciona sem um número. Vamos acompanhar os treinos realizados.</p>}
         </>}

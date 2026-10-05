@@ -1,0 +1,61 @@
+{
+  "checks": [
+    {
+      "name": "miguel configures offline from cached chunks",
+      "pass": true
+    },
+    {
+      "name": "miguel saves actual run offline",
+      "pass": true
+    },
+    {
+      "name": "miguel reload retains completed snapshot offline",
+      "pass": true
+    },
+    {
+      "name": "miguel month works offline",
+      "pass": true
+    },
+    {
+      "name": "miguel actual run reaches performance chart",
+      "pass": true
+    },
+    {
+      "name": "miguel completed snapshot survives offline objective switch",
+      "pass": true
+    },
+    {
+      "name": "miguel data stays in its own database",
+      "pass": true
+    },
+    {
+      "name": "sintia configures offline from cached chunks",
+      "pass": true
+    },
+    {
+      "name": "sintia saves actual run offline",
+      "pass": true
+    },
+    {
+      "name": "sintia reload retains completed snapshot offline",
+      "pass": true
+    },
+    {
+      "name": "sintia month works offline",
+      "pass": true
+    },
+    {
+      "name": "sintia actual run reaches performance chart",
+      "pass": true
+    },
+    {
+      "name": "sintia completed snapshot survives offline objective switch",
+      "pass": true
+    },
+    {
+      "name": "sintia data stays in its own database",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

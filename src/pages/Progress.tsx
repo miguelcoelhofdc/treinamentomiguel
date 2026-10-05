@@ -241,8 +241,8 @@ export default function Progress({ initialWeight, goalWeight, settings, updateSe
       {settings.coaching && <CoachSummary settings={settings} />}
       <section className="evolution-metric" aria-label="Resumo da sua evolução"><p className="page-kicker mb-3">Seu movimento até aqui</p><h2 className="evolution-metric-value">{journey.loaded ? journey.stats.workouts : '—'}</h2><p className="evolution-metric-label">dias ativos</p><p className="mt-4 text-[14px] text-ink-muted">{minutes.toLocaleString('pt-BR')} minutos registrados</p><div className="mt-5"><ActivityRecorder settings={settings} updateSetting={updateSetting} primary /></div></section>
       <CollapsiblePanel id="running-progress" title="Corrida" description="Distância, ritmo e registros">
-        <div className="flex flex-wrap gap-6 mb-6"><div><p className="text-[24px] font-medium">{distanceFormatter.format(totalKm)} km</p><p className="helper">{runData.length} sessões</p></div><div><p className="text-[24px] font-medium">{formatPace(bestPace)}</p><p className="helper">Melhor pace de qualidade · min/km</p></div></div>
-        {chartableRuns.length ? <PaceChart data={chartableRuns} /> : <div className="state-block"><h2>Ainda não há pace comparável</h2><p>Registre uma corrida de qualidade ou longa para acompanhar o ritmo.</p></div>}
+        <div className="flex flex-wrap gap-6 mb-6"><div><p className="text-[24px] font-medium">{distanceFormatter.format(totalKm)} km</p><p className="helper">{runData.length} sessões</p></div><div><p className="text-[24px] font-medium">{formatPace(bestPace)}</p><p className="helper">Melhor pace registrado · min/km</p></div></div>
+        {chartableRuns.length ? <PaceChart data={chartableRuns} /> : <div className="state-block"><h2>Ainda não há pace comparável</h2><p>Registre tempo e distância de uma corrida para acompanhar o ritmo.</p></div>}
         <button className="btn-secondary mt-4" onClick={() => setShowRunForm(true)}><Plus size={18} />Registrar corrida</button>
       </CollapsiblePanel>
       {strengthRecords.length > 0 && <CollapsiblePanel id="strength-progress" title="Recordes de força" description="Melhores cargas por exercício">

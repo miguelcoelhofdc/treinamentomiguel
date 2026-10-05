@@ -52,7 +52,7 @@ const GYM_GROUPS: Record<string, CatalogEntry['group']> = {
 }
 function catalog(plan: Plan, config: CoachingSettings, pain = false): CatalogEntry[] {
   const gym: CatalogEntry[] = [...plan.exercises.forcaA, ...plan.exercises.forcaB, ...plan.exercises.forcaC]
-    .filter(exercise => GYM_GROUPS[exercise.id]).map(exercise => ({ exercise, equipment: ['gym'], restrictions: exercise.caution === 'ombro' ? ['shoulder'] : exercise.caution === 'joelho' ? ['knee'] : [], group: GYM_GROUPS[exercise.id] }))
+    .filter(exercise => GYM_GROUPS[exercise.id]).map(exercise => ({ exercise, equipment: ['gym'], restrictions: GYM_GROUPS[exercise.id] === 'legs' ? ['knee'] : ['shoulder'], group: GYM_GROUPS[exercise.id] }))
   const restrictions = pain ? ['shoulder', 'knee'] : config.restrictions
   return [...gym, ...HOME_CATALOG].filter(entry => entry.equipment.every(item => config.equipment.includes(item)) && !entry.restrictions.some(item => restrictions.includes(item)))
 }
@@ -64,12 +64,13 @@ export function hasSessionPain(log?: DailyLog) { return (log?.shoulderPain ?? 0)
 function progression(config: CoachingSettings, key: string, sessions: PlannedSession[]) {
   const rows = sessions.filter(item => item.coachingId === config.id && item.templateKey === key && item.status === 'completed').sort((a, b) => a.date.localeCompare(b.date))
   const last = rows.at(-1)
+  const latestSession = sessions.filter(item => item.coachingId === config.id && item.status === 'completed').sort((a, b) => a.date.localeCompare(b.date)).at(-1)
   const baseline = key === 'run' ? config.runningAbility === 'new' ? 0 : config.runningAbility === 'intervals' ? 1 : 6 : phases.indexOf(config.level)
-  if (!last) return { stage: baseline, light: false }
+  if (!last) return { stage: baseline, light: latestSession?.pain === true }
   const lastStage = Math.max(baseline, last.stage)
   const qualifying = rows.slice(-2)
-  const canAdvance = qualifying.length === 2 && qualifying.every(item => item.stage === lastStage && !item.light && !item.pain && (item.feedback === 'easy' || item.feedback === 'okay'))
-  return { stage: Math.min(key === 'run' ? 8 : 2, lastStage + (canAdvance ? 1 : 0)), light: last.feedback === 'hard' || last.pain === true }
+  const canAdvance = !latestSession?.pain && qualifying.length === 2 && qualifying.every(item => item.stage === lastStage && !item.light && !item.pain && (item.feedback === 'easy' || item.feedback === 'okay'))
+  return { stage: Math.min(key === 'run' ? 8 : 2, lastStage + (canAdvance ? 1 : 0)), light: last.feedback === 'hard' || last.pain === true || latestSession?.pain === true }
 }
 
 function training(config: CoachingSettings, plan: Plan, date: string, kind: 'strength' | 'run' | 'walk' | 'movement', slot: number, history: PlannedSession[], log?: DailyLog): PlannedSession {
@@ -105,16 +106,18 @@ function training(config: CoachingSettings, plan: Plan, date: string, kind: 'str
       used += duration
     }
     if (blocks.length < 3) {
-      activity = 'mobilidade'; label = 'Preparação curta'; reason = 'Seu tempo ou equipamento não comporta uma sessão completa de força. Hoje faremos uma preparação curta.'
-      blocks = [block('short', 'Movimento confortável', 'Alterne 1 min de marcha leve e 1 min de respiração em pé ou sentado. Evite qualquer movimento que cause dor.', Math.min(budget, 600))]
+      activity = 'mobilidade'; label = 'Preparação curta'; reason = 'Seu tempo, equipamento ou limitações não comportam uma sessão completa de força. Hoje faremos uma preparação curta.'
+      blocks = [block('short', 'Movimento confortável', 'Em uma posição confortável, em pé ou sentado, alterne 1 min de respiração tranquila e 1 min de pequenos movimentos confortáveis. Não force as articulações e interrompa qualquer movimento doloroso.', Math.min(budget, 600))]
     } else {
       blocks.push(cooldown)
+      if (chosen.length < 4 || blocks.length < 6) label = 'Força — rotina adaptada'
       if (blocks.length < chosen.length + 2) reason += ' A sessão foi encurtada para caber no tempo disponível.'
       if (!available.some(entry => entry.group === 'pull')) reason += ' Um elástico ou halteres ampliam as opções de puxada.'
     }
   } else if (kind === 'run' && budget >= 900 && !config.restrictions.includes('knee')) {
     const warm = 300, cool = 300
-    const available = Math.min(budget - warm - cool, (light ? 10 : 15 + stage * 5) * 60)
+    const workMinutes = light ? 10 : config.runningAbility === 'continuous' ? 20 + Math.max(0, stage - 6) * 5 : 15 + Math.min(stage, 4) * 5
+    const available = Math.min(budget - warm - cool, workMinutes * 60)
     blocks = [block('warmup', 'Aquecimento · 5 min', 'Caminhe confortavelmente e aumente o ritmo aos poucos.', warm)]
     if (config.runningAbility === 'continuous' && !light) {
       label = 'Corrida confortável'
@@ -170,8 +173,14 @@ export function buildCoachingPlan(config: CoachingSettings, plan: Plan, stored: 
     result.push(past.isTraining ? { ...past, status: 'missed' } : past)
   }
   const start = today < config.effectiveDate ? config.effectiveDate : today
+  if (today < start) result.push(recovery(config, today, `Seu plano começa em ${config.effectiveDate.split('-').reverse().join('/')}. Até lá, consulte a agenda ou ajuste sua disponibilidade.`))
   let lastStrength = history.filter(item => item.date < today && item.status === 'completed' && item.activity === 'forca').at(-1)?.date
   let lastRun = history.filter(item => item.date < today && item.status === 'completed' && item.activity === 'corrida').at(-1)?.date
+  const priorLogs = [...logs.values()].filter(log => log.date < today && log.workoutDone).sort((a, b) => a.date.localeCompare(b.date))
+  const loggedStrength = priorLogs.filter(log => log.sessionType?.startsWith('forca')).at(-1)?.date
+  const loggedRun = priorLogs.filter(log => ['corrida', 'qualidade', 'longa', 'livre'].includes(log.sessionType ?? '')).at(-1)?.date
+  if (loggedStrength && (!lastStrength || loggedStrength > lastStrength)) lastStrength = loggedStrength
+  if (loggedRun && (!lastRun || loggedRun > lastRun)) lastRun = loggedRun
   for (let date = start; date <= through; date = addCalendarDays(date, 1)) {
     const previous = byDate.get(date)
     if (previous && (previous.startedAt || previous.status === 'completed')) {
@@ -179,6 +188,10 @@ export function buildCoachingPlan(config: CoachingSettings, plan: Plan, stored: 
       if (previous.isTraining) cursor++
       if (previous.activity === 'forca') lastStrength = date
       if (previous.activity === 'corrida') lastRun = date
+      continue
+    }
+    if (date === today && logs.get(today)?.workoutDone) {
+      result.push(recovery(config, date, 'Você já registrou uma atividade hoje. O novo planejamento começa na próxima sessão disponível; seu registro continua na Evolução.'))
       continue
     }
     if (!config.weekdays.includes(weekday(date))) {
@@ -198,7 +211,7 @@ export function buildCoachingPlan(config: CoachingSettings, plan: Plan, stored: 
   return result.sort((a, b) => a.date.localeCompare(b.date))
 }
 export function coachingAdherence(sessions: PlannedSession[], today: string, from?: string, through = today) {
-  const due = sessions.filter(item => item.isTraining && (!from || item.date >= from) && item.date <= through && (item.date < today || item.status === 'completed'))
+  const due = sessions.filter(item => item.isTraining && (!from || item.date >= from) && item.date <= through && item.date <= today && (item.date < today || item.status === 'completed'))
   const completed = due.filter(item => item.status === 'completed').length
   return { due: due.length, completed, percent: due.length ? Math.round(completed / due.length * 100) : null }
 }
@@ -217,7 +230,9 @@ export function validatePlannedSession(value: unknown): value is PlannedSession 
     && (s.feedback == null || ['easy', 'okay', 'hard'].includes(s.feedback)) && (s.pain == null || typeof s.pain === 'boolean')
     && [s.actualDurationMin, s.distanceKm].every(v => v == null || (number(v) && v > 0))
     && (s.activityLogId == null || typeof s.activityLogId === 'string')
-    && Array.isArray(s.blocks) && s.blocks.every(b => typeof b.id === 'string' && typeof b.label === 'string' && typeof b.instruction === 'string' && number(b.durationSeconds)
-      && (b.exercise == null || (typeof b.exercise.id === 'string' && typeof b.exercise.name === 'string' && typeof b.exercise.technique === 'string' && !!b.exercise.phases && phases.every(phase => b.exercise!.phases[phase] && number(b.exercise!.phases[phase].sets))))
+    && Array.isArray(s.blocks) && s.blocks.every(b => b && typeof b.id === 'string' && typeof b.label === 'string' && typeof b.instruction === 'string' && number(b.durationSeconds)
+      && (b.exercise == null || (typeof b.exercise.id === 'string' && typeof b.exercise.name === 'string' && typeof b.exercise.technique === 'string' && typeof b.exercise.category === 'string' && typeof b.exercise.equipment === 'string' && !!b.exercise.phases && phases.every(phase => b.exercise!.phases[phase] && number(b.exercise!.phases[phase].sets) && typeof b.exercise!.phases[phase].reps === 'string' && typeof b.exercise!.phases[phase].rest === 'string')))
       && (b.prescription == null || (Number.isInteger(b.prescription.sets) && b.prescription.sets > 0 && typeof b.prescription.reps === 'string' && typeof b.prescription.rest === 'string')))
+    && new Set(s.blocks.map(b => b.id)).size === s.blocks.length
+    && s.estimatedMinutes === Math.ceil(s.blocks.reduce((sum, b) => sum + b.durationSeconds, 0) / 60)
 }

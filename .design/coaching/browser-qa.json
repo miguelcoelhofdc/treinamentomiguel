@@ -1,6 +1,10 @@
 {
   "checks": [
     {
+      "name": "wizard keyboard focus follows the new step",
+      "pass": true
+    },
+    {
       "name": "layout setup-preview",
       "pass": true,
       "detail": {
@@ -44,6 +48,14 @@
       }
     },
     {
+      "name": "miguel completion sheet keeps keyboard focus",
+      "pass": true
+    },
+    {
+      "name": "miguel invalid duration writes no activity",
+      "pass": true
+    },
+    {
       "name": "miguel actual activity linked",
       "pass": true
     },
@@ -76,6 +88,851 @@
     {
       "name": "miguel execution and result separate",
       "pass": true
+    },
+    {
+      "name": "miguel backup carries frozen sessions",
+      "pass": true
+    },
+    {
+      "name": "miguel backup round trip",
+      "pass": true
+    },
+    {
+      "name": "miguel restore retains prescription",
+      "pass": true
+    },
+    {
+      "name": "miguel accepts legacy backup",
+      "pass": true
+    },
+    {
+      "name": "miguel rejects corrupt coaching backup",
+      "pass": true
+    },
+    {
+      "name": "wizard keyboard focus follows the new step",
+      "pass": true
+    },
+    {
+      "name": "layout setup-preview",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "sintia configuration saved",
+      "pass": true
+    },
+    {
+      "name": "sintia calendar persisted",
+      "pass": true
+    },
+    {
+      "name": "sintia optional target",
+      "pass": true
+    },
+    {
+      "name": "layout sintia home",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "sintia starts from home in one action",
+      "pass": true
+    },
+    {
+      "name": "layout sintia training",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "sintia completion sheet keeps keyboard focus",
+      "pass": true
+    },
+    {
+      "name": "sintia invalid duration writes no activity",
+      "pass": true
+    },
+    {
+      "name": "sintia actual activity linked",
+      "pass": true
+    },
+    {
+      "name": "sintia undo preserves snapshot",
+      "pass": true
+    },
+    {
+      "name": "sintia started prescription preserved after switch",
+      "pass": true
+    },
+    {
+      "name": "layout sintia week",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout sintia month",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "sintia execution and result separate",
+      "pass": true
+    },
+    {
+      "name": "sintia backup carries frozen sessions",
+      "pass": true
+    },
+    {
+      "name": "sintia backup round trip",
+      "pass": true
+    },
+    {
+      "name": "sintia restore retains prescription",
+      "pass": true
+    },
+    {
+      "name": "sintia accepts legacy backup",
+      "pass": true
+    },
+    {
+      "name": "sintia rejects corrupt coaching backup",
+      "pass": true
+    },
+    {
+      "name": "wizard keyboard focus follows the new step",
+      "pass": true
+    },
+    {
+      "name": "layout setup-preview",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "Treinar mais delivers the right session",
+      "pass": true
+    },
+    {
+      "name": "wizard keyboard focus follows the new step",
+      "pass": true
+    },
+    {
+      "name": "layout setup-preview",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "Correr delivers the right session",
+      "pass": true
+    },
+    {
+      "name": "run result persists once",
+      "pass": true
+    },
+    {
+      "name": "undo removes run from performance totals",
+      "pass": true
+    },
+    {
+      "name": "redo restores one run",
+      "pass": true
+    },
+    {
+      "name": "wizard keyboard focus follows the new step",
+      "pass": true
+    },
+    {
+      "name": "layout setup-preview",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "Ficar mais ativo delivers the right session",
+      "pass": true
+    },
+    {
+      "name": "layout 375/light//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/light//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/light//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/light//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/light//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/light//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/dark//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/dark//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/dark//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/dark//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/dark//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 375/dark//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 375
+      }
+    },
+    {
+      "name": "layout 390/light//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/light//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/light//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/light//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/light//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/light//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/dark//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/dark//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/dark//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/dark//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/dark//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 390/dark//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 390
+      }
+    },
+    {
+      "name": "layout 430/light//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/light//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/light//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/light//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/light//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/light//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/dark//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/dark//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/dark//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/dark//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/dark//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 430/dark//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 430
+      }
+    },
+    {
+      "name": "layout 768/light//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/light//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/light//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/light//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/light//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/light//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/dark//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/dark//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/dark//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/dark//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/dark//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 768/dark//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 768
+      }
+    },
+    {
+      "name": "layout 1024/light//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/light//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/light//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/light//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/light//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/light//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/dark//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/dark//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/dark//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/dark//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/dark//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1024/dark//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1024
+      }
+    },
+    {
+      "name": "layout 1440/light//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/light//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/light//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/light//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/light//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/light//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/dark//",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/dark//hoje",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/dark//plano",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/dark//plano?visao=mes",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/dark//progresso?aba=metas",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "layout 1440/dark//coaching",
+      "pass": true,
+      "detail": {
+        "overflow": false,
+        "small": [],
+        "width": 1440
+      }
+    },
+    {
+      "name": "no browser exceptions",
+      "pass": true,
+      "detail": []
     }
   ],
   "audits": [
@@ -108,9 +965,487 @@
       "overflow": false,
       "small": [],
       "width": 390
+    },
+    {
+      "label": "setup-preview",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "sintia home",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "sintia training",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "sintia week",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "sintia month",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "setup-preview",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "setup-preview",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "setup-preview",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "375/light//",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/light//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/light//plano",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/light//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/light//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/light//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/dark//",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/dark//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/dark//plano",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/dark//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/dark//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "375/dark//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 375
+    },
+    {
+      "label": "390/light//",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/light//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/light//plano",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/light//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/light//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/light//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/dark//",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/dark//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/dark//plano",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/dark//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/dark//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "390/dark//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 390
+    },
+    {
+      "label": "430/light//",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/light//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/light//plano",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/light//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/light//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/light//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/dark//",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/dark//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/dark//plano",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/dark//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/dark//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "430/dark//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 430
+    },
+    {
+      "label": "768/light//",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/light//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/light//plano",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/light//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/light//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/light//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/dark//",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/dark//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/dark//plano",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/dark//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/dark//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "768/dark//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 768
+    },
+    {
+      "label": "1024/light//",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/light//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/light//plano",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/light//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/light//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/light//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/dark//",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/dark//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/dark//plano",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/dark//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/dark//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1024/dark//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 1024
+    },
+    {
+      "label": "1440/light//",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/light//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/light//plano",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/light//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/light//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/light//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/dark//",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/dark//hoje",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/dark//plano",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/dark//plano?visao=mes",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/dark//progresso?aba=metas",
+      "overflow": false,
+      "small": [],
+      "width": 1440
+    },
+    {
+      "label": "1440/dark//coaching",
+      "overflow": false,
+      "small": [],
+      "width": 1440
     }
   ],
-  "errors": [
-    "Error: Error: Missing: Dados e backup\n    at <anonymous>:1:274\n    at <anonymous>:1:319\n    at run (file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/coaching/qa.mjs:18:38)\n    at async click (file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/coaching/qa.mjs:22:31)\n    at async file:///C:/Users/Miguel%20Coelho/Desktop/treinamentomiguel/.design/coaching/qa.mjs:85:5"
-  ]
+  "errors": []
 }
