@@ -1,8 +1,8 @@
 import Dexie, { type Table } from 'dexie'
-import type { ActivityLog, DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck, PlannedSession } from '@/types'
+import type { ActivityLog, DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck, PlannedSession, WorkoutTemplate } from '@/types'
 import { ACCESS_PROFILES, getStoredProfileId } from '@/lib/auth'
 
-class TrainingDB extends Dexie {
+export class TrainingDB extends Dexie {
   dailyLogs!: Table<DailyLog>
   runningLogs!: Table<RunningLog>
   strengthLogs!: Table<StrengthLog>
@@ -10,6 +10,7 @@ class TrainingDB extends Dexie {
   exerciseChecks!: Table<ExerciseCheck>
   activityLogs!: Table<ActivityLog, string>
   plannedSessions!: Table<PlannedSession, string>
+  workoutTemplates!: Table<WorkoutTemplate, string>
 
   constructor(databaseName: string) {
     super(databaseName)
@@ -29,6 +30,10 @@ class TrainingDB extends Dexie {
     })
     this.version(3).stores({ activityLogs: 'id, date, activity' })
     this.version(4).stores({ plannedSessions: 'id, &date, coachingId, status' })
+    this.version(5).stores({
+      workoutTemplates: 'id, activity',
+      strengthLogs: '++id, date, exercise, activityLogId, exerciseId',
+    })
   }
 }
 
@@ -61,8 +66,11 @@ export async function saveDailyLog(log: DailyLog): Promise<void> {
   await db.transaction('rw', db.dailyLogs, async () => {
     const existing = await getDailyLog(log.date)
     const { id: _id, ...patch } = log
-    if (existing?.id) await db.dailyLogs.update(existing.id, patch)
-    else await db.dailyLogs.add(patch)
+    const rows = await db.dailyLogs.where('date').equals(log.date).toArray()
+    if (existing?.id) {
+      await db.dailyLogs.put({ ...existing, ...patch })
+      await db.dailyLogs.bulkDelete(rows.filter(row => row.id !== existing.id).map(row => row.id!))
+    } else await db.dailyLogs.add(patch)
   })
 }
 

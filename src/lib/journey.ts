@@ -24,7 +24,7 @@ export function plannedWorkouts(plan: Plan): number {
 export function hasCheckIn(log?: DailyLog): boolean {
   if (!log || !isDateKey(log.date)) return false
   if (log.checkInDone != null) return log.checkInDone
-  return [log.energy, log.sleepH, log.weightKg, log.shoulderPain, log.kneePain, log.rpe]
+  return Boolean(log.dayRating || log.nutritionRating || log.exerciseRating || log.mentalState || log.sleepQuality) || [log.energy, log.sleepH, log.weightKg, log.shoulderPain, log.kneePain, log.rpe]
     .some(value => typeof value === 'number' && Number.isFinite(value)) || Boolean(log.notes?.trim())
 }
 

@@ -181,6 +181,29 @@ export interface DailyLog {
   sessionName?: string
   trainingLevel?: PhaseId
   lightVolume?: boolean
+  dayRating?: DailyRating
+  nutritionRating?: DailyRating
+  exerciseRating?: DailyRating
+  mentalState?: DailyRating
+  sleepQuality?: DailyRating
+}
+
+export type DailyRating = 'ruim' | 'ok' | 'bom'
+
+export interface TemplateExercise {
+  exerciseId: string
+  name: string
+  suggestedSets?: number
+  suggestedReps?: string
+}
+
+export interface WorkoutTemplate {
+  id: string
+  name: string
+  activity: 'forca' | 'calistenia'
+  exercises: TemplateExercise[]
+  createdAt: string
+  updatedAt: string
 }
 
 export interface TrainingSettings {
@@ -261,6 +284,10 @@ export interface ActivityLog {
   distanceKm?: number
   completed: boolean
   plannedSessionId?: string
+  createdAt?: string
+  updatedAt?: string
+  templateId?: string
+  notes?: string
 }
 
 export interface TrainingGoal {
@@ -299,6 +326,8 @@ export interface StrengthLog {
   exercise: string
   sets: StrengthSet[]
   notes?: string
+  activityLogId?: string
+  exerciseId?: string
 }
 
 export interface AppSettings {

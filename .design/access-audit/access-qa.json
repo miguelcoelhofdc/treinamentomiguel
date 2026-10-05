@@ -1,0 +1,41 @@
+{
+  "target": "http://127.0.0.1:5173",
+  "desktop": {
+    "title": "Meu ritmo — Acompanhamento de treino",
+    "url": "http://127.0.0.1:5173/",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "bodyTextLength": 195,
+    "bodyTextSample": "Treino e bem-estar Seu acompanhamento começa aqui Entre com seu código para abrir seus registros e acompanhar seu progresso. Código de acesso Inclua o hífen entre os dois pares de números. Entrar",
+    "horizontalScroll": false,
+    "scrollWidth": 1440,
+    "textOverflow": [],
+    "smallButtons": [],
+    "blockingFixed": [],
+    "hasMain": true,
+    "screenshotPath": "C:\\Users\\Miguel Coelho\\Desktop\\treinamentomiguel\\.design\\access-audit\\screenshots\\access-desktop.png",
+    "screenshotBytes": 30955,
+    "blankRisk": false
+  },
+  "mobile": {
+    "title": "Meu ritmo — Acompanhamento de treino",
+    "url": "http://127.0.0.1:5173/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "bodyTextLength": 195,
+    "bodyTextSample": "Treino e bem-estar Seu acompanhamento começa aqui Entre com seu código para abrir seus registros e acompanhar seu progresso. Código de acesso Inclua o hífen entre os dois pares de números. Entrar",
+    "horizontalScroll": false,
+    "scrollWidth": 390,
+    "textOverflow": [],
+    "smallButtons": [],
+    "blockingFixed": [],
+    "hasMain": true,
+    "screenshotPath": "C:\\Users\\Miguel Coelho\\Desktop\\treinamentomiguel\\.design\\access-audit\\screenshots\\access-mobile.png",
+    "screenshotBytes": 24814,
+    "blankRisk": false
+  }
+}

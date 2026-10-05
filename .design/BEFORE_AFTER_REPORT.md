@@ -1,22 +1,14 @@
-# BEFORE / AFTER REPORT
+# Antes e depois — diário de treino
 
-## Screenshots
-
-| View | Before | After |
+| Tela | Antes | Depois |
 |---|---|---|
-| Desktop | screenshots/before-desktop.png | screenshots/after-desktop.png |
-| Mobile | screenshots/before-mobile.png | screenshots/after-mobile.png |
+| Computador | [Coaching](coaching/screenshots/home-desktop.png) | [Acompanhamento](screenshots/after-desktop.png) |
+| Celular | [Coaching](coaching/screenshots/miguel-home-mobile.png) | [Acompanhamento](screenshots/after-mobile.png) |
 
-## Image Metadata
+As imagens de antes já existiam no projeto. As imagens de depois foram capturadas em 2026-10-05, com dados fictícios em um perfil descartável, em 1440×1000 e 390×844.
 
-| View | Before Size | After Size |
-|---|---:|---:|
-| Desktop | 1440x1000, 121445 bytes | 1440x1000, 92748 bytes |
-| Mobile | 390x844, 48010 bytes | 390x844, 39320 bytes |
+Antes, a abertura priorizava a rotina sugerida e o início de um treino prescrito; a navegação tinha cinco destinos. Agora, a primeira ação é Registrar, acompanhada de números reais dos últimos sete dias, um gráfico e acesso ao último treino. A navegação inferior tem quatro destinos.
 
-## Review Notes
+Formulários separaram treino e check-in, usam referências anteriores sem preencher automaticamente as novas cargas e mantêm os valores após uma falha. O histórico organiza sessões por dia e conserva as cargas antigas sem inventar vínculos.
 
-- Confirm the after version improves information architecture, not only color.
-- Confirm desktop and mobile screenshots both show usable content.
-- Confirm customer data, secrets, internal URLs, and account information are not visible.
-- Confirm high-risk operations have human confirmation.
+O resultado da inspeção visual está em [VISUAL_SCORECARD.md](VISUAL_SCORECARD.md), com média 4,5/5. A auditoria de layout e os cenários funcionais estão em [UI_QA_REPORT.md](UI_QA_REPORT.md).

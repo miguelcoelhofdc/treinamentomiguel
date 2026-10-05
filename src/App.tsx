@@ -4,8 +4,6 @@ import BottomNav from '@/components/BottomNav'
 import { useSettings } from '@/hooks/useSettings'
 import Access from '@/pages/Access'
 import { useLocalDay } from '@/hooks/useLocalDay'
-import { CoachingProvider } from '@/hooks/useCoaching'
-import { AchievementCelebration } from '@/components/journey/Achievements'
 import {
   ACCESS_PROFILES,
   clearStoredProfile,
@@ -13,11 +11,10 @@ import {
   type ProfileId,
 } from '@/lib/auth'
 
-const Today = lazy(() => import('@/pages/Today'))
-const Journey = lazy(() => import('@/pages/Journey'))
-const Plan = lazy(() => import('@/pages/Plan'))
-const CoachingSetup = lazy(() => import('@/pages/CoachingSetup'))
-const Progress = lazy(() => import('@/pages/Progress'))
+const TrackingHome = lazy(() => import('@/pages/TrackingHome'))
+const Recorder = lazy(() => import('@/pages/Recorder'))
+const TrackingHistory = lazy(() => import('@/pages/TrackingHistory'))
+const WorkoutTemplates = lazy(() => import('@/pages/WorkoutTemplates'))
 const Guides = lazy(() => import('@/pages/Guides'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const Goals = lazy(() => import('@/pages/Goals'))
@@ -32,6 +29,11 @@ function ScrollToTop() {
   }, [pathname])
 
   return null
+}
+
+function ProgressRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={new URLSearchParams(search).get('aba') === 'historico' ? '/historico' : '/'} replace />
 }
 
 function AppSkeleton() {
@@ -66,22 +68,22 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
     window.location.assign('/')
   }
 
-  if (!loaded) return <div className="app-shell training-theme"><AppSkeleton /></div>
-  if (error) return <div className="app-shell training-theme"><div className="page-content"><h1 className="page-title">Não foi possível abrir seu perfil.</h1><button className="btn-primary mt-5" onClick={retry}>Tentar novamente</button></div></div>
+  if (!loaded) return <div className="app-shell training-theme tracking-theme"><AppSkeleton /></div>
+  if (error) return <div className="app-shell training-theme tracking-theme"><div className="page-content"><h1 className="page-title">Não foi possível abrir seu perfil.</h1><button className="btn-primary mt-5" onClick={retry}>Tentar novamente</button></div></div>
 
   return (
-    <div className="app-shell training-theme">
+    <div className="app-shell training-theme tracking-theme">
       <ScrollToTop />
-      <CoachingProvider settings={settings}><Suspense fallback={<AppSkeleton />}>
+      <Suspense fallback={<AppSkeleton />}>
         <Routes>
-          <Route path="/" element={<Journey settings={settings} updateSetting={updateSetting} />} />
-          <Route path="/hoje" element={<Today key={today} settings={settings} updateSetting={updateSetting} />} />
-          <Route path="/plano" element={<Plan settings={settings} updateSetting={updateSetting} />} />
-          <Route path="/coaching" element={<CoachingSetup settings={settings} />} />
-          <Route
-            path="/progresso"
-            element={<Progress initialWeight={settings.initialWeight} goalWeight={settings.goalWeight} settings={settings} updateSetting={updateSetting} />}
-          />
+          <Route path="/" element={<TrackingHome settings={settings} />} />
+          <Route path="/registrar" element={<Recorder key={today} />} />
+          <Route path="/historico" element={<TrackingHistory />} />
+          <Route path="/fichas" element={<WorkoutTemplates />} />
+          <Route path="/hoje" element={<Navigate to="/registrar" replace />} />
+          <Route path="/plano" element={<Navigate to="/fichas" replace />} />
+          <Route path="/coaching" element={<Navigate to="/fichas" replace />} />
+          <Route path="/progresso" element={<ProgressRedirect />} />
           <Route path="/guias" element={<Guides routineType={settings.routineType} />} />
           <Route
             path="/ajustes"
@@ -98,10 +100,9 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
           {DevVisualizer && <Route path="/dev/viz" element={<DevVisualizer />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Suspense></CoachingProvider>
+      </Suspense>
       <div id="training-overlays" />
       <BottomNav />
-      <AchievementCelebration />
     </div>
   )
 }

@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "Production app reloads offline from its installed service worker",
+    "A real running form saves a new session while completely offline",
+    "Offline reload preserves the saved distance and exact duration in the latest workout"
+  ],
+  "screenshots": [
+    {
+      "name": "offline-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 794
+    }
+  ],
+  "runtimeErrors": []
+}

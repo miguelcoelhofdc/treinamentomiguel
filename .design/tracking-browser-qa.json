@@ -1,0 +1,302 @@
+{
+  "checks": [
+    "Two same-day exercise sessions stay distinct",
+    "Editing replaces only its session sets and moves its date",
+    "Moving one session preserves the other same-day workout",
+    "A partial check-in preserves workout completion and has no default energy",
+    "Updating a check-in consolidates duplicate legacy days without discarding their fields",
+    "Run corrections keep one linked run and exact pace",
+    "A failed daily write rolls the entire session transaction back",
+    "Renaming and reordering a sheet leaves recorded snapshots intact",
+    "Editing legacy daily loads creates no fictitious session",
+    "Backup v4 contains sheets and linked measurements",
+    "Repeated restore does not duplicate sessions, runs or sets",
+    "Tracking actions and backup restoration preserve old coaching snapshots without regenerating prescriptions",
+    "A backup from another profile is rejected before writes",
+    "The actual v4-to-v5 migration preserves old loads and creates sheets",
+    "Visible running form retains its draft after failure and saves comma decimals on retry",
+    "Visible strength form saves actual comma-decimal loads and an explicitly repeated series",
+    "History detail edits the correct session through the visible form",
+    "Visible sheet editor creates a custom exercise and persists the reordered sheet",
+    "Escape closes the editor and returns keyboard focus to its original action",
+    "The visible check-in saves only sleep on a previous date without adding ratings",
+    "Old training routes redirect to their tracking equivalents",
+    "Existing dark preference is respected and reduced motion disables animations",
+    "Query errors display a clear retry state",
+    "Switching profiles uses another database, another exercise library and an empty independent history",
+    "Reload restores the original profile history"
+  ],
+  "screenshots": [
+    {
+      "name": "empty-desktop",
+      "width": 1440,
+      "height": 1000,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 797
+    },
+    {
+      "name": "empty-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 763
+    },
+    {
+      "name": "save-error-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 305
+    },
+    {
+      "name": "saved-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 246
+    },
+    {
+      "name": "strength-form-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 655
+    },
+    {
+      "name": "strength-sets-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 655
+    },
+    {
+      "name": "after-desktop",
+      "width": 1440,
+      "height": 1000,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 898
+    },
+    {
+      "name": "after-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 834
+    },
+    {
+      "name": "chart-forca-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 1600
+    },
+    {
+      "name": "chart-corrida-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 771
+    },
+    {
+      "name": "chart-peso-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 850
+    },
+    {
+      "name": "chart-sono-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 821
+    },
+    {
+      "name": "small-mobile",
+      "width": 320,
+      "height": 740,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 811
+    },
+    {
+      "name": "registrar-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 464
+    },
+    {
+      "name": "registrar-desktop",
+      "width": 1440,
+      "height": 1000,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 498
+    },
+    {
+      "name": "checkin-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 431
+    },
+    {
+      "name": "checkin-desktop",
+      "width": 1440,
+      "height": 1000,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 465
+    },
+    {
+      "name": "historico-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 890
+    },
+    {
+      "name": "historico-desktop",
+      "width": 1440,
+      "height": 1000,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 924
+    },
+    {
+      "name": "fichas-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 1124
+    },
+    {
+      "name": "fichas-desktop",
+      "width": 1440,
+      "height": 1000,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 1158
+    },
+    {
+      "name": "ajustes-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": false,
+      "textLength": 588
+    },
+    {
+      "name": "ajustes-desktop",
+      "width": 1440,
+      "height": 1000,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": false,
+      "textLength": 387
+    },
+    {
+      "name": "dark-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 833
+    },
+    {
+      "name": "loading-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 131
+    },
+    {
+      "name": "load-error-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 229
+    },
+    {
+      "name": "second-profile-mobile",
+      "width": 390,
+      "height": 844,
+      "horizontalScroll": false,
+      "smallTargets": [],
+      "textOverflow": [],
+      "hasMain": true,
+      "textLength": 763
+    }
+  ],
+  "runtimeErrors": []
+}

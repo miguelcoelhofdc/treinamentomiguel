@@ -14,7 +14,6 @@ import {
   CaretDown,
   CalendarDots,
   CheckCircle,
-  Clock,
   Database,
   DownloadSimple,
   FloppyDisk,
@@ -36,20 +35,10 @@ import type { ProfileId } from '@/lib/auth'
 import { localDateKey } from '@/lib/date'
 import { isDateKey } from '@/lib/date'
 import plan from '@/data/activePlan'
-import { isActivityLog, validateGoal } from '@/lib/continuousTraining'
-import TrainingControls from '@/components/journey/TrainingControls'
-import { parsePerformanceTargets, type UpdateTrainingSetting } from '@/lib/trainingSettings'
-import { validateCoaching, validatePlannedSession } from '@/lib/coaching'
-import type {
-  ActivityLog,
-  AppSettings,
-  DailyLog,
-  ExerciseCheck,
-  RunningLog,
-  StrengthLog,
-  TrainingSettings,
-  PlannedSession,
-} from '@/types'
+import { type UpdateTrainingSetting } from '@/lib/trainingSettings'
+import type { TrainingSettings } from '@/types'
+import { createTrainingBackup, restoreTrainingBackup } from '@/db/trainingBackup'
+import { backupRecordCount, parseTrainingBackup } from '@/lib/trainingBackup'
 
 type SettingsData = TrainingSettings
 
@@ -59,19 +48,6 @@ interface Props {
   profileId: ProfileId
   profileLabel: string
   onLogout: () => void
-}
-
-interface BackupPayload {
-  kind?: string
-  schemaVersion?: number
-  exportedAt?: string
-  daily: DailyLog[]
-  running: RunningLog[]
-  strength: StrengthLog[]
-  settings: AppSettings[]
-  exerciseChecks: ExerciseCheck[]
-  activities: ActivityLog[]
-  plannedSessions: PlannedSession[]
 }
 
 type Feedback = { message: string; type: 'success' | 'error' }
@@ -84,133 +60,7 @@ type ProfileDraft = {
 }
 type ProfileField = keyof ProfileDraft
 
-const BACKUP_FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks', 'activities', 'plannedSessions'] as const
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function isOptionalNumber(value: unknown): boolean {
-  return value == null || (typeof value === 'number' && Number.isFinite(value))
-}
-
-function isDailyLog(value: unknown): value is DailyLog {
-  if (!isRecord(value) || typeof value.date !== 'string') return false
-  return ['weightKg', 'sleepH', 'energy', 'shoulderPain', 'kneePain', 'rpe'].every(key =>
-    isOptionalNumber(value[key]),
-  ) && (value.notes == null || typeof value.notes === 'string')
-    && (value.workoutDone == null || typeof value.workoutDone === 'boolean')
-    && (value.checkInDone == null || typeof value.checkInDone === 'boolean')
-    && (value.sessionType == null || typeof value.sessionType === 'string')
-    && (value.sessionName == null || typeof value.sessionName === 'string')
-    && (value.trainingLevel == null || ['base', 'desenvolvimento', 'performance'].includes(String(value.trainingLevel)))
-    && (value.lightVolume == null || typeof value.lightVolume === 'boolean')
-}
-
-function isRunningLog(value: unknown): value is RunningLog {
-  if (!isRecord(value)) return false
-  return typeof value.date === 'string'
-    && ['qualidade', 'longa', 'livre'].includes(String(value.type))
-    && typeof value.distanceKm === 'number'
-    && Number.isFinite(value.distanceKm)
-    && typeof value.durationMin === 'number'
-    && Number.isFinite(value.durationMin)
-    && isOptionalNumber(value.paceMinKm)
-    && isOptionalNumber(value.hrAvg)
-    && isOptionalNumber(value.effort)
-    && (value.notes == null || typeof value.notes === 'string')
-}
-
-function isStrengthLog(value: unknown): value is StrengthLog {
-  if (!isRecord(value) || typeof value.date !== 'string' || typeof value.exercise !== 'string') return false
-  if (!Array.isArray(value.sets)) return false
-  return value.sets.every(set => isRecord(set)
-    && typeof set.weightKg === 'number'
-    && Number.isFinite(set.weightKg)
-    && typeof set.reps === 'number'
-    && Number.isFinite(set.reps))
-    && (value.notes == null || typeof value.notes === 'string')
-}
-
-function isAppSetting(value: unknown): value is AppSettings {
-  return isRecord(value) && typeof value.key === 'string' && typeof value.value === 'string'
-}
-
-function isExerciseCheck(value: unknown): value is ExerciseCheck {
-  return isRecord(value)
-    && typeof value.date === 'string'
-    && typeof value.exerciseId === 'string'
-    && typeof value.done === 'boolean'
-}
-
-function parseBackup(raw: string): BackupPayload {
-  const parsed: unknown = JSON.parse(raw)
-  if (!isRecord(parsed)) throw new Error('Formato de backup inválido.')
-
-  const hasBackupData = BACKUP_FIELDS.some(field => field in parsed)
-  if (!hasBackupData) throw new Error('O arquivo não contém dados reconhecidos.')
-
-  for (const field of BACKUP_FIELDS) {
-    if (parsed[field] != null && !Array.isArray(parsed[field])) {
-      throw new Error(`A seção ${field} do backup é inválida.`)
-    }
-  }
-
-  const payload: BackupPayload = {
-    kind: typeof parsed.kind === 'string' ? parsed.kind : undefined,
-    schemaVersion: typeof parsed.schemaVersion === 'number' ? parsed.schemaVersion : undefined,
-    exportedAt: typeof parsed.exportedAt === 'string' ? parsed.exportedAt : undefined,
-    daily: (parsed.daily ?? []) as DailyLog[],
-    running: (parsed.running ?? []) as RunningLog[],
-    strength: (parsed.strength ?? []) as StrengthLog[],
-    settings: (parsed.settings ?? []) as AppSettings[],
-    exerciseChecks: (parsed.exerciseChecks ?? []) as ExerciseCheck[],
-    activities: (parsed.activities ?? []) as ActivityLog[],
-    plannedSessions: (parsed.plannedSessions ?? []) as PlannedSession[],
-  }
-
-  if (!payload.daily.every(isDailyLog)
-    || !payload.running.every(isRunningLog)
-    || !payload.strength.every(isStrengthLog)
-    || !payload.settings.every(isAppSetting)
-    || !payload.exerciseChecks.every(isExerciseCheck)
-    || !payload.activities.every(isActivityLog)
-    || !payload.plannedSessions.every(validatePlannedSession)
-    || new Set(payload.plannedSessions.map(item => item.id)).size !== payload.plannedSessions.length) {
-    throw new Error('Há registros corrompidos ou incompatíveis no backup.')
-  }
-
-  for (const { key, value } of payload.settings) {
-    if (key === 'coaching' && JSON.parse(value) !== null && !validateCoaching(JSON.parse(value))) throw new Error('Configuração de coaching inválida no backup.')
-    if (key === 'performanceTargets') parsePerformanceTargets(value, plan)
-    if (key === 'primaryGoal' && JSON.parse(value) !== null && !validateGoal(JSON.parse(value))) throw new Error('Meta principal inválida no backup.')
-    if (key === 'goalHistory' && (!Array.isArray(JSON.parse(value)) || !JSON.parse(value).every(validateGoal))) throw new Error('Histórico de metas inválido no backup.')
-    if (key === 'trainingLevel' && !['base', 'desenvolvimento', 'performance'].includes(value)) throw new Error('Nível de treino inválido no backup.')
-    if (key === 'lightVolume' && !['true', 'false'].includes(value)) throw new Error('Volume de treino inválido no backup.')
-    if (key === 'sessionDurationMin' && (!Number.isFinite(Number(value)) || Number(value) <= 0 || Number(value) > 1440)) throw new Error('Tempo de treino inválido no backup.')
-    if (key === 'customActivities' && (!Array.isArray(JSON.parse(value)) || !JSON.parse(value).every((item: unknown) => typeof item === 'string' && item.trim().length > 0 && item.length <= 80))) throw new Error('Atividades inválidas no backup.')
-    if (key === 'startDate' && !isDateKey(value)) throw new Error('Data de início inválida no backup.')
-  }
-  return payload
-}
-
-function stripId<T extends { id?: number }>(record: T): T {
-  const clean = { ...record }
-  delete clean.id
-  return clean
-}
-
-function recordCount(payload: BackupPayload): number {
-  return payload.daily.length
-    + payload.running.length
-    + payload.strength.length
-    + payload.settings.length
-    + payload.exerciseChecks.length
-    + payload.activities.length
-    + payload.plannedSessions.length
-}
-
-const GROUPS = ['Dados pessoais', 'Treino e rotina', 'Aparência', 'Conta', 'Dados e backup']
+const GROUPS = ['Dados pessoais', 'Fichas e consultas', 'Aparência', 'Conta', 'Dados e backup']
 const SettingsGroupContext = createContext<{ active: string | null; select: (title: string | null) => void }>({ active: null, select: () => {} })
 
 function SettingsSection({ icon: SectionIcon, title, description, children }: { icon: Icon; title: string; description: string; children: ReactNode }) {
@@ -339,27 +189,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
   const handleExport = async () => {
     setBusy('export')
     try {
-      const [daily, running, strength, storedSettings, exerciseChecks, activities, plannedSessions] = await Promise.all([
-        db.dailyLogs.toArray(),
-        db.runningLogs.toArray(),
-        db.strengthLogs.toArray(),
-        db.settings.toArray(),
-        db.exerciseChecks.toArray(),
-        db.activityLogs.toArray(),
-        db.plannedSessions.toArray(),
-      ])
-      const payload: BackupPayload = {
-        kind: `treino-${profileId}-backup`,
-        schemaVersion: 3,
-        exportedAt: new Date().toISOString(),
-        daily,
-        running,
-        strength,
-        settings: storedSettings,
-        exerciseChecks,
-        activities,
-        plannedSessions,
-      }
+      const payload = await createTrainingBackup(profileId)
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
@@ -369,45 +199,12 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
       anchor.click()
       anchor.remove()
       window.setTimeout(() => URL.revokeObjectURL(url), 0)
-      showFeedback(`Backup criado com ${recordCount(payload)} registros.`)
+      showFeedback(`Backup criado com ${backupRecordCount(payload)} registros.`)
     } catch {
       showFeedback('Não foi possível criar o backup.', 'error')
     } finally {
       setBusy(null)
     }
-  }
-
-  const applyImportedSettings = async (rows: AppSettings[]) => {
-    const imported = new Map(rows.map(row => [row.key, row.value]))
-    const name = imported.get('name')
-    const startDate = imported.get('startDate')
-    const height = Number(imported.get('height'))
-    const initialWeight = Number(imported.get('initialWeight'))
-    const goalWeight = Number(imported.get('goalWeight'))
-    const routineType = imported.get('routineType')
-    const darkMode = imported.get('darkMode')
-    const performanceTargets = imported.get('performanceTargets')
-
-    if (name) await commitSetting('name', name)
-    if (startDate) await commitSetting('startDate', startDate)
-    if (Number.isFinite(height)) await commitSetting('height', height)
-    if (Number.isFinite(initialWeight)) await commitSetting('initialWeight', initialWeight)
-    if (Number.isFinite(goalWeight)) await commitSetting('goalWeight', goalWeight)
-    if (routineType === 'morning' || routineType === 'evening') {
-      await commitSetting('routineType', routineType)
-    }
-    if (darkMode === 'true' || darkMode === 'false') {
-      await commitSetting('darkMode', darkMode === 'true')
-    }
-    for (const key of ['primaryGoal', 'goalHistory', 'customActivities', 'lightVolume', 'coaching'] as const) {
-      const value = imported.get(key)
-      if (value != null) await commitSetting(key, JSON.parse(value))
-    }
-    const level = imported.get('trainingLevel')
-    if (level === 'base' || level === 'desenvolvimento' || level === 'performance') await commitSetting('trainingLevel', level)
-    const duration = imported.get('sessionDurationMin')
-    if (duration != null) await commitSetting('sessionDurationMin', Number(duration))
-    if (performanceTargets != null) await commitSetting('performanceTargets', parsePerformanceTargets(performanceTargets, plan))
   }
 
   const handleImport = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -418,105 +215,9 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     setBusy('import')
     try {
       if (file.size > 10 * 1024 * 1024) throw new Error('Arquivo muito grande.')
-      const payload = parseBackup(await file.text())
-      const expectedKind = `treino-${profileId}-backup`
-      if (payload.kind && payload.kind !== expectedKind) {
-        throw new Error(`Este backup pertence a outro perfil. Entre na conta correta antes de restaurar.`)
-      }
-
-      await db.transaction(
-        'rw',
-        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions],
-        async () => {
-          for (const importedLog of payload.daily) {
-            const log = stripId(importedLog)
-            const existing = await db.dailyLogs.where('date').equals(log.date).toArray()
-            const primary = existing[0]
-            if (primary?.id != null) await db.dailyLogs.update(primary.id, log)
-            else await db.dailyLogs.add(log)
-
-            const duplicateIds = existing.slice(1)
-              .map(item => item.id)
-              .filter((id): id is number => id != null)
-            if (duplicateIds.length > 0) await db.dailyLogs.bulkDelete(duplicateIds)
-          }
-
-          const runIdMap = new Map<number, number>()
-          for (const importedLog of payload.running) {
-            const log = stripId(importedLog)
-            const existing = (await db.runningLogs.where('date').equals(log.date).toArray())
-              .filter(item => item.type === log.type
-                && item.distanceKm === log.distanceKm
-                && Math.abs(item.durationMin - log.durationMin) < 0.000_001)
-            const primary = existing[0]
-            const restoredId = primary?.id ?? await db.runningLogs.add(log)
-            if (primary?.id != null) await db.runningLogs.update(primary.id, log)
-            if (importedLog.id != null) runIdMap.set(importedLog.id, restoredId as number)
-
-            const duplicateIds = existing.slice(1)
-              .map(item => item.id)
-              .filter((id): id is number => id != null)
-            if (duplicateIds.length > 0) await db.runningLogs.bulkDelete(duplicateIds)
-          }
-
-          for (const activity of payload.activities) {
-            const sourceId = /^run:(\d+)$/.exec(activity.id)
-            const restoredId = sourceId ? runIdMap.get(Number(sourceId[1])) : undefined
-            await db.activityLogs.put({ ...activity, id: restoredId == null ? activity.id : 'run:' + restoredId })
-          }
-          for (const session of payload.plannedSessions) {
-            const sourceId = /^run:(\d+)$/.exec(session.activityLogId ?? '')
-            const restoredId = sourceId ? runIdMap.get(Number(sourceId[1])) : undefined
-            await db.plannedSessions.put({ ...session, activityLogId: restoredId == null ? session.activityLogId : `run:${restoredId}` })
-          }
-          for (const importedLog of payload.strength) {
-            const log = stripId(importedLog)
-            const existing = (await db.strengthLogs.where('date').equals(log.date).toArray())
-              .filter(item => item.exercise === log.exercise)
-            const primary = existing[0]
-            if (primary?.id != null) await db.strengthLogs.update(primary.id, log)
-            else await db.strengthLogs.add(log)
-
-            const duplicateIds = existing.slice(1)
-              .map(item => item.id)
-              .filter((id): id is number => id != null)
-            if (duplicateIds.length > 0) await db.strengthLogs.bulkDelete(duplicateIds)
-          }
-
-          for (const importedSetting of payload.settings) {
-            const setting = stripId(importedSetting)
-            const existing = await db.settings.where('key').equals(setting.key).toArray()
-            const primary = existing[0]
-            if (primary?.id != null) await db.settings.update(primary.id, setting)
-            else await db.settings.add(setting)
-
-            const duplicateIds = existing.slice(1)
-              .map(item => item.id)
-              .filter((id): id is number => id != null)
-            if (duplicateIds.length > 0) await db.settings.bulkDelete(duplicateIds)
-          }
-
-          for (const importedCheck of payload.exerciseChecks) {
-            const check = stripId(importedCheck)
-            const existing = await db.exerciseChecks
-              .where('[date+exerciseId]')
-              .equals([check.date, check.exerciseId])
-              .toArray()
-            const primary = existing[0]
-            if (primary?.id != null) await db.exerciseChecks.update(primary.id, check)
-            else await db.exerciseChecks.add(check)
-
-            const duplicateIds = existing.slice(1)
-              .map(item => item.id)
-              .filter((id): id is number => id != null)
-            if (duplicateIds.length > 0) await db.exerciseChecks.bulkDelete(duplicateIds)
-          }
-
-        },
-      )
-
-      await applyImportedSettings(payload.settings)
-      showFeedback(`Backup restaurado: ${recordCount(payload)} registros processados.`)
+      const payload = parseTrainingBackup(await file.text(), plan)
+      await restoreTrainingBackup(payload, profileId)
+      showFeedback(`Backup restaurado: ${backupRecordCount(payload)} registros processados.`)
     } catch (error) {
       const detail = error instanceof Error ? error.message : 'Arquivo inválido.'
       showFeedback(`Não foi possível importar. ${detail}`, 'error')
@@ -557,10 +258,10 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
       <PageHeader
         eyebrow="Preferências"
         title="Perfil"
-        description="Seu plano, suas preferências."
+        description="Seus dados, suas preferências."
       />
 
-      <div className="settings-profile-summary"><span className="settings-avatar" aria-hidden="true">{settings.name.trim()[0] ?? 'P'}</span><div className="min-w-0 flex-1"><p className="text-[16px] font-medium">{settings.name}</p><p className="helper">Perfil de {profileLabel}</p></div><Link to="/progresso?aba=metas" className="inline-link">Minhas metas</Link></div>
+      <div className="settings-profile-summary"><span className="settings-avatar" aria-hidden="true">{settings.name.trim()[0] ?? 'P'}</span><div className="min-w-0 flex-1"><p className="text-[16px] font-medium">{settings.name}</p><p className="helper">Perfil de {profileLabel}</p></div><Link to="/fichas" className="inline-link">Minhas fichas</Link></div>
       <div aria-live="polite" aria-atomic="true">
         {feedback && (
           <div
@@ -584,7 +285,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
       <SettingsSection
         icon={UserCircle}
         title="Dados pessoais"
-        description="Esses dados calibram seus indicadores de progresso."
+        description="As referências pessoais do seu acompanhamento."
       >
         <form className="list-surface divide-y divide-line/80" onSubmit={handleProfileSubmit} noValidate>
           <div className="p-4 sm:p-5">
@@ -673,74 +374,12 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
         </form>
       </SettingsSection>
 
-      <SettingsSection
-        icon={CalendarDots}
-        title="Treino e rotina"
-        description="Defina a data de referência do acompanhamento e em qual período você costuma treinar."
-      >
-        <div className="list-surface divide-y divide-line/80">
-          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-[1fr_13rem] sm:items-center sm:p-5">
-            <div className="flex items-start gap-3">
-              <CalendarDots size={21} weight="duotone" className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-              <div>
-                <label className="text-[15px] font-semibold text-ink" htmlFor="settings-start-date">Início do acompanhamento</label>
-                <p className="mt-1 text-[12px] leading-4 text-ink-muted">Uma referência para seus registros. O acompanhamento não tem data final.</p>
-              </div>
-            </div>
-            <input
-              id="settings-start-date"
-              type="date"
-              className="input tabular-nums"
-              value={settings.startDate}
-              disabled={busy !== null}
-              onChange={event => void handlePreference('startDate', event.target.value, 'Data de início atualizada.')}
-            />
-          </div>
-
-          <div className="p-4 sm:p-5">
-            <div className="mb-4 flex items-start gap-3">
-              <Clock size={21} weight="duotone" className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-              <div>
-                <p className="text-[15px] font-semibold text-ink">Período preferido</p>
-                <p className="mt-1 text-[12px] leading-4 text-ink-muted">O guia de rotina abre direto no período escolhido.</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2 rounded-[17px] bg-surface-raised p-1.5" role="group" aria-label="Período preferido de treino">
-              <button
-                type="button"
-                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[13px] px-3 text-[14px] font-semibold transition duration-200 active:scale-[0.985] ${
-                  settings.routineType === 'morning'
-                    ? 'bg-surface text-accent-strong shadow-card'
-                    : 'text-ink-muted'
-                }`}
-                aria-pressed={settings.routineType === 'morning'}
-                disabled={busy !== null}
-                onClick={() => void handlePreference('routineType', 'morning', 'Rotina da manhã selecionada.')}
-              >
-                <Sun size={18} weight="bold" />
-                Manhã
-              </button>
-              <button
-                type="button"
-                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[13px] px-3 text-[14px] font-semibold transition duration-200 active:scale-[0.985] ${
-                  settings.routineType === 'evening'
-                    ? 'bg-surface text-accent-strong shadow-card'
-                    : 'text-ink-muted'
-                }`}
-                aria-pressed={settings.routineType === 'evening'}
-                disabled={busy !== null}
-                onClick={() => void handlePreference('routineType', 'evening', 'Rotina da noite selecionada.')}
-              >
-                <MoonStars size={18} weight="bold" />
-                Noite
-              </button>
-            </div>
-          </div>
+      <SettingsSection icon={CalendarDots} title="Fichas e consultas" description="Seus exercícios salvos e materiais para consultar quando precisar.">
+        <div className="profile-resource-links">
+          <Link to="/fichas" className="btn-secondary">Minhas fichas de treino</Link>
+          <Link to="/guias" className="btn-secondary">Guias e materiais de consulta</Link>
         </div>
-      <TrainingControls settings={settings} updateSetting={updateSetting} />
       </SettingsSection>
-
-
 
       <SettingsSection
         icon={Palette}

@@ -1,32 +1,11 @@
-# DESIGN
+# Training diary design
 
-## Product Type
+Based on `dashboard/tremor-kpi-chart-grid` and `states/loading-empty-error-set`.
 
-- Type: data dashboard + settings form.
-- Main object: venda mensal e seus valores de meta/comissão.
-- Recipe: `data-dashboard`.
-- Patterns: KPI chart grid, settings form, complete states.
+Home: compact greeting and Register action; active-day and recorded-time summaries; one chart with metric and 7/30/90-day selectors; latest session; compact daily check-in. Register: activity/check-in tabs, selectable sheet, actual sets or distance/time inputs. History: date groups, activity filter, details and editing. Sheets: reusable ordered exercise lists. Profile: personal data, sheets/reference material, appearance and backup.
 
-## Design Goals
+Use Outfit, white/soft-neutral surfaces, dark readable text, green primary buttons with a darker base, restrained blue/orange accents for activity icons, 16-24px radii and clear borders. Keep the existing dark-mode preference. No brand asset copying. Respect reduced motion.
 
-- Tornar impossível confundir o valor que conta para a meta com o valor remunerado.
-- Explicar a composição da comissão sem esconder o bônus semanal.
-- Fazer a inicialização mensal exigir poucos passos e nunca propagar alterações retroativamente.
+Desktop uses the existing lateral navigation with a wider dashboard. Mobile uses a four-item bottom navigation and stacked panels. Sheets retain the existing focus trap and visual-viewport keyboard behavior. Charts and data sections provide loading, actionable empty and retry states. New data is kept in IndexedDB, transactional and isolated by profile. Backup v4 includes templates and new links while preserving old records.
 
-## Screen Structure
-
-- Header: mês, configuração e nova venda.
-- KPI layer: MRR de meta, objetivo, restante, MRR comissão, setup e comissão prevista.
-- Explanation layer: gráfico diário, composição da comissão e quatro períodos semanais.
-- Detail layer: tabela no desktop e cartões no mobile.
-- Settings drawer: inicialização, valores mensais e três faixas fixas.
-- Confirmation: edição histórica e exclusão de venda.
-
-## State and Responsive Plan
-
-- Unconfigured month: valores registrados aparecem, cálculos ficam “Pendentes” e CTA configura o mês.
-- New month with predecessor: choice between repeat and change; goal remains blank.
-- Legacy config: calculation stays legacy until an explicitly confirmed save.
-- Desktop: existing sidebar and two-column analytical layout.
-- Mobile: single-column cards, compact actions and sales cards instead of table.
-- No external UI dependency or copied source; existing tokens remain authoritative.
+Implementation is grouped under tracking library/database/hooks/components and new tracking pages, with app routing, scoped CSS and profile backup updates. Verification includes calculations, same-day sessions, retroactive edits, legacy migration/import, profile isolation, offline reload and screenshots at desktop and mobile sizes.
