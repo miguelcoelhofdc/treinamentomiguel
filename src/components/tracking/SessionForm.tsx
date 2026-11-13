@@ -12,14 +12,14 @@ interface SetDraft { weight: string; reps: string }
 interface ExerciseDraft { exercise: TemplateExercise; sets: SetDraft[]; legacyId?: number; open: boolean; notes?: string }
 const blankSet = (): SetDraft => ({ weight: '', reps: '' })
 
-export default function SessionForm({ data, initial, defaultTemplateId, onSaved }: { data: TrackingData; initial?: ActivityLog; defaultTemplateId?: string; onSaved: () => void }) {
+export default function SessionForm({ data, initial, defaultTemplateId, defaultDate, defaultActivity, onSaved }: { data: TrackingData; initial?: ActivityLog; defaultTemplateId?: string; defaultDate?: string; defaultActivity?: string; onSaved: () => void }) {
   const id = useId()
   const chosen = !initial ? data.templates.find(template => template.id === defaultTemplateId) : undefined
   const legacyDay = Boolean(initial?.id.startsWith('day-strength:'))
   const [sessionId] = useState(initial?.id ?? crypto.randomUUID())
-  const [activity, setActivity] = useState(initial?.activity ?? chosen?.activity ?? 'forca')
-  const [date, setDate] = useState(initial?.date ?? data.today)
-  const [name, setName] = useState(initial?.name ?? chosen?.name ?? 'Musculação')
+  const [activity, setActivity] = useState(initial?.activity ?? chosen?.activity ?? defaultActivity ?? 'forca')
+  const [date, setDate] = useState(initial?.date ?? defaultDate ?? data.today)
+  const [name, setName] = useState(initial?.name ?? chosen?.name ?? ACTIVITY_LABELS[defaultActivity ?? 'forca'] ?? 'Exercício')
   const [templateId, setTemplateId] = useState(initial?.templateId ?? chosen?.id ?? '')
   const [duration, setDuration] = useState(durationInput(initial?.durationMin))
   const [distance, setDistance] = useState(initial?.distanceKm == null ? '' : String(initial.distanceKm).replace('.', ','))
@@ -29,6 +29,8 @@ export default function SessionForm({ data, initial, defaultTemplateId, onSaved 
   const [picker, setPicker] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const hasSavedSets = Boolean(initial && sessionStrength(initial, data.strength).length)
+  const [detailed, setDetailed] = useState(Boolean(chosen || hasSavedSets || (initial && !initial.simple)))
   const isStrength = ['forca', 'calistenia'].includes(activity)
   const mode = isStrength ? 'forca' : activity === 'corrida' ? 'corrida' : 'outro'
   const templates = data.templates.filter(template => template.activity === activity)
@@ -36,6 +38,7 @@ export default function SessionForm({ data, initial, defaultTemplateId, onSaved 
     setActivity(next); setName(ACTIVITY_LABELS[next]); setTemplateId(''); setExercises([]); setPicker(null); setErrors({})
   }
   const selectTemplate = (next: string) => {
+    setDetailed(true)
     setTemplateId(next)
     const template = data.templates.find(item => item.id === next)
     if (template) { setName(template.name); setExercises(template.exercises.map(exercise => ({ exercise, sets: [blankSet()], open: false }))) }
@@ -56,11 +59,11 @@ export default function SessionForm({ data, initial, defaultTemplateId, onSaved 
     if (!name.trim()) next.name = 'Dê um nome à atividade.'
     if (durationMin != null && (!Number.isFinite(durationMin) || durationMin <= 0)) next.duration = 'Use minutos ou min:seg, com um tempo maior que zero.'
     if (distanceKm != null && (!Number.isFinite(distanceKm) || distanceKm <= 0)) next.distance = 'Informe uma distância maior que zero.'
-    if (activity === 'corrida') {
+    if (activity === 'corrida' && detailed) {
       if (durationMin == null) next.duration = 'Informe o tempo da corrida.'
       if (distanceKm == null) next.distance = 'Informe os quilômetros percorridos.'
     }
-    const records = isStrength ? exercises.flatMap(item => {
+    const records = isStrength && detailed ? exercises.flatMap(item => {
       const sets = item.sets.filter(set => set.weight.trim() || set.reps.trim()).map((set, index) => {
         const weightKg = decimal(set.weight), reps = decimal(set.reps)
         if (weightKg == null || !Number.isFinite(weightKg) || weightKg < 0 || reps == null || !Number.isInteger(reps) || reps <= 0) next[item.exercise.exerciseId] = `Confira a série ${index + 1}: carga em kg (0 para peso corporal) e repetições inteiras maiores que zero.`
@@ -68,25 +71,26 @@ export default function SessionForm({ data, initial, defaultTemplateId, onSaved 
       })
       return sets.length ? [{ id: item.legacyId, exercise: item.exercise.name, exerciseId: item.exercise.exerciseId, sets, notes: item.notes }] : []
     }) : []
-    if (isStrength && !records.length) next.exercises = 'Adicione um exercício e registre ao menos uma série.'
+    if (isStrength && detailed && !records.length) next.exercises = 'Adicione um exercício e registre ao menos uma série.'
     setErrors(next)
     if (Object.keys(next).length) { setExercises(current => current.map(item => next[item.exercise.exerciseId] ? { ...item, open: true } : item)); return }
     setBusy(true)
     try {
       if (legacyDay) await saveLegacyStrength(date, records)
-      else await saveSession({ activity: { ...initial, id: sessionId, date, activity, name: name.trim(), durationMin, distanceKm: isStrength ? undefined : distanceKm, templateId: templateId || undefined, notes: notes.trim(), completed: true }, strength: records, originalDate: initial?.date })
+      else await saveSession({ activity: { ...initial, id: sessionId, date, activity, name: name.trim(), durationMin: detailed ? durationMin : undefined, distanceKm: detailed && !isStrength ? distanceKm : undefined, templateId: detailed ? templateId || undefined : undefined, notes: notes.trim(), completed: true, simple: !detailed }, strength: records, originalDate: initial?.date })
       onSaved()
     } catch { setErrors({ form: 'Não foi possível salvar. Seus campos continuam aqui; tente novamente.' }); setBusy(false) }
   }
   const nameControl = <div><label className="label" htmlFor={`${id}-name`}>Nome do treino ou atividade</label><input id={`${id}-name`} className="input" value={name} maxLength={80} onChange={event => setName(event.target.value)} aria-invalid={Boolean(errors.name)} />{errors.name && <p className="field-error">{errors.name}</p>}</div>
   return <form className="tracking-form session-form" onSubmit={event => void save(event)} noValidate>
     <fieldset disabled={busy} className="tracking-fields">
+      {!legacyDay && <div className="entry-tabs" role="group" aria-label="Detalhes do treino"><button type="button" disabled={hasSavedSets} aria-pressed={!detailed} onClick={() => setDetailed(false)}>Só marcar como feito</button><button type="button" aria-pressed={detailed} onClick={() => setDetailed(true)}>Registrar detalhes</button></div>}
       {!legacyDay && <div className="activity-choices" role="group" aria-label="Tipo de atividade">{[{ key: 'forca', label: 'Força', Icon: Barbell }, { key: 'corrida', label: 'Corrida', Icon: PersonSimpleRun }, { key: 'outro', label: 'Outra', Icon: Heart }].map(({ key, label, Icon }) => <button type="button" key={key} className={mode === key ? 'choice-selected' : ''} aria-pressed={mode === key} onClick={() => { if (mode !== key) changeMode(key) }}><Icon size={27} weight="duotone" />{label}</button>)}</div>}
       <div className="form-columns"><div><label className="label" htmlFor={`${id}-date`}>Data</label><input id={`${id}-date`} className="input" type="date" max={data.today} value={date} disabled={legacyDay} onChange={event => setDate(event.target.value)} aria-invalid={Boolean(errors.date)} aria-describedby={errors.date ? `${id}-date-error` : undefined} />{errors.date && <p id={`${id}-date-error`} className="field-error">{errors.date}</p>}{legacyDay && <p className="helper mt-2">Essas séries antigas pertencem ao registro deste dia.</p>}</div>
       {mode === 'outro' ? <div><label className="label" htmlFor={`${id}-type`}>Atividade</label><select id={`${id}-type`} className="input" value={['caminhada', 'mobilidade', 'outro'].includes(activity) ? activity : 'outro'} onChange={event => changeMode(event.target.value)}><option value="outro">Outra atividade</option><option value="caminhada">Caminhada</option><option value="mobilidade">Mobilidade</option></select></div> : isStrength && !legacyDay ? <div><label className="label" htmlFor={`${id}-type`}>Modalidade</label><select id={`${id}-type`} className="input" value={activity} onChange={event => changeMode(event.target.value)}><option value="forca">Musculação</option><option value="calistenia">Calistenia</option></select></div> : null}</div>
-      {isStrength && !initial && <div><div className="flex items-center justify-between gap-3 mb-2"><label className="label mb-0" htmlFor={`${id}-sheet`}>Escolher ficha</label><Link className="inline-link" to="/fichas">Minhas fichas</Link></div><select id={`${id}-sheet`} className="input" value={templateId} onChange={event => selectTemplate(event.target.value)}><option value="">Treino livre</option>{templates.map(template => <option key={template.id} value={template.id}>{template.name}</option>)}</select></div>}
+      {isStrength && detailed && !initial && <div><div className="flex items-center justify-between gap-3 mb-2"><label className="label mb-0" htmlFor={`${id}-sheet`}>Escolher ficha</label><Link className="inline-link" to="/fichas">Minhas fichas</Link></div><select id={`${id}-sheet`} className="input" value={templateId} onChange={event => selectTemplate(event.target.value)}><option value="">Treino livre</option>{templates.map(template => <option key={template.id} value={template.id}>{template.name}</option>)}</select></div>}
       {!legacyDay && !isStrength && nameControl}
-      {isStrength && <section className="exercise-records" aria-label="Exercícios e séries">
+      {isStrength && (detailed || legacyDay) && <section className="exercise-records" aria-label="Exercícios e séries">
         <div className="section-heading"><div><h2>Seus exercícios</h2><p>Registre as séries que você fez.</p></div><span className="count-pill">{exercises.length}</span></div>
         {exercises.map((item, index) => {
           const key = item.exercise.exerciseId
@@ -109,7 +113,7 @@ export default function SessionForm({ data, initial, defaultTemplateId, onSaved 
         {errors.exercises && <p className="field-error" role="alert">{errors.exercises}</p>}
       </section>}
       {!legacyDay && isStrength && <details className="session-extra" open={errors.name ? true : undefined}><summary>Nome do treino<span>{name}</span></summary>{nameControl}</details>}
-      {!legacyDay && <><div className="form-columns"><div><label className="label" htmlFor={`${id}-duration`}>Tempo · min:seg {activity !== 'corrida' && <span>· opcional</span>}</label><input id={`${id}-duration`} className="input" inputMode="text" placeholder="Ex.: 30:45 ou 30" value={duration} onChange={event => setDuration(event.target.value)} aria-invalid={Boolean(errors.duration)} aria-describedby={errors.duration ? `${id}-duration-error` : undefined} />{errors.duration && <p id={`${id}-duration-error`} className="field-error">{errors.duration}</p>}</div>{!isStrength && <div><label className="label" htmlFor={`${id}-distance`}>Distância · km {activity !== 'corrida' && <span>· opcional</span>}</label><input id={`${id}-distance`} className="input" inputMode="decimal" placeholder="Ex.: 5,2" value={distance} onChange={event => setDistance(event.target.value)} aria-invalid={Boolean(errors.distance)} aria-describedby={errors.distance ? `${id}-distance-error` : undefined} />{errors.distance && <p id={`${id}-distance-error`} className="field-error">{errors.distance}</p>}</div>}</div><div><label className="label" htmlFor={`${id}-notes`}>Observação <span>· opcional</span></label><textarea id={`${id}-notes`} className="input" rows={2} placeholder="Algo que vale lembrar deste treino?" value={notes} maxLength={2000} onChange={event => setNotes(event.target.value)} /></div></>}
+      {!legacyDay && detailed && <><div className="form-columns"><div><label className="label" htmlFor={`${id}-duration`}>Tempo · min:seg {activity !== 'corrida' && <span>· opcional</span>}</label><input id={`${id}-duration`} className="input" inputMode="text" placeholder="Ex.: 30:45 ou 30" value={duration} onChange={event => setDuration(event.target.value)} aria-invalid={Boolean(errors.duration)} aria-describedby={errors.duration ? `${id}-duration-error` : undefined} />{errors.duration && <p id={`${id}-duration-error`} className="field-error">{errors.duration}</p>}</div>{!isStrength && <div><label className="label" htmlFor={`${id}-distance`}>Distância · km {activity !== 'corrida' && <span>· opcional</span>}</label><input id={`${id}-distance`} className="input" inputMode="decimal" placeholder="Ex.: 5,2" value={distance} onChange={event => setDistance(event.target.value)} aria-invalid={Boolean(errors.distance)} aria-describedby={errors.distance ? `${id}-distance-error` : undefined} />{errors.distance && <p id={`${id}-distance-error`} className="field-error">{errors.distance}</p>}</div>}</div><div><label className="label" htmlFor={`${id}-notes`}>Observação <span>· opcional</span></label><textarea id={`${id}-notes`} className="input" rows={2} placeholder="Algo que vale lembrar deste treino?" value={notes} maxLength={2000} onChange={event => setNotes(event.target.value)} /></div></>}
     </fieldset>
     {errors.form && <p className="field-error" role="alert">{errors.form}</p>}
     <button className="btn-primary w-full" disabled={busy}>{busy ? 'Salvando…' : initial ? 'Salvar alterações' : 'Salvar treino'}</button>

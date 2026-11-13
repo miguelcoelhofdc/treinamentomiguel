@@ -107,6 +107,6 @@ describe('workout sheets and backup compatibility', () => {
     assert.equal(parsed.daily[0].nutritionRating, undefined)
   })
   it('rejects unknown versions, invalid ratings and malformed linked sets before any write', () => {
-    for (const payload of [{ schemaVersion: 5, daily: [] }, { daily: [{ date: today, mentalState: 'great' }] }, { strength: [strength('a', -1)] }, { strength: [strength('missing', 20)] }, { activities: [session('a'), session('a')] }]) assert.throws(() => parseTrainingBackup(JSON.stringify(payload), plan))
+    for (const payload of [{ schemaVersion: 6, daily: [] }, { daily: [{ date: today, mentalState: 'great' }] }, { strength: [strength('a', -1)] }, { strength: [strength('missing', 20)] }, { activities: [session('a'), session('a')] }]) assert.throws(() => parseTrainingBackup(JSON.stringify(payload), plan))
   })
 })

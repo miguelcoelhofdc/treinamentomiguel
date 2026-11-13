@@ -56,10 +56,10 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png'],
         manifest: {
-          name: 'Meu ritmo — Acompanhamento de treino',
+          name: 'Meu ritmo — Rotinas de saúde',
           lang: 'pt-BR',
           short_name: 'Meu ritmo',
-          description: 'Registre treinos, acompanhe seu progresso e cuide do seu dia',
+          description: 'Acompanhe suas rotinas de saúde, metas e progresso',
           theme_color: '#FAFBF9',
           background_color: '#FAFBF9',
           display: 'standalone',

@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { liveQuery } from 'dexie'
 import { db } from '@/db'
 import { ensureWorkoutTemplates } from '@/db/tracking'
+import { ensureRoutines } from '@/db/routines'
 import plan from '@/data/activePlan'
 import { useLocalDay } from './useLocalDay'
 import { dailyLogMap } from '@/lib/journey'
 import { exerciseCatalogue, trackingActivities } from '@/lib/tracking'
-import type { ActivityLog, DailyLog, RunningLog, StrengthLog, WorkoutTemplate } from '@/types'
+import type { ActivityLog, DailyLog, RunningLog, StrengthLog, WorkoutTemplate, RoutineDefinition, RoutineEntry, RoutineGoal } from '@/types'
 
-const EMPTY = { daily: [] as DailyLog[], running: [] as RunningLog[], stored: [] as ActivityLog[], strength: [] as StrengthLog[], templates: [] as WorkoutTemplate[] }
+const EMPTY = { daily: [] as DailyLog[], running: [] as RunningLog[], stored: [] as ActivityLog[], strength: [] as StrengthLog[], templates: [] as WorkoutTemplate[], routines: [] as RoutineDefinition[], entries: [] as RoutineEntry[], goals: [] as RoutineGoal[] }
 
 export function useTracking() {
   const today = useLocalDay()
@@ -20,11 +21,11 @@ export function useTracking() {
     let active = true
     let subscription: { unsubscribe: () => void } | undefined
     setError(false)
-    ensureWorkoutTemplates().then(() => {
+    ensureWorkoutTemplates().then(ensureRoutines).then(() => {
       if (!active) return
       subscription = liveQuery(async () => {
-        const [daily, running, stored, strength, templates] = await Promise.all([db.dailyLogs.toArray(), db.runningLogs.toArray(), db.activityLogs.toArray(), db.strengthLogs.toArray(), db.workoutTemplates.toArray()])
-        return { daily, running, stored, strength, templates }
+        const [daily, running, stored, strength, templates, routines, entries, goals] = await Promise.all([db.dailyLogs.toArray(), db.runningLogs.toArray(), db.activityLogs.toArray(), db.strengthLogs.toArray(), db.workoutTemplates.toArray(), db.routines.toArray(), db.routineEntries.toArray(), db.routineGoals.toArray()])
+        return { daily, running, stored, strength, templates, routines, entries, goals }
       }).subscribe({ next: next => { setData(next); setLoaded(true); setError(false) }, error: () => { setError(true); setLoaded(true) } })
     }).catch(() => { if (active) { setError(true); setLoaded(true) } })
     return () => { active = false; subscription?.unsubscribe() }

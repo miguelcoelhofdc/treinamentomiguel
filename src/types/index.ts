@@ -170,6 +170,9 @@ export interface DailyLog {
   date: string // YYYY-MM-DD
   weightKg?: number
   sleepH?: number
+  sleepStart?: string // Local YYYY-MM-DDTHH:mm; date is the wake-up day.
+  sleepEnd?: string
+  nutritionScore?: number // 1-5; nutritionRating remains readable for old records.
   energy?: number // 1-5
   shoulderPain?: number // 0-3
   kneePain?: number // 0-3
@@ -288,6 +291,48 @@ export interface ActivityLog {
   updatedAt?: string
   templateId?: string
   notes?: string
+  simple?: boolean
+}
+
+export type RoutineKind = 'water' | 'nutrition' | 'sleep' | 'weight' | 'exercise' | 'check' | 'count' | 'duration' | 'rating'
+export interface RoutineSchedule {
+  mode: 'daily' | 'weekdays' | 'weekly' | 'any'
+  weekdays: number[]
+  timesPerWeek?: number
+}
+export interface RoutineDefinition {
+  id: string
+  name: string
+  kind: RoutineKind
+  enabled: boolean
+  createdDate: string
+  schedule: RoutineSchedule
+  scheduleChanges?: { from: string; schedule: RoutineSchedule }[]
+  stateChanges?: { from: string; enabled: boolean }[]
+  activity?: string
+  bottleMl?: number
+}
+export interface RoutineEntry {
+  id: string
+  routineId: string
+  date: string
+  value: number
+  bottleMl?: number
+}
+export type RoutineGoalMetric = 'value' | 'days' | 'sessions' | 'minutes' | 'distance' | 'runTime'
+export interface RoutineGoal {
+  id: string
+  routineId: string
+  title: string
+  metric: RoutineGoalMetric
+  period: 'day' | 'week' | 'target'
+  target: number
+  startDate: string
+  endDate?: string
+  threshold?: number
+  baseline?: number
+  distanceKm?: number
+  changes?: { from: string; target: number }[]
 }
 
 export interface TrainingGoal {

@@ -60,7 +60,7 @@ type ProfileDraft = {
 }
 type ProfileField = keyof ProfileDraft
 
-const GROUPS = ['Dados pessoais', 'Fichas e consultas', 'Aparência', 'Conta', 'Dados e backup']
+const GROUPS = ['Dados pessoais', 'Rotinas e metas', 'Fichas e consultas', 'Aparência', 'Conta', 'Dados e backup']
 const SettingsGroupContext = createContext<{ active: string | null; select: (title: string | null) => void }>({ active: null, select: () => {} })
 
 function SettingsSection({ icon: SectionIcon, title, description, children }: { icon: Icon; title: string; description: string; children: ReactNode }) {
@@ -232,7 +232,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     try {
       await db.transaction(
         'rw',
-        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.exerciseChecks, db.activityLogs, db.plannedSessions],
+        [db.dailyLogs, db.runningLogs, db.strengthLogs, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.routineEntries],
         async () => {
           await Promise.all([
             db.dailyLogs.clear(),
@@ -241,6 +241,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             db.exerciseChecks.clear(),
             db.activityLogs.clear(),
             db.plannedSessions.clear(),
+            db.routineEntries.clear(),
           ])
         },
       )
@@ -374,6 +375,10 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
         </form>
       </SettingsSection>
 
+      <SettingsSection icon={CalendarDots} title="Rotinas e metas" description="Escolha seus acompanhamentos, frequências e metas opcionais.">
+        <div className="profile-resource-links"><Link to="/rotinas" className="btn-secondary">Gerenciar minhas rotinas e metas</Link></div>
+      </SettingsSection>
+
       <SettingsSection icon={CalendarDots} title="Fichas e consultas" description="Seus exercícios salvos e materiais para consultar quando precisar.">
         <div className="profile-resource-links">
           <Link to="/fichas" className="btn-secondary">Minhas fichas de treino</Link>
@@ -461,7 +466,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             <div>
               <p className="text-[14px] font-semibold text-ink">Backup completo</p>
               <p className="mt-1 text-[12px] leading-5 text-ink-muted">
-                Inclui perfil, metas, atividades, preferências, check-ins, corridas, força e marcações de exercícios.
+                Inclui perfil, rotinas, metas, água, hábitos, check-ins, corridas, força e preferências.
               </p>
             </div>
           </div>
@@ -517,7 +522,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
               <div>
                 <p className="text-[15px] font-semibold text-ink">Apagar histórico</p>
                 <p className="mt-1 max-w-[46ch] text-[12px] leading-5 text-ink-muted">
-                  Remove treinos, corridas e check-ins. Perfil, meta e aparência serão preservados.
+                  Remove treinos, corridas, check-ins e registros das rotinas. Configurações, metas e aparência serão preservadas.
                 </p>
               </div>
               <button

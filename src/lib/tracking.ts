@@ -99,7 +99,7 @@ export function validDailyRatings(value: DailyLog): boolean {
 }
 
 export function hasWellness(log?: DailyLog): boolean {
-  return Boolean(log && (RATING_FIELDS.some(field => log[field] != null) || ['sleepH', 'weightKg', 'energy', 'shoulderPain', 'kneePain', 'rpe'].some(field => typeof log[field as keyof DailyLog] === 'number') || log.notes?.trim()))
+  return Boolean(log && (log.nutritionScore != null || RATING_FIELDS.some(field => log[field] != null) || ['sleepH', 'weightKg', 'energy', 'shoulderPain', 'kneePain', 'rpe'].some(field => typeof log[field as keyof DailyLog] === 'number') || log.notes?.trim()))
 }
 
 export function trackingActivities(daily: DailyLog[], running: RunningLog[], stored: ActivityLog[], strength: StrengthLog[], plan: Plan, today: string): ActivityLog[] {

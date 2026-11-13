@@ -12,6 +12,7 @@ import {
 } from '@/lib/auth'
 
 const TrackingHome = lazy(() => import('@/pages/TrackingHome'))
+const Routines = lazy(() => import('@/pages/Routines'))
 const Recorder = lazy(() => import('@/pages/Recorder'))
 const TrackingHistory = lazy(() => import('@/pages/TrackingHistory'))
 const WorkoutTemplates = lazy(() => import('@/pages/WorkoutTemplates'))
@@ -59,7 +60,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
     if (!loaded) return
     const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
     const previous = metas.map(meta => meta.content)
-    metas.forEach(meta => { meta.content = settings.darkMode ? '#121916' : '#F7F9F7' })
+    metas.forEach(meta => { meta.content = settings.darkMode ? '#121916' : '#FFFFFF' })
     return () => metas.forEach((meta, index) => { meta.content = previous[index] })
   }, [settings.darkMode, loaded])
 
@@ -77,6 +78,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
       <Suspense fallback={<AppSkeleton />}>
         <Routes>
           <Route path="/" element={<TrackingHome settings={settings} />} />
+          <Route path="/rotinas" element={<Routines />} />
           <Route path="/registrar" element={<Recorder key={today} />} />
           <Route path="/historico" element={<TrackingHistory />} />
           <Route path="/fichas" element={<WorkoutTemplates />} />

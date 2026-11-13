@@ -7,16 +7,21 @@ function stripId<T extends { id?: number }>(value: T): Omit<T, 'id'> {
 }
 
 export async function createTrainingBackup(profileId: string): Promise<TrainingBackup> {
-  return db.transaction('r', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates], async () => {
+  return db.transaction('r', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates, db.routines, db.routineEntries, db.routineGoals], async () => {
     const [daily, running, strength, settings, exerciseChecks, activities, plannedSessions, workoutTemplates] = await Promise.all([db.dailyLogs.toArray(), db.runningLogs.toArray(), db.strengthLogs.toArray(), db.settings.toArray(), db.exerciseChecks.toArray(), db.activityLogs.toArray(), db.plannedSessions.toArray(), db.workoutTemplates.toArray()])
-    return { kind: `treino-${profileId}-backup`, schemaVersion: 4, exportedAt: new Date().toISOString(), daily, running, strength, settings, exerciseChecks, activities, plannedSessions, workoutTemplates }
+    const [routines, routineEntries, routineGoals] = await Promise.all([db.routines.toArray(), db.routineEntries.toArray(), db.routineGoals.toArray()])
+    return { kind: `treino-${profileId}-backup`, schemaVersion: 5, exportedAt: new Date().toISOString(), daily, running, strength, settings, exerciseChecks, activities, plannedSessions, workoutTemplates, routines, routineEntries, routineGoals }
   })
 }
 
 export async function restoreTrainingBackup(payload: TrainingBackup, profileId: string) {
   if (payload.kind && payload.kind !== `treino-${profileId}-backup`) throw new Error('Este backup pertence a outro perfil. Entre na conta correta antes de restaurar.')
-  await db.transaction('rw', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates], async () => {
-    for (const log of payload.daily) await saveDailyLog(stripId(log))
+  await db.transaction('rw', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates, db.routines, db.routineEntries, db.routineGoals], async () => {
+    for (const log of payload.daily) await saveDailyLog({
+      ...stripId(log),
+      ...(log.nutritionRating != null && log.nutritionScore == null ? { nutritionScore: undefined } : {}),
+      ...(log.sleepH != null && !log.sleepStart && !log.sleepEnd ? { sleepStart: undefined, sleepEnd: undefined } : {}),
+    })
     const runIdMap = new Map<number, number>()
     const claimedRuns = new Set<number>()
     const storedActivities = await db.activityLogs.toArray()
@@ -61,5 +66,10 @@ export async function restoreTrainingBackup(payload: TrainingBackup, profileId: 
       else await db.exerciseChecks.add(check)
     }
     await db.workoutTemplates.bulkPut(payload.workoutTemplates)
+    await db.routines.bulkPut(payload.routines)
+    await db.routineEntries.bulkPut(payload.routineEntries)
+    await db.routineGoals.bulkPut(payload.routineGoals)
+    // Old backups may bring previously unseen health data or an explicit legacy goal.
+    if (!payload.routines.length) await db.settings.where('key').equals('routinesInitialized').delete()
   })
 }

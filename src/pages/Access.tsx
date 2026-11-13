@@ -43,7 +43,7 @@ export default function Access() {
     <main className="training-theme tracking-theme training-access">
       <div className="access-form">
         <span className="icon-tile mb-6" aria-hidden="true"><ShieldCheck size={28} /></span>
-        <p className="page-kicker">Treino e bem-estar</p>
+        <p className="page-kicker">Rotinas de saúde</p>
         <h1 className="page-title mt-2">Seu acompanhamento começa aqui</h1>
         <p className="page-subtitle mt-3">Entre com seu código para abrir seus registros e acompanhar seu progresso.</p>
             <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>

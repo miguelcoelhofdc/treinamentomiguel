@@ -3,3 +3,6 @@
 .env.*
 !.env.example
 .design/treino-jornada/build/
+node_modules/
+dist/
+/tmp/routines-build/

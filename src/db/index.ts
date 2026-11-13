@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { ActivityLog, DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck, PlannedSession, WorkoutTemplate } from '@/types'
+import type { ActivityLog, DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck, PlannedSession, WorkoutTemplate, RoutineDefinition, RoutineEntry, RoutineGoal } from '@/types'
 import { ACCESS_PROFILES, getStoredProfileId } from '@/lib/auth'
 
 export class TrainingDB extends Dexie {
@@ -11,6 +11,9 @@ export class TrainingDB extends Dexie {
   activityLogs!: Table<ActivityLog, string>
   plannedSessions!: Table<PlannedSession, string>
   workoutTemplates!: Table<WorkoutTemplate, string>
+  routines!: Table<RoutineDefinition, string>
+  routineEntries!: Table<RoutineEntry, string>
+  routineGoals!: Table<RoutineGoal, string>
 
   constructor(databaseName: string) {
     super(databaseName)
@@ -33,6 +36,11 @@ export class TrainingDB extends Dexie {
     this.version(5).stores({
       workoutTemplates: 'id, activity',
       strengthLogs: '++id, date, exercise, activityLogId, exerciseId',
+    })
+    this.version(6).stores({
+      routines: 'id',
+      routineEntries: 'id, date, routineId, &[routineId+date]',
+      routineGoals: 'id, routineId, startDate',
     })
   }
 }
