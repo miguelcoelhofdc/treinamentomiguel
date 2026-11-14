@@ -256,53 +256,106 @@
   }
 }
 .tracking-theme .home-trends { padding: 18px 16px; overflow: hidden; }
+.tracking-theme .home-trends-hero {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse 90% 70% at 100% -10%, hsl(var(--color-accent-soft) / .95), transparent 58%),
+    radial-gradient(ellipse 70% 55% at 0% 100%, hsl(var(--color-accent-soft) / .55), transparent 52%),
+    hsl(var(--color-surface));
+}
 .tracking-theme .home-trends-heading {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 12px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
 }
 .tracking-theme .home-trends-heading > div:first-child { min-width: 0; }
 .tracking-theme .home-trends-heading h2 { font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
 .tracking-theme .home-trends-periods {
   display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; flex-shrink: 0;
-  background: hsl(var(--color-surface-raised));
+  background: hsl(var(--color-canvas) / .9); border: 1px solid hsl(var(--color-line) / .7);
 }
 .tracking-theme .home-trends-periods button {
-  min-height: 32px; min-width: 0; padding: 0 10px; border-radius: 999px;
+  min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 999px;
   font-size: 12px; font-weight: 600; color: hsl(var(--color-ink-muted));
+  transition: background-color .18s ease, color .18s ease, transform .18s ease;
 }
 .tracking-theme .home-trends-periods button[aria-pressed=true] {
-  background: #111; color: #fff;
+  background: var(--brand-violet); color: #fff;
+  box-shadow: 0 8px 18px -12px rgba(101, 92, 242, 0.8);
 }
+.tracking-theme .home-trends-periods button:active { transform: scale(.97); }
 .tracking-theme .home-metric-tabs {
   display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain;
-  padding-bottom: 2px; margin-bottom: 12px; margin-inline: -2px; padding-inline: 2px;
+  padding-bottom: 2px; margin-bottom: 16px; margin-inline: -2px; padding-inline: 2px;
   scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .tracking-theme .home-metric-tabs::-webkit-scrollbar { display: none; }
 .tracking-theme .home-metric-tabs button {
-  flex: 0 0 auto; min-height: 36px; min-width: 0; padding: 0 13px; border-radius: 999px;
-  border: 1px solid hsl(var(--color-line)); background: hsl(var(--color-surface));
+  display: inline-flex; align-items: center; gap: 6px;
+  flex: 0 0 auto; min-height: 44px; min-width: 44px; padding: 0 13px; border-radius: 999px;
+  border: 1px solid hsl(var(--color-line)); background: hsl(var(--color-surface) / .82);
   font-size: 13px; font-weight: 600; color: hsl(var(--color-ink-muted));
+  transition: background-color .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
 }
 .tracking-theme .home-metric-tabs button.is-active {
-  background: var(--lime); border-color: transparent; color: var(--action-ink);
+  background: hsl(var(--color-accent-soft)); border-color: transparent; color: hsl(var(--color-accent-strong));
 }
+.tracking-theme .home-metric-tabs button:active { transform: scale(.97); }
 .tracking-theme .home-exercise-select { display: block; margin-bottom: 12px; }
 .tracking-theme .home-exercise-select .input { min-height: 44px; width: 100%; }
-.tracking-theme .home-trends-summary { margin-bottom: 8px; min-width: 0; }
+.tracking-theme .home-trends-summary {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  margin-bottom: 14px; min-width: 0;
+}
+.tracking-theme .home-trends-summary-main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.tracking-theme .home-trends-summary-icon {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 14px; flex-shrink: 0;
+  background: linear-gradient(155deg, var(--brand-violet), var(--brand-violet-hover));
+  color: #fff;
+  box-shadow: 0 12px 24px -14px rgba(101, 92, 242, 0.7);
+}
 .tracking-theme .home-trends-summary strong {
-  font-size: 28px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums;
+  font-size: 34px; font-weight: 700; letter-spacing: -.04em; font-variant-numeric: tabular-nums; line-height: 1;
 }
 .tracking-theme .home-trends-summary strong + span {
-  margin-left: 6px; font-size: 13px; color: hsl(var(--color-ink-muted)); font-weight: 500;
+  margin-left: 7px; font-size: 13px; color: hsl(var(--color-ink-muted)); font-weight: 500;
 }
-.tracking-theme .home-trends-summary .helper { display: block; margin-top: 4px; }
+.tracking-theme .home-trends-chip {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  min-height: 30px; padding: 0 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; line-height: 1.2;
+  background: hsl(var(--color-canvas)); color: hsl(var(--color-ink-soft));
+}
+.tracking-theme .home-trends-chip.is-up { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
+.tracking-theme .home-trends-chip.is-down { background: #fdeceb; color: #a6463a; }
+.dark .tracking-theme .home-trends-chip.is-down { background: #3a2422; color: #f0b0a7; }
+.tracking-theme .home-trends-stage {
+  position: relative; border-radius: 22px; overflow: hidden;
+  background: linear-gradient(180deg, hsl(var(--color-surface) / .35), hsl(var(--color-canvas) / .7));
+  border: 1px solid hsl(var(--color-line) / .55);
+  padding: 10px 6px 4px;
+}
+.tracking-theme .home-trends-stage::before {
+  content: '';
+  position: absolute; inset: auto -10% -35% 35%; height: 55%;
+  background: radial-gradient(circle, hsl(var(--color-accent-soft) / .9), transparent 68%);
+  pointer-events: none;
+}
 .tracking-theme .home-trends-canvas {
-  height: 180px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;
+  position: relative; z-index: 1;
+  height: 210px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden;
 }
 .tracking-theme .home-trends-canvas .recharts-responsive-container { width: 100% !important; }
+.tracking-theme .home-trends-tooltip {
+  display: grid; gap: 2px; min-width: 112px; padding: 10px 12px; border-radius: 14px;
+  background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .7);
+  box-shadow: 0 16px 32px -18px rgba(17, 17, 17, 0.35);
+}
+.tracking-theme .home-trends-tooltip span { font-size: 11px; color: hsl(var(--color-ink-muted)); }
+.tracking-theme .home-trends-tooltip strong { font-size: 15px; font-weight: 650; letter-spacing: -.02em; }
+.tracking-theme .home-trends-tooltip em { font-style: normal; font-size: 11px; color: hsl(var(--color-accent-strong)); }
 .tracking-theme .home-trends-empty {
   display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
-  padding: 14px 0 4px;
+  padding: 18px 4px 8px;
 }
 .tracking-theme .home-trends-empty p { font-size: 14px; color: hsl(var(--color-ink-muted)); line-height: 1.5; }
 .tracking-theme .home-analytics .latest-session { padding: 18px 16px; }
@@ -353,10 +406,83 @@
 .tracking-theme .entry-tabs button[aria-pressed=true] { color: hsl(var(--color-accent-strong)); background: hsl(var(--color-surface)); border-color: hsl(var(--color-line)); }
 .tracking-theme .tracking-form { display: grid; gap: 24px; }
 .tracking-theme .tracking-fields { display: grid; gap: 23px; min-width: 0; }
-.tracking-theme .form-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }
-.tracking-theme .form-columns > div { min-width: 0; }
-.tracking-theme .activity-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.tracking-theme .activity-choices button { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 17px 8px; border-radius: 17px; border: 2px solid hsl(var(--color-line)); border-bottom-width: 4px; color: hsl(var(--color-ink-muted)); font-weight: 600; }
+.tracking-theme .form-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.tracking-theme .form-columns > * {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+}
+.tracking-theme .form-columns .input,
+.tracking-theme .form-columns select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.tracking-theme :is(input[type='date'], input[type='datetime-local'], input[type='time'], input[type='month']) {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.tracking-theme :is(input[type='date'], input[type='datetime-local'], input[type='time'], input[type='month'])::-webkit-datetime-edit {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+.tracking-theme :is(input[type='date'], input[type='datetime-local'])::-webkit-calendar-picker-indicator {
+  flex-shrink: 0;
+  margin-inline-start: 4px;
+}
+.tracking-theme .activity-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.tracking-theme .activity-choices button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 88px;
+  padding: 14px 6px;
+  border-radius: 17px;
+  border: 2px solid hsl(var(--color-line));
+  border-bottom-width: 4px;
+  color: hsl(var(--color-ink-muted));
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.tracking-theme .activity-choices button svg { flex-shrink: 0; width: 26px; height: 26px; }
+.tracking-theme .activity-choices button > span {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .tracking-theme .activity-choices .choice-selected { border-color: hsl(var(--color-accent)); background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
 .tracking-theme .count-pill { background: hsl(var(--color-surface-raised)); padding: 4px 10px; font-size: 13px; border-radius: 9px; color: hsl(var(--color-ink-muted)); }
 .tracking-theme .record-exercise { border: 2px solid hsl(var(--color-line)); border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
@@ -394,7 +520,7 @@
 .tracking-theme .saved-illustration { color: hsl(var(--color-accent-strong)); background: hsl(var(--color-accent-soft)); padding: 23px; border-radius: 30px; animation: tracking-confirm .3s ease-out; }
 .tracking-theme .saved-panel h2 { font-size: 25px; }
 .tracking-theme .saved-panel p { color: hsl(var(--color-ink-muted)); font-size: 15px; max-width: 34ch; }
-.tracking-theme .saved-panel .btn-primary, .tracking-theme .saved-panel .btn-secondary { min-width: 230px; }
+.tracking-theme .saved-panel .btn-primary, .tracking-theme .saved-panel .btn-secondary { min-width: min(230px, 100%); }
 .tracking-theme .history-filter { display: block; max-width: 300px; margin-bottom: 26px; }
 .tracking-theme .history-day { margin-bottom: 25px; }
 .tracking-theme .history-day h2 { display: flex; gap: 10px; align-items: baseline; font-size: 17px; margin-bottom: 11px; }
@@ -500,8 +626,8 @@
   .tracking-theme .training-nav { width: 224px; padding: 34px 18px; }
   .tracking-theme .training-nav-brand { margin-bottom: 35px; }
   .tracking-theme .training-nav-item { border-radius: 15px; min-height: 54px; padding-inline: 15px; }
-  .tracking-theme .nav-active { border: 2px solid #b9dfa0; }
-  .dark .tracking-theme .nav-active { border-color: #436033; }
+  .tracking-theme .nav-active { border: 0; }
+  .dark .tracking-theme .nav-active { border: 0; }
 }
 @media (max-width: 767px) {
   .tracking-theme .page-content {
@@ -526,7 +652,9 @@
   .tracking-theme .home-kpi { padding: 11px 9px; border-radius: 16px; }
   .tracking-theme .home-kpi strong { font-size: 18px; }
   .tracking-theme .home-trends { padding: 16px 14px; border-radius: 24px; }
-  .tracking-theme .home-trends-canvas { height: 168px; }
+  .tracking-theme .home-trends-canvas { height: 190px; }
+  .tracking-theme .home-trends-summary { flex-wrap: wrap; }
+  .tracking-theme .home-trends-summary strong { font-size: 30px; }
   .tracking-theme .home-analytics .latest-session { padding: 16px 14px; border-radius: 24px; }
   .tracking-theme .home-day-chip { font-size: 10px; }
   .tracking-theme .home-day-chip strong { font-size: 12px; }
@@ -549,9 +677,12 @@
   .tracking-theme .latest-session-link strong { font-size: 17px; }
   .tracking-theme .latest-strength { font-size: 12px; }
   .tracking-theme .latest-session .section-heading { margin-bottom: 13px; }
-  .tracking-theme .form-columns { grid-template-columns: 1fr; gap: 20px; }
-  .tracking-theme .session-form .form-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 13px; }
-  .tracking-theme .session-form .form-columns .label { font-size: 12px; }
+  .tracking-theme .form-columns { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .tracking-theme .activity-choices { gap: 8px; }
+  .tracking-theme .activity-choices button { min-height: 82px; padding: 12px 4px; font-size: 12px; gap: 6px; }
+  .tracking-theme .activity-choices button svg { width: 24px; height: 24px; }
+  .tracking-theme .session-form .form-columns { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .tracking-theme .session-form .form-columns .label { font-size: 13px; }
   .tracking-theme .record-exercise-body { padding-inline: 10px; }
   .tracking-theme .set-header, .tracking-theme .set-row { grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 6px; }
   .tracking-theme .set-row .input { padding-inline: 9px; }
@@ -569,7 +700,9 @@
   .tracking-theme .summary-item { padding: 12px 10px; }
   .tracking-theme .chart-heading h2 { font-size: 17px; }
   .tracking-theme .record-exercise-heading { padding-inline: 9px; gap: 8px; }
-  .tracking-theme .session-form .form-columns { grid-template-columns: 1fr; }
+}
+@media (min-width: 768px) {
+  .tracking-theme .session-form .form-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .tracking-theme *, .tracking-theme *::before, .tracking-theme *::after { animation: none !important; transition: none !important; }

@@ -14,6 +14,7 @@ import { useTracking } from '@/hooks/useTracking'
 import { addCalendarDays, formatShortDate, weekday } from '@/lib/date'
 import { activitySummary, hasWellness, numberLabel, progressPoints } from '@/lib/tracking'
 import CheckInForm from '@/components/tracking/CheckInForm'
+import HomeTrends from '@/components/tracking/HomeTrends'
 import SessionDetails from '@/components/tracking/SessionDetails'
 import { ActivityBadge, SavedNotice, TrackingError } from '@/components/tracking/TrackingState'
 import type { TrainingSettings } from '@/types'
@@ -26,6 +27,7 @@ function HomeLoading() {
       <div className="home-start-actions"><div className="skeleton home-start-workout-skeleton" /><div className="skeleton home-start-checkin-skeleton" /></div>
       <div className="home-start-summary"><div className="skeleton h-32" /><div className="skeleton h-32" /><div className="skeleton h-32" /></div>
       <div className="home-start-secondary"><div className="skeleton h-44" /><div className="skeleton h-44" /></div>
+      <div className="skeleton home-start-trends-skeleton" />
     </div>
   )
 }
@@ -202,6 +204,8 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
             )}
           </section>
         </div>
+
+        <HomeTrends data={data} showAll />
       </>}
 
       {details && latest && (

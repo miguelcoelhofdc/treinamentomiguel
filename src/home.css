@@ -88,8 +88,20 @@
 .home-theme .home-start-empty .home-start-text-link { justify-content: flex-start; font-size: 13px; margin-top: 2px; }
 .home-theme .home-start-loading { display: grid; gap: 26px; }
 .home-theme .home-start-loading .skeleton { border-radius: 22px; animation: none; }
+.home-theme .home-start-trends-skeleton { min-height: 380px; }
+.home-theme .home-start .home-trends-hero {
+  animation: home-trends-rise 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes home-trends-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-theme .home-start .home-trends-hero { animation: none; }
+}
 .home-theme .home-start-workout-skeleton { min-height: 238px; }
 .home-theme .home-start-checkin-skeleton { min-height: 100px; }
+.home-theme .home-start .home-trends { margin-bottom: 0; }
 .home-theme .tracking-empty { padding: 24px; border: 1px solid hsl(var(--color-line)); border-radius: 22px; background: hsl(var(--color-surface)); }
 .home-theme .saved-notice { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); border-color: hsl(var(--color-line)); margin-bottom: 0; animation: none; }
 
@@ -127,11 +139,20 @@
   .home-theme .home-start-checkin { gap: 10px; padding: 16px; }
   .home-theme .home-start-checkin-icon { width: 38px; height: 38px; border-radius: 12px; }
   .home-theme .home-start-checkin-copy strong { font-size: 15px; }
-  .home-theme .home-start-summary { gap: 7px; }
-  .home-theme .home-start-metric { padding: 14px 9px; }
-  .home-theme .home-start-metric > strong { font-size: 22px; }
+  .home-theme .home-start-summary { grid-template-columns: 1fr; gap: 8px; }
+  .home-theme .home-start-metric {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 2px;
+    padding: 14px 16px;
+  }
+  .home-theme .home-start-metric-icon { margin-bottom: 0; grid-row: 1 / span 2; }
+  .home-theme .home-start-metric h3 { font-size: 13px; grid-column: 2; }
+  .home-theme .home-start-metric > strong { font-size: 22px; grid-column: 3; grid-row: 1 / span 2; }
   .home-theme .home-start-metric > strong > span { font-size: 11px; }
-  .home-theme .home-start-metric h3 { font-size: 11px; }
+  .home-theme .home-start-metric > p { margin-top: 0; grid-column: 2; }
   .home-theme .home-start-panel { padding: 15px; }
   .home-theme .home-start-calendar-row { gap: 4px; }
 }

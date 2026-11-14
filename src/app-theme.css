@@ -34,7 +34,10 @@
   --color-accent-soft: 245 28% 23%;
   background: #18181f;
 }
-.app-theme .page-content { max-width: 1120px; padding: calc(28px + var(--safe-top)) 20px calc(116px + var(--safe-bottom)); overflow-x: visible; min-width: 0; }
+.app-theme .page-content { max-width: 1120px; padding: calc(28px + var(--safe-top)) 20px calc(116px + var(--safe-bottom)); overflow-x: clip; min-width: 0; }
+.app-theme .tracking-form,
+.app-theme .tracking-fields,
+.app-theme .label { min-width: 0; max-width: 100%; }
 .app-theme .page-title { font-size: 28px; font-weight: 600; line-height: 1.15; letter-spacing: -.035em; overflow-wrap: anywhere; }
 .app-theme .page-header { align-items: center; gap: 16px; margin-bottom: 28px; }
 .app-theme .page-subtitle { font-size: 14px; line-height: 1.5; }
@@ -43,14 +46,16 @@
 .app-theme .section-heading { gap: 12px; flex-wrap: wrap; }
 .app-theme .section-heading h2 { font-size: 18px; font-weight: 500; }
 .app-theme :is(.tracking-entry, .training-form-page) { max-width: 860px; }
-.app-theme .tracking-panel { background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 22px; padding: 24px; box-shadow: none; }
+.app-theme .tracking-panel { background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 22px; padding: 24px; box-shadow: none; min-width: 0; overflow-x: clip; }
 .app-theme .btn-primary { background: var(--brand-violet); color: #fff; box-shadow: none; border-radius: 14px; font-weight: 500; }
 .app-theme .btn-primary:hover { background: var(--brand-violet-hover); }
 .app-theme .btn-secondary { border-width: 1px; border-radius: 14px; font-weight: 500; }
 .app-theme .btn-icon { min-width: 44px; min-height: 44px; }
 .app-theme .inline-link { min-width: 44px; min-height: 44px; max-width: 100%; font-size: 13px; font-weight: 500; white-space: normal; overflow-wrap: anywhere; }
 .app-theme .inline-link svg { flex-shrink: 0; }
-.app-theme .input { border-width: 1px; border-radius: 14px; background: hsl(var(--color-surface)); min-height: 48px; }
+.app-theme .input { border-width: 1px; border-radius: 14px; background: hsl(var(--color-surface)); min-height: 48px; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.app-theme .form-columns { width: 100%; max-width: 100%; min-width: 0; }
+.app-theme .form-columns > * { min-width: 0; max-width: 100%; }
 .app-theme .label { font-size: 14px; font-weight: 500; }
 .app-theme :is(button, a, input, textarea, select):focus-visible { outline: 3px solid hsl(var(--color-accent-strong)); outline-offset: 4px; }
 .app-theme .tracking-form { gap: 24px; }
@@ -58,8 +63,18 @@
 .app-theme .entry-tabs { background: hsl(var(--color-canvas)); padding: 5px; border-radius: 16px; gap: 5px; border: 1px solid hsl(var(--color-line) / .6); }
 .app-theme .entry-tabs button { border: 1px solid transparent; border-radius: 12px; font-size: 14px; font-weight: 400; min-height: 44px; }
 .app-theme .entry-tabs button[aria-pressed=true] { background: hsl(var(--color-surface)); color: hsl(var(--color-accent-strong)); border-color: hsl(var(--color-line) / .5); font-weight: 500; }
-.app-theme .activity-choices { gap: 10px; }
-.app-theme .activity-choices button { border-width: 1px; border-radius: 16px; padding: 16px 8px; font-size: 14px; font-weight: 400; }
+.app-theme .activity-choices { gap: 8px; width: 100%; max-width: 100%; min-width: 0; }
+.app-theme .activity-choices button {
+  border-width: 1px;
+  border-radius: 16px;
+  padding: 14px 4px;
+  font-size: 13px;
+  font-weight: 400;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .app-theme .activity-choices .choice-selected { border-color: var(--brand-violet); background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
 .app-theme .rating-options button { border-width: 1px; font-weight: 400; }
 .app-theme .rating-options .rating-selected { border-color: var(--brand-violet); background: hsl(var(--color-accent-soft)); }
@@ -83,13 +98,13 @@
 /* Analysis: shared surfaces, softer chart controls and compact history rows. */
 .app-theme .tracking-history > .form-columns { padding: 18px 20px; border-radius: 20px; background: hsl(var(--color-surface)); gap: 16px; margin-bottom: 24px; }
 .app-theme .history-filter { margin-bottom: 0; max-width: none; min-width: 0; }
-.app-theme .home-trends { padding: 24px; margin-bottom: 28px; }
+.app-theme .home-trends { padding: 22px; margin-bottom: 28px; border-radius: 26px; }
 .app-theme .home-trends-heading h2 { font-size: 22px; font-weight: 500; }
-.app-theme .home-trends-summary strong { font-weight: 500; }
+.app-theme .home-trends-summary strong { font-weight: 600; }
 .app-theme .home-metric-tabs { gap: 6px; }
-.app-theme .home-metric-tabs button { min-height: 44px; min-width: 44px; padding-inline: 16px; font-weight: 400; }
+.app-theme .home-metric-tabs button { min-height: 44px; min-width: 44px; padding-inline: 14px; font-weight: 400; }
 .app-theme .home-metric-tabs button.is-active { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); border-color: transparent; font-weight: 500; }
-.app-theme .home-trends-periods button[aria-pressed=true] { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
+.app-theme .home-trends-periods button[aria-pressed=true] { background: var(--brand-violet); color: #fff; }
 .app-theme .history-day { margin-bottom: 24px; }
 .app-theme .history-day h2 { font-size: 15px; font-weight: 500; }
 .app-theme .history-day-panel { padding: 0 20px; }
@@ -141,9 +156,9 @@
 .app-theme.training-access .page-title { font-size: 28px; line-height: 1.2; }
 .app-theme.training-access .helper { margin-top: 10px; }
 
-/* The navigation matches the approved start page at every route. */
+/* Floating bottom nav keeps today's violet palette. */
 .app-theme .training-nav { background: hsl(var(--color-surface)); border-color: hsl(var(--color-line)); }
-.app-theme .training-nav-inner { background: hsl(var(--color-surface)); box-shadow: none; }
+.app-theme .training-nav-inner { background: hsl(var(--color-surface)); }
 .app-theme .training-nav-item { color: hsl(var(--color-ink-muted)); }
 .app-theme .nav-active { color: hsl(var(--color-accent-strong)); background: hsl(var(--color-accent-soft)); border: 0; }
 .dark .app-theme .nav-active { border: 0; }
@@ -151,12 +166,77 @@
 .app-theme .training-nav-brand > span:first-child { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
 .app-theme .training-nav-brand > span:first-child svg { color: inherit; }
 @media (max-width: 1023px) {
-  .app-theme .training-nav { left: 0; right: 0; bottom: 0; border-top: 1px solid hsl(var(--color-line) / .6); padding: 6px 12px calc(8px + var(--safe-bottom)); }
-  .app-theme .training-nav-inner { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; max-width: 560px; margin-inline: auto; gap: 6px; padding: 0; border-radius: 0; }
-  .app-theme .training-nav-item { flex-direction: column; gap: 4px; min-height: 58px; padding: 7px 2px; border-radius: 15px; font-size: 11px; font-weight: 400; }
-  .app-theme .training-nav-item .nav-label { display: inline; overflow: visible; font-size: 11px; }
-  .app-theme .training-nav-item .nav-icon { display: grid; place-items: center; width: 24px; height: 24px; color: inherit; background: transparent; }
-  .app-theme .nav-active { font-weight: 500; }
+  .app-theme .training-nav {
+    left: max(12px, env(safe-area-inset-left, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(10px + var(--safe-bottom));
+    border: 0;
+    padding: 0;
+    background: transparent;
+    pointer-events: none;
+  }
+  .app-theme .training-nav-inner {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    gap: 4px;
+    padding: 6px;
+    border-radius: 999px;
+    background: hsl(var(--color-surface));
+    border: 1px solid hsl(var(--color-line) / .55);
+    box-shadow: 0 18px 40px -18px rgba(17, 17, 17, 0.35);
+  }
+  .app-theme .training-nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    flex-direction: row;
+    gap: 6px;
+    padding-inline: 4px;
+    border-radius: 999px;
+    font-size: 0;
+    font-weight: 500;
+  }
+  .app-theme .training-nav-item .nav-label { display: none; }
+  .app-theme .training-nav-item .nav-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    color: inherit;
+    background: transparent;
+  }
+  .app-theme .nav-active {
+    flex: 1.4 1 0;
+    background: var(--brand-violet);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding-inline: 10px;
+  }
+  .app-theme .nav-active .nav-label {
+    display: inline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .app-theme .nav-active .nav-icon {
+    width: auto;
+    height: auto;
+    background: transparent;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .dark .app-theme .training-nav-inner {
+    background: hsl(var(--color-surface));
+    border-color: hsl(var(--color-line) / .7);
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.55);
+  }
 }
 @media (min-width: 768px) {
   .app-theme .page-content { padding: 40px 32px 116px; }
@@ -197,6 +277,8 @@
   .app-theme .settings-group-trigger > svg:first-child { width: 36px; height: 36px; padding: 8px; }
   .app-theme.training-access .access-form { padding: 24px; }
   .app-theme.training-access .page-title { font-size: 25px; }
+  .app-theme .activity-choices { gap: 6px; }
+  .app-theme .activity-choices button { padding: 12px 2px; font-size: 12px; min-height: 78px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .app-theme *, .app-theme *::before, .app-theme *::after { animation: none !important; transition: none !important; }

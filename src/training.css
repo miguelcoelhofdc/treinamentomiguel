@@ -105,7 +105,8 @@
 .training-theme .sheet-overlay {background:rgb(16 30 23 / .4);backdrop-filter:none}
 .training-theme .sheet-panel,.training-theme .modal-card {border:0;border-radius:20px 20px 0 0;box-shadow:0 16px 64px rgb(0 0 0 / .12)}
 .training-theme .journey-sheet-root {position:fixed;inset:0;z-index:70}
-.training-theme .journey-sheet {max-width:560px;max-height:calc(var(--sheet-visible-height,100dvh) - 24px - var(--safe-top));bottom:var(--sheet-keyboard-offset,0px);padding:16px 20px calc(24px + var(--safe-bottom));overscroll-behavior:contain}
+.training-theme .journey-sheet {max-width:560px;max-height:calc(var(--sheet-visible-height,100dvh) - 24px - var(--safe-top));bottom:var(--sheet-keyboard-offset,0px);padding:16px 20px calc(24px + var(--safe-bottom));overscroll-behavior:contain;overflow-x:clip;box-sizing:border-box}
+.training-theme .journey-sheet .activity-choices,.training-theme .journey-sheet .tracking-fields,.training-theme .journey-sheet .tracking-form{min-width:0;max-width:100%}
 .training-theme .modal-card {border-radius:20px}
 .training-theme .disclosure {border:0;border-radius:0;background:transparent;border-bottom:1px solid hsl(var(--color-line))}
 .training-theme .disclosure-trigger {padding:16px 0;min-height:64px}

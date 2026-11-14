@@ -9,8 +9,8 @@ export interface AccessProfile {
 const ACTIVE_PROFILE_KEY = 'treino-active-profile'
 
 const ACCESS_HASHES: Record<ProfileId, string> = {
-  miguel: '58fd907dd28fa63fefcc0d678ad44921e2b69d7421067c183d5dd298cf413bd5',
-  sintia: '560feb7d1519b097d694c3518b4daf8779918ff7adf2fbeeb26359ffb585310d',
+  miguel: '69e62ea6ec1e1e35959c97f5631d02c93286c13410c20895fb8b5118cf644ef0',
+  sintia: '69be0182f4d8fa9f909126ba2ded763d076e10fc4999b9dee9cec1f596ea2cad',
 }
 
 export const ACCESS_PROFILES: Record<ProfileId, AccessProfile> = {
