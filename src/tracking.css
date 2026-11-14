@@ -487,7 +487,7 @@
 .tracking-theme .count-pill { background: hsl(var(--color-surface-raised)); padding: 4px 10px; font-size: 13px; border-radius: 9px; color: hsl(var(--color-ink-muted)); }
 .tracking-theme .record-exercise { border: 2px solid hsl(var(--color-line)); border-radius: 16px; margin-bottom: 12px; overflow: hidden; }
 .tracking-theme .record-exercise-heading { display: flex; align-items: center; width: 100%; padding: 15px 12px; gap: 11px; text-align: left; }
-.tracking-theme .record-exercise-heading strong { font-size: 15px; font-weight: 600; }
+.tracking-theme .record-exercise-heading strong { display: block; font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
 .tracking-theme .exercise-number { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9px; background: hsl(var(--color-surface-raised)); color: hsl(var(--color-ink-muted)); font-size: 13px; font-weight: 600; flex-shrink: 0; }
 .tracking-theme .record-exercise-body { padding: 4px 14px 15px; }
 .tracking-theme .previous-result { padding: 10px 12px; margin-bottom: 14px; background: hsl(var(--color-surface-raised)); border-radius: 10px; font-size: 12px; line-height: 1.5; color: hsl(var(--color-ink-muted)); }
@@ -499,8 +499,26 @@
 .tracking-theme .exercise-tools { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid hsl(var(--color-line)); margin-top: 13px; padding-top: 8px; }
 .tracking-theme .exercise-tools button { font-size: 12px; }
 .tracking-theme .session-extra { border-top: 1px solid hsl(var(--color-line)); }
-.tracking-theme .session-extra summary { cursor: pointer; min-height: 44px; padding: 12px 0; font-size: 14px; font-weight: 500; }
-.tracking-theme .session-extra summary span { margin-left: 12px; color: hsl(var(--color-ink-muted)); font-weight: 400; }
+.tracking-theme .session-extra summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.tracking-theme .session-extra summary span {
+  margin-left: 0;
+  min-width: 0;
+  color: hsl(var(--color-ink-muted));
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .tracking-theme .session-extra > div { margin-top: 12px; }
 .tracking-theme .exercise-picker { border: 2px solid hsl(var(--color-line)); border-radius: 16px; background: hsl(var(--color-surface-raised)); padding: 13px; }
 .tracking-theme .picker-search { position: relative; }
@@ -683,8 +701,19 @@
   .tracking-theme .activity-choices button svg { width: 24px; height: 24px; }
   .tracking-theme .session-form .form-columns { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .tracking-theme .session-form .form-columns .label { font-size: 13px; }
+  .tracking-theme .session-form .entry-tabs {
+    gap: 4px;
+    padding: 4px;
+  }
+  .tracking-theme .session-form .entry-tabs button {
+    font-size: 12px;
+    padding: 10px 6px;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
   .tracking-theme .record-exercise-body { padding-inline: 10px; }
   .tracking-theme .set-header, .tracking-theme .set-row { grid-template-columns: 26px minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 6px; }
+  .tracking-theme .set-header { font-size: 10px; }
   .tracking-theme .set-row .input { padding-inline: 9px; }
   .tracking-theme .template-grid { grid-template-columns: 1fr; }
   .tracking-theme .history-day-panel { padding: 0 15px; }
@@ -700,6 +729,14 @@
   .tracking-theme .summary-item { padding: 12px 10px; }
   .tracking-theme .chart-heading h2 { font-size: 17px; }
   .tracking-theme .record-exercise-heading { padding-inline: 9px; gap: 8px; }
+  .tracking-theme .session-form .entry-tabs button {
+    font-size: 11px;
+    padding: 10px 5px;
+  }
+  .tracking-theme .exercise-tools {
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
 }
 @media (min-width: 768px) {
   .tracking-theme .session-form .form-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }

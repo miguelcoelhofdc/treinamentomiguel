@@ -279,6 +279,16 @@
   .app-theme.training-access .page-title { font-size: 25px; }
   .app-theme .activity-choices { gap: 6px; }
   .app-theme .activity-choices button { padding: 12px 2px; font-size: 12px; min-height: 78px; }
+  /* Evita "Regist..." na nav ativa em ecrãs muito estreitos */
+  .app-theme .nav-active {
+    flex: 1 1 0;
+    padding-inline: 4px;
+  }
+  .app-theme .nav-active .nav-label { display: none; }
+  .app-theme .nav-active .nav-icon {
+    width: 36px;
+    height: 36px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .app-theme *, .app-theme *::before, .app-theme *::after { animation: none !important; transition: none !important; }
