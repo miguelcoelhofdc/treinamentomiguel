@@ -1,0 +1,54 @@
+{
+  "light": [
+    {
+      "selector": ".home-start-header .page-title",
+      "ratio": 13.10090881873438
+    },
+    {
+      "selector": ".home-start-workout p",
+      "ratio": 4.809498351277248
+    },
+    {
+      "selector": ".home-start-primary",
+      "ratio": 6.465875738877154
+    },
+    {
+      "selector": ".home-start-metric h3",
+      "ratio": 5.489323640173012
+    },
+    {
+      "selector": ".home-start-text-link",
+      "ratio": 8.811692031125817
+    },
+    {
+      "selector": ".training-nav-item:not(.nav-active)",
+      "ratio": 5.489323640173012
+    }
+  ],
+  "dark": [
+    {
+      "selector": ".home-start-header .page-title",
+      "ratio": 15.53499543592771
+    },
+    {
+      "selector": ".home-start-workout p",
+      "ratio": 4.809498351277248
+    },
+    {
+      "selector": ".home-start-primary",
+      "ratio": 6.465875738877154
+    },
+    {
+      "selector": ".home-start-metric h3",
+      "ratio": 6.800148027160804
+    },
+    {
+      "selector": ".home-start-text-link",
+      "ratio": 7.077156114436175
+    },
+    {
+      "selector": ".training-nav-item:not(.nav-active)",
+      "ratio": 6.800148027160804
+    }
+  ]
+}

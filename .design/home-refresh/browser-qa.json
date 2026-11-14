@@ -1,0 +1,278 @@
+{
+  "checks": [
+    "Empty Home has honest missing values, zero active days, a register action and no charts",
+    "Computed styles in Registrar, Perfil and Fichas match the baseline",
+    "Mobile, 320 px, tablet, long names and bottom navigation are usable without clipping",
+    "Home check-in keeps input after a failed save, accepts comma decimals, updates the summary and restores focus",
+    "Last workout opens its details and saving an edit refreshes the compact summary",
+    "Registering from Home works; Analysis has all five chart metrics, follows the 7-day period and keeps specific filters",
+    "Dark mode applies to the page and its panels; reduced motion and visible keyboard focus are respected",
+    "Home loading has matching skeletons and a failed query recovers through the visible Retry button",
+    "Key text and actions meet a 4.5:1 contrast ratio in light and dark modes"
+  ],
+  "screenshots": [
+    {
+      "name": "empty-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-registrar-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "after-ajustes-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": null,
+      "navHeight": 58
+    },
+    {
+      "name": "after-fichas-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "long-name-small-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-mobile-bottom",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "checkin-error-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "checkin-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "session-details-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "analysis-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [
+        {
+          "text": "Treinos",
+          "width": 70.859375,
+          "height": 36
+        },
+        {
+          "text": "Peso",
+          "width": 55.9375,
+          "height": 36
+        },
+        {
+          "text": "Sono",
+          "width": 57.453125,
+          "height": 36
+        },
+        {
+          "text": "Carga",
+          "width": 64.8125,
+          "height": 36
+        },
+        {
+          "text": "Corrida",
+          "width": 73.46875,
+          "height": 36
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "analysis-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [
+        {
+          "text": "Treinos",
+          "width": 70.859375,
+          "height": 36
+        },
+        {
+          "text": "Peso",
+          "width": 55.9375,
+          "height": 36
+        },
+        {
+          "text": "Sono",
+          "width": 57.453125,
+          "height": 36
+        },
+        {
+          "text": "Carga",
+          "width": 64.8125,
+          "height": 36
+        },
+        {
+          "text": "Corrida",
+          "width": 73.46875,
+          "height": 36
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "dark-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "dark-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-checkin-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "loading-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "load-error-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    }
+  ],
+  "errors": []
+}

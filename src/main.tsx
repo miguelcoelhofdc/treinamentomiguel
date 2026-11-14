@@ -6,6 +6,8 @@ import '@fontsource-variable/outfit/wght.css'
 import './index.css'
 import './training.css'
 import './tracking.css'
+import './app-theme.css'
+import './home.css'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(

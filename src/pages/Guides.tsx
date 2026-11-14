@@ -82,7 +82,7 @@ export default function Guides({ routineType }: GuidesProps) {
   const routine = plan.dailyRoutines[routineTab]
 
   return (
-    <main className="page-content training-form-page page-enter">
+    <main className="page-content training-form-page guides-page page-enter">
       <PageHeader
         eyebrow="Base de apoio"
         title="Guias"

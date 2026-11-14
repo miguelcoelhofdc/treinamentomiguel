@@ -1,0 +1,270 @@
+{
+  "checks": [],
+  "screenshots": [
+    {
+      "name": "before-inicio-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-inicio-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "before-registrar-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-registrar-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-treino-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-treino-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-historico-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [
+        {
+          "text": "Treinos",
+          "width": 70.859375,
+          "height": 36
+        },
+        {
+          "text": "Peso",
+          "width": 55.9375,
+          "height": 36
+        },
+        {
+          "text": "Sono",
+          "width": 57.453125,
+          "height": 36
+        },
+        {
+          "text": "Carga",
+          "width": 64.8125,
+          "height": 36
+        },
+        {
+          "text": "Corrida",
+          "width": 73.46875,
+          "height": 36
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-historico-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [
+        {
+          "text": "Treinos",
+          "width": 70.859375,
+          "height": 36
+        },
+        {
+          "text": "Peso",
+          "width": 55.9375,
+          "height": 36
+        },
+        {
+          "text": "Sono",
+          "width": 57.453125,
+          "height": 36
+        },
+        {
+          "text": "Carga",
+          "width": 64.8125,
+          "height": 36
+        },
+        {
+          "text": "Corrida",
+          "width": 73.46875,
+          "height": 36
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-ajustes-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": null,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-ajustes-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": null,
+      "navHeight": 58
+    },
+    {
+      "name": "before-rotinas-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [
+        {
+          "text": "Início",
+          "width": 33.578125,
+          "height": 44
+        },
+        {
+          "text": "Perfil",
+          "width": 33.84375,
+          "height": 44
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-rotinas-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [
+        {
+          "text": "Início",
+          "width": 33.578125,
+          "height": 44
+        },
+        {
+          "text": "Perfil",
+          "width": 33.84375,
+          "height": 44
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-fichas-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-fichas-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-guias-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-guias-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-access-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 32,
+      "navHeight": null
+    },
+    {
+      "name": "before-access-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 32,
+      "navHeight": null
+    },
+    {
+      "name": "before-access-small",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 32,
+      "navHeight": null
+    }
+  ],
+  "errors": []
+}

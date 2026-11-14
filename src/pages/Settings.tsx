@@ -255,7 +255,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
   }
 
   return (
-    <div className="page-content page-enter">
+    <main className="page-content settings-page page-enter">
       <PageHeader
         eyebrow="Preferências"
         title="Perfil"
@@ -573,6 +573,6 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
       </section>
       </div></div>
       </SettingsGroupContext.Provider>
-    </div>
+    </main>
   )
 }

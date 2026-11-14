@@ -4,23 +4,31 @@ import {
   ArrowRight,
   Barbell,
   CaretRight,
+  Check,
   CheckCircle,
-  Heart,
   MoonStars,
-  Plus,
   Scales,
 } from '@phosphor-icons/react'
 import BottomSheet from '@/components/ui/BottomSheet'
 import { useTracking } from '@/hooks/useTracking'
 import { addCalendarDays, formatShortDate, weekday } from '@/lib/date'
-import { activitySummary, hasWellness, numberLabel, progressPoints, sessionStrength } from '@/lib/tracking'
-import HomeTrends from '@/components/tracking/HomeTrends'
+import { activitySummary, hasWellness, numberLabel, progressPoints } from '@/lib/tracking'
 import CheckInForm from '@/components/tracking/CheckInForm'
 import SessionDetails from '@/components/tracking/SessionDetails'
-import { ActivityBadge, EmptyBlock, SavedNotice, TrackingError, TrackingLoading } from '@/components/tracking/TrackingState'
+import { ActivityBadge, SavedNotice, TrackingError } from '@/components/tracking/TrackingState'
 import type { TrainingSettings } from '@/types'
 
 const DAY_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+
+function HomeLoading() {
+  return (
+    <div className="home-start-loading" aria-label="Carregando seus registros" aria-busy="true">
+      <div className="home-start-actions"><div className="skeleton home-start-workout-skeleton" /><div className="skeleton home-start-checkin-skeleton" /></div>
+      <div className="home-start-summary"><div className="skeleton h-32" /><div className="skeleton h-32" /><div className="skeleton h-32" /></div>
+      <div className="home-start-secondary"><div className="skeleton h-44" /><div className="skeleton h-44" /></div>
+    </div>
+  )
+}
 
 export default function TrackingHome({ settings }: { settings: TrainingSettings }) {
   const data = useTracking()
@@ -69,124 +77,131 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
     : null
 
   const latest = data.activities.at(-1)
-  const records = latest ? sessionStrength(latest, data.strength) : []
   const todayLog = data.byDate.get(data.today)
   const checkedIn = hasWellness(todayLog)
   const todayDone = week.some(day => day.isToday && day.active)
 
   return (
-    <main className="page-content tracking-home home-analytics page-enter">
-      <header className="home-analytics-header">
+    <main className="page-content tracking-home home-start">
+      <header className="home-start-header">
         <div className="min-w-0">
-          <span className="home-heart" aria-hidden="true"><Heart size={18} weight="fill" /></span>
           <h1 className="page-title">Olá, {firstName}</h1>
-          <p className="page-subtitle">Seus números e um toque para registrar.</p>
+          <p className="page-subtitle">Um registro de cada vez.</p>
         </div>
-        <Link to="/ajustes" className="home-avatar" aria-label="Abrir perfil">
+        <Link to="/ajustes" className="home-start-avatar" aria-label="Abrir perfil">
           {initials}
         </Link>
       </header>
 
-      {!data.loaded ? <TrackingLoading /> : data.error ? <TrackingError retry={data.retry} /> : <>
+      {!data.loaded ? <HomeLoading /> : data.error ? <TrackingError retry={data.retry} /> : <>
         {saved && <SavedNotice>{saved}</SavedNotice>}
 
-        <section className="home-quick-actions" aria-label="Registrar agora">
-          <Link to="/registrar" className="home-quick-card is-primary">
-            <span className="home-quick-icon" aria-hidden="true"><Barbell size={22} weight="fill" /></span>
-            <span className="home-quick-copy">
-              <strong>{todayDone ? 'Novo treino' : 'Registrar treino'}</strong>
-              <span>{todayDone ? 'Já tem atividade hoje' : 'Força, corrida ou outro'}</span>
-            </span>
-            <Plus size={18} weight="bold" />
-          </Link>
-          <button type="button" className="home-quick-card" onClick={() => setCheckIn(true)}>
-            <span className="home-quick-icon tone-weight" aria-hidden="true"><Scales size={22} weight="fill" /></span>
-            <span className="home-quick-copy">
+        <div className="home-start-actions">
+          <section className="home-start-workout" aria-labelledby="home-workout-title">
+            <div className="home-start-workout-top">
+              <Barbell size={26} aria-hidden="true" />
+              <span>{todayDone ? <><CheckCircle size={16} aria-hidden="true" />Treino salvo hoje</> : 'No seu ritmo'}</span>
+            </div>
+            <div>
+              <h2 id="home-workout-title">{todayDone ? 'Mais um passo hoje?' : 'Seu próximo movimento'}</h2>
+              <p>{todayDone ? 'Seu movimento de hoje já está registrado.' : 'Força, corrida ou o que fizer sentido hoje.'}</p>
+            </div>
+            <Link to="/registrar?modo=treino" className="home-start-primary">
+              {todayDone ? 'Novo treino' : 'Registrar treino'}<ArrowRight size={18} aria-hidden="true" />
+            </Link>
+          </section>
+          <button type="button" className="home-start-checkin" onClick={() => setCheckIn(true)}>
+            <span className="home-start-checkin-icon" aria-hidden="true"><Scales size={24} /></span>
+            <span className="home-start-checkin-copy">
               <strong>{checkedIn ? 'Atualizar meu dia' : 'Peso e check-in'}</strong>
-              <span>{latestWeight ? `${numberLabel(latestWeight.value)} kg` : 'Peso, sono e humor'}</span>
+              <span>Peso, sono e como você está.</span>
+              {checkedIn && <span className="home-start-checkin-status"><CheckCircle size={14} aria-hidden="true" />Registrado hoje</span>}
             </span>
-            {checkedIn ? <CheckCircle size={18} weight="fill" /> : <Plus size={18} weight="bold" />}
+            <CaretRight size={20} className="home-start-checkin-arrow" aria-hidden="true" />
           </button>
-        </section>
+        </div>
 
-        <section className="home-kpi-row" aria-label="Resumo dos seus dados">
-          <article className="home-kpi">
-            <span className="home-kpi-icon" aria-hidden="true"><Scales size={18} weight="fill" /></span>
-            <p className="small-label">Peso</p>
-            <strong>{latestWeight ? `${numberLabel(latestWeight.value)} kg` : '—'}</strong>
-            <span className="helper">
-              {weightDelta == null
-                ? (latestWeight ? formatShortDate(latestWeight.date) : 'Sem registro')
-                : `${weightDelta > 0 ? '+' : ''}${numberLabel(weightDelta)} kg`}
-            </span>
-          </article>
-          <article className="home-kpi">
-            <span className="home-kpi-icon tone-sleep" aria-hidden="true"><MoonStars size={18} weight="fill" /></span>
-            <p className="small-label">Sono · 7d</p>
-            <strong>{sleepAvg == null ? '—' : `${numberLabel(Math.round(sleepAvg * 10) / 10)} h`}</strong>
-            <span className="helper">{sleepPoints.length ? `${sleepPoints.length} registros` : 'Sem registro'}</span>
-          </article>
-          <article className="home-kpi">
-            <span className="home-kpi-icon tone-train" aria-hidden="true"><Barbell size={18} weight="fill" /></span>
-            <p className="small-label">Treinos · 7d</p>
-            <strong>{activeDays}<span className="home-kpi-suffix">/7</span></strong>
-            <span className="helper">{hasTime ? `${numberLabel(minutes)} min` : 'Dias ativos'}</span>
-          </article>
-        </section>
-
-        <section className="home-calendar" aria-labelledby="calendar-title">
-          <div className="home-section-heading">
-            <h2 id="calendar-title">Esta semana</h2>
-            <Link to="/historico" className="inline-link">Histórico</Link>
+        <section className="home-start-overview" aria-labelledby="home-summary-title">
+          <div className="home-start-section-heading">
+            <h2 id="home-summary-title">Seu resumo</h2>
+            <span>Últimos registros</span>
           </div>
-          <div className="home-calendar-row" role="list">
-            {week.map(day => (
-              <div
-                key={day.date}
-                role="listitem"
-                className={[
-                  'home-day-chip',
-                  day.active ? 'is-active' : '',
-                  day.isToday ? 'is-today' : '',
-                  day.isFuture ? 'is-future' : '',
-                ].filter(Boolean).join(' ')}
-                aria-label={`${day.day} ${day.number}${day.active ? ', treino feito' : ''}${day.isToday ? ', hoje' : ''}`}
-              >
-                <span>{day.day}</span>
-                <strong>{day.number}</strong>
+          <div className="home-start-summary">
+            <article className="home-start-metric">
+              <span className="home-start-metric-icon" aria-hidden="true"><Scales size={19} /></span>
+              <h3>Peso</h3>
+              <strong>{latestWeight ? <>{numberLabel(latestWeight.value)}<span> kg</span></> : '—'}</strong>
+              <p>
+                {weightDelta == null
+                  ? (latestWeight ? formatShortDate(latestWeight.date) : 'Sem registro')
+                  : `${weightDelta > 0 ? '+' : ''}${numberLabel(weightDelta)} kg`}
+              </p>
+            </article>
+            <article className="home-start-metric">
+              <span className="home-start-metric-icon is-sleep" aria-hidden="true"><MoonStars size={19} /></span>
+              <h3>Sono · 7d</h3>
+              <strong>{sleepAvg == null ? '—' : <>{numberLabel(Math.round(sleepAvg * 10) / 10)}<span> h</span></>}</strong>
+              <p>{sleepPoints.length ? 'Média diária' : 'Sem registro'}</p>
+            </article>
+            <article className="home-start-metric">
+              <span className="home-start-metric-icon is-activity" aria-hidden="true"><Barbell size={19} /></span>
+              <h3>Atividade · 7d</h3>
+              <strong>{activeDays}<span> / 7</span></strong>
+              <p>{hasTime ? `${numberLabel(minutes)} min` : 'Dias ativos'}</p>
+            </article>
+          </div>
+        </section>
+
+        <div className="home-start-secondary">
+          <section className="home-start-panel home-start-calendar" aria-labelledby="calendar-title">
+            <div className="home-start-section-heading">
+              <h2 id="calendar-title">Esta semana</h2>
+              <Link to="/historico" className="home-start-text-link">Ver análise<ArrowRight size={15} aria-hidden="true" /></Link>
+            </div>
+            <div className="home-start-calendar-row" role="list">
+              {week.map(day => (
+                <div
+                  key={day.date}
+                  role="listitem"
+                  className={[
+                    'home-start-day',
+                    day.active ? 'is-active' : '',
+                    day.isToday ? 'is-today' : '',
+                    day.isFuture ? 'is-future' : '',
+                  ].filter(Boolean).join(' ')}
+                  aria-label={`${day.day} ${day.number}${day.active ? ', treino feito' : ''}${day.isToday ? ', hoje' : ''}`}
+                >
+                  <span>{day.day}</span>
+                  <strong>{day.number}</strong>
+                  <span className="home-start-day-mark" aria-hidden="true">{day.active ? <Check size={12} weight="bold" /> : day.isToday ? <span /> : null}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="home-start-panel home-start-latest" aria-labelledby="home-latest-title">
+            <div className="home-start-section-heading">
+              <h2 id="home-latest-title">Último treino</h2>
+              <Link to="/historico" className="home-start-text-link">Ver todos<ArrowRight size={15} aria-hidden="true" /></Link>
+            </div>
+            {latest ? (
+              <button type="button" className="home-start-session" onClick={() => setDetails(true)}>
+                <ActivityBadge activity={latest.activity} />
+                <span className="home-start-session-copy">
+                  <span className="home-start-session-date">{formatShortDate(latest.date)}</span>
+                  <strong>{latest.name}</strong>
+                  <span>{activitySummary(latest)}</span>
+                </span>
+                <CaretRight size={20} className="shrink-0 text-ink-muted" aria-hidden="true" />
+              </button>
+            ) : (
+              <div className="home-start-empty">
+                <p>Seu primeiro treino começa por aqui.</p>
+                <Link to="/registrar?modo=treino" className="home-start-text-link">Fazer um registro<ArrowRight size={16} aria-hidden="true" /></Link>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <HomeTrends data={data} activityFilter="all" />
-
-        <section className="tracking-panel latest-session">
-          <div className="section-heading">
-            <h2>Último treino</h2>
-            <Link to="/historico" className="inline-link">Ver tudo<ArrowRight size={17} /></Link>
-          </div>
-          {latest ? (
-            <button className="latest-session-link" onClick={() => setDetails(true)}>
-              <ActivityBadge activity={latest.activity} />
-              <span className="min-w-0 flex-1">
-                <span className="small-label">{formatShortDate(latest.date)}</span>
-                <strong>{latest.name}</strong>
-                <span className="helper block">{activitySummary(latest)}</span>
-                {records.length > 0 && (
-                  <span className="latest-strength">
-                    {records.length} {records.length === 1 ? 'exercício' : 'exercícios'} · {records[0].exercise}: {records[0].sets.map(set => `${numberLabel(set.weightKg)} kg × ${set.reps}`).join(' · ')}
-                  </span>
-                )}
-              </span>
-              <CaretRight size={20} className="shrink-0 text-ink-muted" />
-            </button>
-          ) : (
-            <EmptyBlock title="Registre o primeiro treino" action={<Link to="/registrar" className="inline-link">Começar agora<ArrowRight size={17} /></Link>}>
-              Em poucos toques o gráfico e o histórico começam a ganhar forma.
-            </EmptyBlock>
-          )}
-        </section>
+            )}
+          </section>
+        </div>
       </>}
 
       {details && latest && (
@@ -196,7 +211,7 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
           onClose={() => setDetails(false)}
           onSaved={() => {
             setDetails(false)
-            setSaved('Treino atualizado. Os gráficos já refletem a mudança.')
+            setSaved('Treino atualizado. Seu resumo já está em dia.')
           }}
         />
       )}
@@ -207,7 +222,7 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
             log={todayLog}
             onSaved={() => {
               setCheckIn(false)
-              setSaved('Dia salvo. Peso e sono já entram nos gráficos.')
+              setSaved('Check-in salvo. Seu resumo já está em dia.')
             }}
           />
         </BottomSheet>

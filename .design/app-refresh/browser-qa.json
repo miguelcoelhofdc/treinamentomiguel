@@ -1,0 +1,690 @@
+{
+  "checks": [
+    "Home dimensions, typography, colors and navigation match its approved baseline",
+    "All eight health routes use the shared theme and fit 320, 390, 768 and 1440 px",
+    "Detailed running form saves comma decimals and exact minutes and seconds",
+    "Daily routine form saves sleep through its existing review workflow",
+    "Workout template validation, exercise picker and save preserve the existing workflow",
+    "Routine creation, toggle, configuration and goal editor keep their interactions and themed panels",
+    "Personal profile form saves successfully with the new shared controls",
+    "All five guide disclosures open without overflow or inaccessible controls",
+    "Analysis metrics, period and filters work; history opens the themed details panel",
+    "Every health route supports the persisted dark preference",
+    "Reduced motion and keyboard focus remain accessible",
+    "Loading and failed queries keep themed surfaces and recover through the visible Retry action",
+    "Access form keeps invalid-code feedback and the existing authentication flow"
+  ],
+  "screenshots": [
+    {
+      "name": "empty-inicio-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-inicio-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-inicio-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-inicio",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-inicio",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-registrar-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-registrar-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-registrar",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-registrar",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-treino-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-treino-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-treino",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-treino",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-historico-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-historico-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-historico",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-historico",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-ajustes-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-ajustes-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-ajustes",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-ajustes",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-rotinas-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-rotinas-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-rotinas",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-rotinas",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-fichas-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-fichas-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-fichas",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-fichas",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-guias-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 44,
+      "navHeight": 1000
+    },
+    {
+      "name": "after-guias-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "small-guias",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "tablet-guias",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "run-form-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "run-saved-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "day-saved-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "template-editor-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "routine-editor-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "goal-editor-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "profile-saved-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "settings-rotinas",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "settings-fichas",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "settings-aparência",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "settings-dark-switch",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "settings-conta",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "settings-dados",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "guide-nutrição",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "guide-rotina",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "guide-mobilidade",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "guide-suplementos",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "guide-compras",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "history-details-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "history-checkins-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-inicio",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-registrar",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-treino",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-historico",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-ajustes",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-rotinas",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-fichas",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "dark-guias",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "loading-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "load-error-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 116,
+      "navHeight": 73.5
+    },
+    {
+      "name": "after-access-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 32,
+      "navHeight": null
+    },
+    {
+      "name": "after-access-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 32,
+      "navHeight": null
+    },
+    {
+      "name": "after-access-small",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 32,
+      "navHeight": null
+    },
+    {
+      "name": "access-error-mobile",
+      "width": 320,
+      "height": 740,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 32,
+      "navHeight": null
+    }
+  ],
+  "errors": []
+}

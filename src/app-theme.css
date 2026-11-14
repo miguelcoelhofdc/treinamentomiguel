@@ -1,0 +1,203 @@
+/* Shared visual system for Meu ritmo. The drawing board and sales app are separate. */
+.tracking-theme.app-theme {
+  --color-canvas: 240 10% 96.08%;
+  --color-surface: 0 0% 100%;
+  --color-surface-raised: 240 16% 97%;
+  --color-ink: 240 11% 18.04%;
+  --color-ink-soft: 240 7% 32%;
+  --color-ink-muted: 240 6% 43.33%;
+  --color-line: 240 14% 91%;
+  --color-accent: 243.6 85.2% 65.5%;
+  --color-accent-strong: 244 58% 47%;
+  --color-accent-soft: 245 85% 96%;
+  --brand-violet: #655cf2;
+  --brand-violet-hover: #554bdc;
+  --home-violet: var(--brand-violet);
+  --home-violet-hover: var(--brand-violet-hover);
+  --action-ink: #fff;
+  --button-base: var(--brand-violet);
+  --lime: var(--brand-violet);
+  --lime-deep: var(--brand-violet-hover);
+  --chart-green: var(--brand-violet);
+  --nav-ink: #292933;
+  background: #f4f4f6;
+}
+.dark .tracking-theme.app-theme {
+  --color-canvas: 240 12.73% 10.78%;
+  --color-surface: 240 11% 15%;
+  --color-surface-raised: 240 11% 19%;
+  --color-ink: 240 14% 95%;
+  --color-ink-soft: 240 10% 82%;
+  --color-ink-muted: 240 9% 69%;
+  --color-line: 240 10% 25%;
+  --color-accent-strong: 245 100% 82%;
+  --color-accent-soft: 245 28% 23%;
+  background: #18181f;
+}
+.app-theme .page-content { max-width: 1120px; padding: calc(28px + var(--safe-top)) 20px calc(116px + var(--safe-bottom)); overflow-x: visible; min-width: 0; }
+.app-theme .page-title { font-size: 28px; font-weight: 600; line-height: 1.15; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.app-theme .page-header { align-items: center; gap: 16px; margin-bottom: 28px; }
+.app-theme .page-subtitle { font-size: 14px; line-height: 1.5; }
+.app-theme .page-kicker { color: hsl(var(--color-ink-muted)); font-size: 11px; letter-spacing: .1em; font-weight: 500; }
+.app-theme :is(.page-enter, .reveal-item) { animation: none; }
+.app-theme .section-heading { gap: 12px; flex-wrap: wrap; }
+.app-theme .section-heading h2 { font-size: 18px; font-weight: 500; }
+.app-theme :is(.tracking-entry, .training-form-page) { max-width: 860px; }
+.app-theme .tracking-panel { background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 22px; padding: 24px; box-shadow: none; }
+.app-theme .btn-primary { background: var(--brand-violet); color: #fff; box-shadow: none; border-radius: 14px; font-weight: 500; }
+.app-theme .btn-primary:hover { background: var(--brand-violet-hover); }
+.app-theme .btn-secondary { border-width: 1px; border-radius: 14px; font-weight: 500; }
+.app-theme .btn-icon { min-width: 44px; min-height: 44px; }
+.app-theme .inline-link { min-width: 44px; min-height: 44px; max-width: 100%; font-size: 13px; font-weight: 500; white-space: normal; overflow-wrap: anywhere; }
+.app-theme .inline-link svg { flex-shrink: 0; }
+.app-theme .input { border-width: 1px; border-radius: 14px; background: hsl(var(--color-surface)); min-height: 48px; }
+.app-theme .label { font-size: 14px; font-weight: 500; }
+.app-theme :is(button, a, input, textarea, select):focus-visible { outline: 3px solid hsl(var(--color-accent-strong)); outline-offset: 4px; }
+.app-theme .tracking-form { gap: 24px; }
+.app-theme .tracking-fields { gap: 22px; }
+.app-theme .entry-tabs { background: hsl(var(--color-canvas)); padding: 5px; border-radius: 16px; gap: 5px; border: 1px solid hsl(var(--color-line) / .6); }
+.app-theme .entry-tabs button { border: 1px solid transparent; border-radius: 12px; font-size: 14px; font-weight: 400; min-height: 44px; }
+.app-theme .entry-tabs button[aria-pressed=true] { background: hsl(var(--color-surface)); color: hsl(var(--color-accent-strong)); border-color: hsl(var(--color-line) / .5); font-weight: 500; }
+.app-theme .activity-choices { gap: 10px; }
+.app-theme .activity-choices button { border-width: 1px; border-radius: 16px; padding: 16px 8px; font-size: 14px; font-weight: 400; }
+.app-theme .activity-choices .choice-selected { border-color: var(--brand-violet); background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
+.app-theme .rating-options button { border-width: 1px; font-weight: 400; }
+.app-theme .rating-options .rating-selected { border-color: var(--brand-violet); background: hsl(var(--color-accent-soft)); }
+.app-theme .routine-review-item .section-heading h2 { font-size: 16px; }
+.app-theme :is(.record-exercise, .exercise-picker) { border-width: 1px; border-radius: 16px; }
+.app-theme .record-exercise-heading strong { font-weight: 500; }
+.app-theme .exercise-picker { background: hsl(var(--color-surface-raised)); }
+.app-theme .previous-result { background: hsl(var(--color-canvas)); }
+.app-theme .journey-sheet { border-width: 1px; border-radius: 24px 24px 0 0; }
+.app-theme .activity-badge { border-radius: 14px; width: 44px; height: 44px; }
+.dark .app-theme .badge-strength { background: #3a3023; color: #e9c182; }
+.dark .app-theme .badge-run { background: #23323d; color: #a0d3eb; }
+.app-theme .saved-notice { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); border-color: hsl(var(--color-line)); animation: none; font-weight: 400; }
+.app-theme .saved-illustration { animation: none; background: hsl(var(--color-accent-soft)); }
+.app-theme .saved-panel h2 { font-size: 24px; font-weight: 500; }
+.app-theme .saved-panel :is(.btn-primary, .btn-secondary) { min-width: 0; max-width: 100%; }
+.app-theme .skeleton { border-radius: 20px; }
+.app-theme .tracking-empty { padding: 28px 20px; border-radius: 22px; background: hsl(var(--color-surface)); }
+.app-theme .tracking-empty h2 { font-size: 18px; font-weight: 500; }
+
+/* Analysis: shared surfaces, softer chart controls and compact history rows. */
+.app-theme .tracking-history > .form-columns { padding: 18px 20px; border-radius: 20px; background: hsl(var(--color-surface)); gap: 16px; margin-bottom: 24px; }
+.app-theme .history-filter { margin-bottom: 0; max-width: none; min-width: 0; }
+.app-theme .home-trends { padding: 24px; margin-bottom: 28px; }
+.app-theme .home-trends-heading h2 { font-size: 22px; font-weight: 500; }
+.app-theme .home-trends-summary strong { font-weight: 500; }
+.app-theme .home-metric-tabs { gap: 6px; }
+.app-theme .home-metric-tabs button { min-height: 44px; min-width: 44px; padding-inline: 16px; font-weight: 400; }
+.app-theme .home-metric-tabs button.is-active { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); border-color: transparent; font-weight: 500; }
+.app-theme .home-trends-periods button[aria-pressed=true] { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
+.app-theme .history-day { margin-bottom: 24px; }
+.app-theme .history-day h2 { font-size: 15px; font-weight: 500; }
+.app-theme .history-day-panel { padding: 0 20px; }
+.app-theme .history-session { gap: 14px; }
+.app-theme .history-session:last-child { border-bottom: 0; }
+.app-theme .history-session strong { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+.app-theme .history-checkin { gap: 12px; font-size: 14px; }
+.app-theme .history-checkin > svg { flex-shrink: 0; }
+
+/* Templates and routine cards. */
+.app-theme .template-grid { gap: 20px; }
+.app-theme .template-card h2 { font-size: 19px; line-height: 1.35; font-weight: 500; overflow-wrap: anywhere; }
+.app-theme .template-preview { font-size: 13px; line-height: 1.7; color: hsl(var(--color-ink-muted)); }
+.app-theme .template-actions { margin-top: auto; }
+.app-theme .template-actions .btn-secondary { font-size: 14px; }
+.app-theme .routine-settings-list { gap: 20px; }
+.app-theme .routine-settings-list > section + section { margin-top: 12px; }
+.app-theme .routine-settings-list > section > h2 { font-size: 17px; font-weight: 500; margin-bottom: 14px; }
+.app-theme .routine-settings-list .section-heading { margin-bottom: 8px; }
+.app-theme .routine-name-button h2 { font-size: 18px; font-weight: 500; overflow-wrap: anywhere; }
+.app-theme .routine-settings-list button[role=switch] { min-width: 100px; border-color: hsl(var(--color-line)); font-size: 13px; }
+.app-theme .routine-settings-list button[role=switch][aria-checked=true] { background: hsl(var(--color-accent-soft)); border-color: transparent; color: hsl(var(--color-accent-strong)); }
+
+/* Profile groups keep their existing mobile disclosures and desktop section navigation. */
+.app-theme .settings-profile-summary { background: hsl(var(--color-surface)); padding: 20px; border-radius: 22px; border: 1px solid hsl(var(--color-line) / .5); margin-bottom: 24px; }
+.app-theme .settings-profile-summary p { overflow-wrap: anywhere; }
+.app-theme .settings-avatar { color: hsl(var(--color-accent-strong)); flex-shrink: 0; }
+.app-theme .settings-group { background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 22px; margin-bottom: 14px; padding: 0 20px; }
+.app-theme .settings-group-trigger { padding-block: 20px; gap: 12px; }
+.app-theme .settings-group-trigger > svg:first-child { width: 42px; height: 42px; padding: 10px; border-radius: 13px; background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
+.app-theme .settings-group-trigger > span > span:first-child { font-size: 17px; font-weight: 500; }
+.app-theme .settings-group-body { padding-block: 0 22px; }
+.app-theme .settings-group .list-surface { background: transparent; border: 0; }
+.app-theme .settings-group .list-surface > div { padding-inline: 0; }
+.app-theme .settings-group-body .profile-resource-links { display: grid; gap: 12px; }
+.app-theme .settings-page button[role=switch] { background: transparent; min-height: 44px; }
+.app-theme .settings-page button[role=switch]::before { content: ''; position: absolute; inset: 8px 0; background: hsl(var(--color-line)); border-radius: 999px; }
+.app-theme .settings-page button[role=switch][aria-checked=true]::before { background: var(--brand-violet); }
+.app-theme .settings-page button[role=switch] > span { top: 12px; }
+
+/* Guides and access use the same light surfaces. */
+.app-theme .guides-page .open-list { display: grid; gap: 14px; }
+.app-theme .disclosure { background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 22px; }
+.app-theme .disclosure-trigger { padding: 20px; gap: 14px; }
+.app-theme .disclosure-trigger > span > span:first-child { font-weight: 500; }
+.app-theme .disclosure-body { padding: 0 20px 24px; }
+.app-theme .icon-tile { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); border-radius: 14px; }
+.app-theme.training-access .access-form { max-width: 440px; border-radius: 24px; background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); padding: 32px; }
+.app-theme.training-access .page-title { font-size: 28px; line-height: 1.2; }
+.app-theme.training-access .helper { margin-top: 10px; }
+
+/* The navigation matches the approved start page at every route. */
+.app-theme .training-nav { background: hsl(var(--color-surface)); border-color: hsl(var(--color-line)); }
+.app-theme .training-nav-inner { background: hsl(var(--color-surface)); box-shadow: none; }
+.app-theme .training-nav-item { color: hsl(var(--color-ink-muted)); }
+.app-theme .nav-active { color: hsl(var(--color-accent-strong)); background: hsl(var(--color-accent-soft)); border: 0; }
+.dark .app-theme .nav-active { border: 0; }
+.app-theme .nav-active .nav-icon { background: transparent; color: hsl(var(--color-accent-strong)); }
+.app-theme .training-nav-brand > span:first-child { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
+.app-theme .training-nav-brand > span:first-child svg { color: inherit; }
+@media (max-width: 1023px) {
+  .app-theme .training-nav { left: 0; right: 0; bottom: 0; border-top: 1px solid hsl(var(--color-line) / .6); padding: 6px 12px calc(8px + var(--safe-bottom)); }
+  .app-theme .training-nav-inner { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; max-width: 560px; margin-inline: auto; gap: 6px; padding: 0; border-radius: 0; }
+  .app-theme .training-nav-item { flex-direction: column; gap: 4px; min-height: 58px; padding: 7px 2px; border-radius: 15px; font-size: 11px; font-weight: 400; }
+  .app-theme .training-nav-item .nav-label { display: inline; overflow: visible; font-size: 11px; }
+  .app-theme .training-nav-item .nav-icon { display: grid; place-items: center; width: 24px; height: 24px; color: inherit; background: transparent; }
+  .app-theme .nav-active { font-weight: 500; }
+}
+@media (min-width: 768px) {
+  .app-theme .page-content { padding: 40px 32px 116px; }
+  .app-theme .page-title { font-size: 30px; }
+  .app-theme .journey-sheet { border-radius: 24px; }
+}
+@media (min-width: 1024px) {
+  .app-theme .page-content { padding-top: 44px; padding-bottom: 44px; }
+  .app-theme .training-nav-item { gap: 12px; }
+  .app-theme .training-nav .nav-icon { background: transparent; }
+  .app-theme .settings-group-nav { align-self: start; background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 20px; padding: 10px; gap: 6px; }
+  .app-theme .settings-group-nav button { font-size: 13px; min-height: 44px; padding: 10px 12px; border-radius: 12px; }
+  .app-theme .settings-group { padding-inline: 24px; }
+}
+@media (max-width: 767px) {
+  .app-theme .page-header { align-items: flex-start; }
+  .app-theme .tracking-panel { padding: 20px; }
+  .app-theme .history-day-panel { padding: 0 16px; }
+  .app-theme .tracking-history > .form-columns { padding: 18px; grid-template-columns: minmax(0, 1fr); }
+  .app-theme .settings-profile-summary { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px 12px; }
+  .app-theme .settings-profile-summary > .inline-link { grid-column: 2; justify-self: start; }
+  .app-theme .settings-group { padding-inline: 16px; }
+  .app-theme .settings-group-trigger > span > span:first-child { font-size: 16px; }
+  .app-theme .disclosure-trigger { padding: 18px; }
+  .app-theme .disclosure-body { padding-inline: 18px; }
+}
+@media (max-width: 359px) {
+  .app-theme .page-header { flex-direction: column; align-items: stretch; gap: 14px; }
+  .app-theme .page-header > div:last-child:not(:first-child) > .btn-primary { width: 100%; }
+  .app-theme .page-title { font-size: 26px; }
+  .app-theme .tracking-panel { padding: 16px; }
+  .app-theme .history-day-panel { padding: 0 14px; }
+  .app-theme .template-actions { gap: 8px; }
+  .app-theme .template-actions .btn-secondary { padding-inline: 10px; font-size: 13px; }
+  .app-theme .home-trends { padding: 16px; }
+  .app-theme .home-trends-heading { gap: 8px; }
+  .app-theme .settings-group-trigger { gap: 10px; }
+  .app-theme .settings-group-trigger > svg:first-child { width: 36px; height: 36px; padding: 8px; }
+  .app-theme.training-access .access-form { padding: 24px; }
+  .app-theme.training-access .page-title { font-size: 25px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-theme *, .app-theme *::before, .app-theme *::after { animation: none !important; transition: none !important; }
+}

@@ -52,15 +52,18 @@ function AppSkeleton() {
 }
 
 function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
+  const { pathname } = useLocation()
   const { settings, updateSetting, loaded, error, retry } = useSettings()
   const today = useLocalDay()
   const activeProfile = ACCESS_PROFILES[profileId]
+  const isHome = pathname === '/'
+  const shellClass = `app-shell training-theme tracking-theme app-theme${isHome ? ' home-theme' : ''}`
 
   useEffect(() => {
     if (!loaded) return
     const metas = [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')]
     const previous = metas.map(meta => meta.content)
-    metas.forEach(meta => { meta.content = settings.darkMode ? '#121916' : '#FFFFFF' })
+    metas.forEach(meta => { meta.content = settings.darkMode ? '#18181F' : '#F4F4F6' })
     return () => metas.forEach((meta, index) => { meta.content = previous[index] })
   }, [settings.darkMode, loaded])
 
@@ -69,11 +72,11 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
     window.location.assign('/')
   }
 
-  if (!loaded) return <div className="app-shell training-theme tracking-theme"><AppSkeleton /></div>
-  if (error) return <div className="app-shell training-theme tracking-theme"><div className="page-content"><h1 className="page-title">Não foi possível abrir seu perfil.</h1><button className="btn-primary mt-5" onClick={retry}>Tentar novamente</button></div></div>
+  if (!loaded) return <div className={shellClass}><AppSkeleton /></div>
+  if (error) return <div className={shellClass}><div className="page-content"><h1 className="page-title">Não foi possível abrir seu perfil.</h1><button className="btn-primary mt-5" onClick={retry}>Tentar novamente</button></div></div>
 
   return (
-    <div className="app-shell training-theme tracking-theme">
+    <div className={shellClass}>
       <ScrollToTop />
       <Suspense fallback={<AppSkeleton />}>
         <Routes>

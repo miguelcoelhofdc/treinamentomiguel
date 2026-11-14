@@ -1,0 +1,61 @@
+
+> treino-miguel@1.0.0 build
+> vite build --outDir tmp/routines-build/app-refresh
+
+vite v5.4.21 building for production...
+transforming...
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ 5436 modules transformed.
+rendering chunks...
+computing gzip size...
+tmp/routines-build/app-refresh/registerSW.js                                            0.13 kB
+tmp/routines-build/app-refresh/manifest.webmanifest                                     0.45 kB
+tmp/routines-build/app-refresh/index.html                                               1.15 kB │ gzip:   0.54 kB
+tmp/routines-build/app-refresh/assets/outfit-latin-ext-wght-normal-DdQaqQDo.woff2      14.81 kB
+tmp/routines-build/app-refresh/assets/caveat-latin-ext-wght-normal-Byk3UhVp.woff2      29.47 kB
+tmp/routines-build/app-refresh/assets/outfit-latin-wght-normal-Bc-8i84L.woff2          32.29 kB
+tmp/routines-build/app-refresh/assets/caveat-cyrillic-ext-wght-normal-DiMfzA-V.woff2   42.86 kB
+tmp/routines-build/app-refresh/assets/caveat-latin-wght-normal-C1hSzPvX.woff2          74.93 kB
+tmp/routines-build/app-refresh/assets/caveat-cyrillic-wght-normal-D5lnP6kL.woff2       77.22 kB
+tmp/routines-build/app-refresh/assets/index-EdVhMElZ.css                              160.48 kB │ gzip:  26.60 kB
+tmp/routines-build/app-refresh/assets/PageHeader-DmQ1sJu4.js                            0.43 kB │ gzip:   0.24 kB
+tmp/routines-build/app-refresh/assets/CaretDown.es-Dk3Z8KOH.js                          1.36 kB │ gzip:   0.54 kB
+tmp/routines-build/app-refresh/assets/CaretRight.es-CI8l8W_5.js                         1.37 kB │ gzip:   0.54 kB
+tmp/routines-build/app-refresh/assets/Check.es-5LCOoJlJ.js                              1.53 kB │ gzip:   0.56 kB
+tmp/routines-build/app-refresh/assets/Copy.es-CA68iXcm.js                               1.78 kB │ gzip:   0.59 kB
+tmp/routines-build/app-refresh/assets/Clock.es-CClQjZvw.js                              1.79 kB │ gzip:   0.62 kB
+tmp/routines-build/app-refresh/assets/CheckCircle.es-DPT6os3r.js                        2.08 kB │ gzip:   0.70 kB
+tmp/routines-build/app-refresh/assets/Recorder-Bsl5fRLg.js                              2.28 kB │ gzip:   1.14 kB
+tmp/routines-build/app-refresh/assets/PencilSimple.es-CcpCGidr.js                       2.44 kB │ gzip:   0.87 kB
+tmp/routines-build/app-refresh/assets/Trash.es-DZmLM18U.js                              2.53 kB │ gzip:   0.77 kB
+tmp/routines-build/app-refresh/assets/BottomSheet-C7bW8hk3.js                           2.68 kB │ gzip:   1.26 kB
+tmp/routines-build/app-refresh/assets/ExercisePicker-Bnd2T1Jv.js                        3.27 kB │ gzip:   1.42 kB
+tmp/routines-build/app-refresh/assets/MoonStars.es-DfH1Pniq.js                          3.29 kB │ gzip:   1.08 kB
+tmp/routines-build/app-refresh/assets/WarningCircle.es-02aqpTQC.js                      3.30 kB │ gzip:   0.93 kB
+tmp/routines-build/app-refresh/assets/X.es-DSaQVB4X.js                                  3.85 kB │ gzip:   1.15 kB
+tmp/routines-build/app-refresh/assets/Sparkle.es-BqOm2ddc.js                            4.44 kB │ gzip:   1.38 kB
+tmp/routines-build/app-refresh/assets/SessionDetails-B3NuAd69.js                        7.18 kB │ gzip:   2.80 kB
+tmp/routines-build/app-refresh/assets/FloppyDisk.es-CUYzmR17.js                         7.45 kB │ gzip:   1.97 kB
+tmp/routines-build/app-refresh/assets/WorkoutTemplates-CYSchnME.js                      8.03 kB │ gzip:   2.88 kB
+tmp/routines-build/app-refresh/assets/TrackingHome-DAR8xJJ7.js                         12.30 kB │ gzip:   4.01 kB
+tmp/routines-build/app-refresh/assets/Routines-d9NZtffx.js                             12.58 kB │ gzip:   4.34 kB
+tmp/routines-build/app-refresh/assets/TrackingHistory-CPWhV7Zk.js                      15.05 kB │ gzip:   5.03 kB
+tmp/routines-build/app-refresh/assets/routines-75bRzkA3.js                             15.26 kB │ gzip:   5.40 kB
+tmp/routines-build/app-refresh/assets/TrackingState-T97p_WP6.js                        23.43 kB │ gzip:   8.15 kB
+tmp/routines-build/app-refresh/assets/Guides-CIRWBzuM.js                               25.41 kB │ gzip:   7.54 kB
+tmp/routines-build/app-refresh/assets/SessionForm-CliGR2I3.js                          32.46 kB │ gzip:   8.59 kB
+tmp/routines-build/app-refresh/assets/Settings-DXqN8jM_.js                             45.54 kB │ gzip:  12.24 kB
+tmp/routines-build/app-refresh/assets/Whiteboard-B5EL2r9E.js                          100.16 kB │ gzip:  25.19 kB
+tmp/routines-build/app-refresh/assets/Goals-Dki1N-Jk.js                               113.68 kB │ gzip:  28.30 kB
+tmp/routines-build/app-refresh/assets/index-C739fEN7.js                               320.53 kB │ gzip: 105.65 kB
+tmp/routines-build/app-refresh/assets/generateCategoricalChart-CdMjUuje.js            383.44 kB │ gzip: 105.82 kB
+✓ built in 9.59s
+
+PWA v0.20.5
+mode      generateSW
+precache  50 entries (1590.87 KiB)
+files generated
+  tmp/routines-build/app-refresh/sw.js
+  tmp/routines-build/app-refresh/workbox-9c191d2f.js

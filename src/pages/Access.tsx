@@ -40,7 +40,7 @@ export default function Access() {
   }
 
   return (
-    <main className="training-theme tracking-theme training-access">
+    <main className="training-theme tracking-theme app-theme training-access">
       <div className="access-form">
         <span className="icon-tile mb-6" aria-hidden="true"><ShieldCheck size={28} /></span>
         <p className="page-kicker">Rotinas de saúde</p>

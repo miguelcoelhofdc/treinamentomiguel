@@ -1,0 +1,159 @@
+{
+  "checks": [],
+  "screenshots": [
+    {
+      "name": "before-empty-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [
+        {
+          "text": "7d",
+          "width": 33.375,
+          "height": 32
+        },
+        {
+          "text": "30d",
+          "width": 41.59375,
+          "height": 32
+        },
+        {
+          "text": "90d",
+          "width": 41.8125,
+          "height": 32
+        },
+        {
+          "text": "Treinos",
+          "width": 70.859375,
+          "height": 36
+        },
+        {
+          "text": "Carga",
+          "width": 64.8125,
+          "height": 36
+        },
+        {
+          "text": "Corrida",
+          "width": 73.46875,
+          "height": 36
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-desktop",
+      "width": 1440,
+      "height": 1000,
+      "overflow": false,
+      "small": [
+        {
+          "text": "7d",
+          "width": 33.375,
+          "height": 32
+        },
+        {
+          "text": "30d",
+          "width": 41.59375,
+          "height": 32
+        },
+        {
+          "text": "90d",
+          "width": 41.8125,
+          "height": 32
+        },
+        {
+          "text": "Treinos",
+          "width": 70.859375,
+          "height": 36
+        },
+        {
+          "text": "Carga",
+          "width": 64.8125,
+          "height": 36
+        },
+        {
+          "text": "Corrida",
+          "width": 73.46875,
+          "height": 36
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 48,
+      "navHeight": 1000
+    },
+    {
+      "name": "before-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [
+        {
+          "text": "7d",
+          "width": 33.375,
+          "height": 32
+        },
+        {
+          "text": "30d",
+          "width": 41.59375,
+          "height": 32
+        },
+        {
+          "text": "90d",
+          "width": 41.8125,
+          "height": 32
+        },
+        {
+          "text": "Treinos",
+          "width": 70.859375,
+          "height": 36
+        },
+        {
+          "text": "Carga",
+          "width": 64.8125,
+          "height": 36
+        },
+        {
+          "text": "Corrida",
+          "width": 73.46875,
+          "height": 36
+        }
+      ],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-registrar-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    },
+    {
+      "name": "before-ajustes-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": null,
+      "navHeight": 58
+    },
+    {
+      "name": "before-fichas-mobile",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "small": [],
+      "textOverflow": [],
+      "bottomPadding": 108,
+      "navHeight": 58
+    }
+  ],
+  "errors": []
+}

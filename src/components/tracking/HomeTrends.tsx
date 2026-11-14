@@ -134,7 +134,7 @@ export default function HomeTrends({ data, rangeDays, showAll = false, activityF
               <AreaChart data={chartData} margin={{ top: 8, right: 4, left: -12, bottom: 0 }}>
                 <defs>
                   <linearGradient id="homeTrendFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--lime)" stopOpacity={0.45} />
+                    <stop offset="0%" stopColor="var(--lime)" stopOpacity={0.16} />
                     <stop offset="100%" stopColor="var(--lime)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
