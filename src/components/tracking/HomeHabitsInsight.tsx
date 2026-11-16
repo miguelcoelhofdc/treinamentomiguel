@@ -1,6 +1,6 @@
 import { useId, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, PencilSimple, TrendDown, TrendUp } from '@phosphor-icons/react'
+import { CalendarBlank, Flame, Target, TrendDown, TrendUp } from '@phosphor-icons/react'
 import {
   Area,
   AreaChart,
@@ -281,8 +281,11 @@ export default function HomeHabitsInsight({
     [routines, monthChartDates, sparkDates, yesterday, data],
   )
 
-  const editYesterday = `/registrar?modo=dia&vista=formulario&data=${yesterday}`
   const onTarget = percent(monthSummary.otimo, monthSummary.total)
+  const coverage = percent(activeDays, monthChartDates.length || 1)
+  const streakTone = streak >= 7 ? 'is-hot' : streak >= 3 ? 'is-warm' : streak > 0 ? 'is-lit' : 'is-cool'
+  const coverageTone = coverage >= 60 ? 'is-strong' : coverage >= 30 ? 'is-mid' : 'is-low'
+  const targetTone = onTarget >= 60 ? 'is-strong' : onTarget >= 35 ? 'is-mid' : 'is-low'
 
   if (!routines.length) {
     return (
@@ -302,72 +305,86 @@ export default function HomeHabitsInsight({
   }
 
   return (
-    <section className="tracking-panel home-insight" aria-labelledby="home-insight-title">
-      <div className="home-insight-header">
-        <div className="min-w-0">
-          <p className="page-kicker">Rotina</p>
-          <h2 id="home-insight-title">Panorama do mês</h2>
-          <p className="helper">Ontem concluído · {formatShortDate(yesterday)}</p>
-        </div>
-        <div className="home-insight-actions">
-          <Link className="home-insight-btn" to="/registrar?modo=dia" title="Abrir grade do mês">
-            Grade
-            <ArrowUpRight size={14} aria-hidden="true" />
-          </Link>
-          <Link className="home-insight-btn" to={editYesterday} title="Editar registro de ontem">
-            Editar
-            <PencilSimple size={14} aria-hidden="true" />
-          </Link>
-        </div>
-      </div>
-
+    <>
       <div className="home-insight-hero" aria-label="Como estou no mês">
-        <article>
-          <span>No alvo</span>
+        <article className={`home-insight-kpi is-target ${targetTone}`}>
+          <div className="home-insight-kpi-top">
+            <span className="home-insight-kpi-icon" aria-hidden="true"><Target size={18} weight="fill" /></span>
+            <span>No alvo</span>
+          </div>
           <strong>{onTarget}<em>%</em></strong>
+          <div
+            className="home-insight-kpi-meter"
+            role="img"
+            aria-label={`${onTarget}% dos registros no alvo neste mês`}
+          >
+            <span style={{ width: `${onTarget}%` }} />
+          </div>
           <p>{monthScore == null ? 'Sem média ainda' : `Média ${numberLabel(monthScore)} · ontem ${yesterdayScore == null ? '—' : numberLabel(yesterdayScore)}`}</p>
         </article>
-        <article>
-          <span>Sequência</span>
+
+        <article className={`home-insight-kpi is-streak ${streakTone}`}>
+          <div className="home-insight-kpi-top">
+            <span className="home-insight-kpi-icon" aria-hidden="true"><Flame size={18} weight="fill" /></span>
+            <span>Sequência</span>
+          </div>
           <strong>{streak}<em>d</em></strong>
-          <p>Dias seguidos com registro</p>
+          <div className="home-insight-kpi-streak" aria-hidden="true">
+            {Array.from({ length: 7 }, (_, index) => (
+              <span key={index} className={index < Math.min(streak, 7) ? 'is-on' : undefined} />
+            ))}
+          </div>
+          <p>{streak > 0 ? 'Dias seguidos com registro' : 'Comece uma sequência hoje'}</p>
         </article>
-        <article>
-          <span>Dias com registro</span>
+
+        <article className={`home-insight-kpi is-coverage ${coverageTone}`}>
+          <div className="home-insight-kpi-top">
+            <span className="home-insight-kpi-icon" aria-hidden="true"><CalendarBlank size={18} weight="fill" /></span>
+            <span>Dias com registro</span>
+          </div>
           <strong>{activeDays}<em>/{monthChartDates.length || 1}</em></strong>
-          <p>Neste mês até hoje</p>
+          <div
+            className="home-insight-kpi-meter"
+            role="img"
+            aria-label={`${activeDays} de ${monthChartDates.length || 1} dias com registro neste mês`}
+          >
+            <span style={{ width: `${coverage}%` }} />
+          </div>
+          <p>{coverage}% do mês preenchido até hoje</p>
         </article>
       </div>
 
-      <div className="home-insight-charts-heading">
-        <h3>Hábitos</h3>
-        <span>{insights.length} {insights.length === 1 ? 'ativo' : 'ativos'}</span>
-      </div>
+      <section className="tracking-panel home-insight" aria-labelledby="home-insight-title">
+        <div className="home-insight-charts-heading">
+          <h2 id="home-insight-title">Hábitos</h2>
+          <span>{insights.length} {insights.length === 1 ? 'ativo' : 'ativos'}</span>
+        </div>
 
-      <ul className="home-insight-charts">
-        {insights.map(habit => (
-          <li key={habit.id} className="home-insight-chart-panel">
-            <div className="home-insight-chart-top">
-              <div className="min-w-0">
-                <h4 title={habit.name}>{habit.name}</h4>
-                <p className="home-insight-chart-hint">{headlineHint(habit)}</p>
+        <ul className="home-insight-charts">
+          {insights.map(habit => (
+            <li key={habit.id} className="home-insight-chart-panel">
+              <div className="home-insight-chart-top">
+                <div className="min-w-0">
+                  <h4 title={habit.name}>{habit.name}</h4>
+                  <p className="home-insight-chart-hint">{headlineHint(habit)}</p>
+                </div>
+                <YesterdayChip habit={habit} />
               </div>
-              <YesterdayChip habit={habit} />
-            </div>
-            <div className="home-insight-chart-value">
-              <strong>{headlineCopy(habit)}</strong>
-              {habit.trend && (
-                <span className={`home-insight-trend is-${habit.trend.direction}`}>
-                  {habit.trend.direction === 'up' ? <TrendUp size={13} weight="bold" aria-hidden="true" /> : null}
-                  {habit.trend.direction === 'down' ? <TrendDown size={13} weight="bold" aria-hidden="true" /> : null}
-                  {habit.trend.label}
-                </span>
-              )}
-            </div>
-            <HabitChart habit={habit} />
-          </li>
-        ))}
-      </ul>
-    </section>
+              <div className="home-insight-chart-value">
+                <strong>{headlineCopy(habit)}</strong>
+                {habit.trend && (
+                  <span className={`home-insight-trend is-${habit.trend.direction}`}>
+                    {habit.trend.direction === 'up' ? <TrendUp size={13} weight="bold" aria-hidden="true" /> : null}
+                    {habit.trend.direction === 'down' ? <TrendDown size={13} weight="bold" aria-hidden="true" /> : null}
+                    {habit.trend.label}
+                  </span>
+                )}
+              </div>
+              <HabitChart habit={habit} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    </>
   )
 }

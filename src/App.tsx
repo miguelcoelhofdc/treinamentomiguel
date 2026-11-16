@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from '@/components/BottomNav'
 import { useSettings } from '@/hooks/useSettings'
@@ -10,6 +10,16 @@ import {
   getStoredProfileId,
   type ProfileId,
 } from '@/lib/auth'
+
+const NAV_COLLAPSE_KEY = 'meu-ritmo:nav-collapsed'
+
+function readNavCollapsed() {
+  try {
+    return window.localStorage.getItem(NAV_COLLAPSE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 const TrackingHome = lazy(() => import('@/pages/TrackingHome'))
 const Routines = lazy(() => import('@/pages/Routines'))
@@ -57,7 +67,14 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
   const today = useLocalDay()
   const activeProfile = ACCESS_PROFILES[profileId]
   const isHome = pathname === '/'
-  const shellClass = `app-shell training-theme tracking-theme app-theme${isHome ? ' home-theme' : ''}`
+  const [navCollapsed, setNavCollapsed] = useState(readNavCollapsed)
+  const shellClass = [
+    'app-shell training-theme tracking-theme app-theme',
+    isHome ? 'home-theme' : '',
+    navCollapsed ? 'is-nav-collapsed' : '',
+  ].filter(Boolean).join(' ')
+  const desktopSidebarWidth = navCollapsed ? '72px' : '256px'
+  const shellStyle = { '--desktop-sidebar-width': desktopSidebarWidth } as CSSProperties
 
   useEffect(() => {
     if (!loaded) return
@@ -67,16 +84,28 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
     return () => metas.forEach((meta, index) => { meta.content = previous[index] })
   }, [settings.darkMode, loaded])
 
+  const toggleNavCollapse = () => {
+    setNavCollapsed(current => {
+      const next = !current
+      try {
+        window.localStorage.setItem(NAV_COLLAPSE_KEY, next ? '1' : '0')
+      } catch {
+        /* Storage may be restricted. */
+      }
+      return next
+    })
+  }
+
   const handleLogout = () => {
     clearStoredProfile()
     window.location.assign('/')
   }
 
-  if (!loaded) return <div className={shellClass}><AppSkeleton /></div>
-  if (error) return <div className={shellClass}><div className="page-content"><h1 className="page-title">Não foi possível abrir seu perfil.</h1><button className="btn-primary mt-5" onClick={retry}>Tentar novamente</button></div></div>
+  if (!loaded) return <div className={shellClass} style={shellStyle}><AppSkeleton /></div>
+  if (error) return <div className={shellClass} style={shellStyle}><div className="page-content"><h1 className="page-title">Não foi possível abrir seu perfil.</h1><button className="btn-primary mt-5" onClick={retry}>Tentar novamente</button></div></div>
 
   return (
-    <div className={shellClass}>
+    <div className={shellClass} style={shellStyle}>
       <ScrollToTop />
       <Suspense fallback={<AppSkeleton />}>
         <Routes>
@@ -107,7 +136,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
         </Routes>
       </Suspense>
       <div id="training-overlays" />
-      <BottomNav />
+      <BottomNav collapsed={navCollapsed} onToggleCollapse={toggleNavCollapse} />
     </div>
   )
 }

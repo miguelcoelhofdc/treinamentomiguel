@@ -195,15 +195,16 @@
 @media (max-width:390px) {.training-theme .home-checkin {padding:24px 20px}.training-theme .exercise-detail {padding-left:16px}}
 @media (min-width:768px) {.training-theme .journey-sheet {bottom:24px;border-radius:20px;padding-inline:28px}.training-theme .page-content {padding-inline:32px}}
 @media (min-width:1024px) {
-  .training-theme.app-shell {padding-left:208px}
+  .training-theme.app-shell {padding-left:var(--desktop-sidebar-width, 256px)}
   .training-theme .journey-sheet {top:50%;bottom:auto;transform:translateY(-50%);animation:none}
   .training-theme .page-content {padding-top:48px;padding-bottom:48px}
-  .training-theme .training-nav {inset:0 auto 0 0;width:208px;border-top:0;border-right:1px solid hsl(var(--color-line));padding:32px 16px}
-  .training-theme .training-nav-brand {display:flex;align-items:center;gap:10px;padding:0 12px 32px;font-size:18px;font-weight:600}
+  .training-theme .training-nav {inset:0 auto 0 0;width:var(--desktop-sidebar-width, 256px);border-top:0;padding:0;padding-bottom:0}
+  .training-theme .training-nav-header {display:flex}
+  .training-theme .training-nav-brand {display:flex;align-items:center;gap:10px}
   .training-theme .training-nav-brand svg {color:hsl(var(--color-accent))}
-  .training-theme .training-nav-inner {display:flex;flex-direction:column;gap:8px;padding:0}
-  .training-theme .training-nav-item {flex-direction:row;justify-content:flex-start;min-height:48px;gap:12px;padding:8px 12px;font-size:14px}
-  .training-theme .nav-icon {width:24px}.training-theme .nav-active {background:hsl(var(--color-accent-soft))}
+  .training-theme .training-nav-inner {display:flex;flex-direction:column;gap:4px;padding:12px;flex:1;margin:0;max-width:none;grid-template-columns:none}
+  .training-theme .training-nav-item {flex-direction:row;justify-content:flex-start;align-items:center;min-height:48px;gap:0;font-size:14px}
+  .training-theme .nav-active {background:hsl(var(--color-accent-soft))}
   .training-theme .settings-layout {grid-template-columns:192px minmax(0,1fr);gap:32px}
   .training-theme .settings-group-nav {display:flex;flex-direction:column;gap:4px;align-self:start}
   .training-theme .settings-group-nav button {min-height:44px;padding:12px;text-align:left;border-radius:12px;font-size:14px;color:hsl(var(--color-ink-muted))}

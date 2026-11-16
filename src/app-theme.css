@@ -167,8 +167,9 @@
 .app-theme .nav-active { color: hsl(var(--color-accent-strong)); background: hsl(var(--color-accent-soft)); border: 0; }
 .dark .app-theme .nav-active { border: 0; }
 .app-theme .nav-active .nav-icon { background: transparent; color: hsl(var(--color-accent-strong)); }
-.app-theme .training-nav-brand > span:first-child { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
-.app-theme .training-nav-brand > span:first-child svg { color: inherit; }
+.app-theme .training-nav-mark { background: hsl(var(--color-accent-soft)); color: hsl(var(--color-accent-strong)); }
+.app-theme .training-nav-mark svg { color: inherit; }
+.app-theme .training-nav-brand-name { color: hsl(var(--color-ink)); }
 @media (max-width: 1023px) {
   .app-theme .training-nav {
     left: max(12px, env(safe-area-inset-left, 0px));
@@ -249,8 +250,9 @@
 }
 @media (min-width: 1024px) {
   .app-theme .page-content { padding-top: 44px; padding-bottom: 44px; }
-  .app-theme .training-nav-item { gap: 12px; }
+  .app-theme .training-nav-item { gap: 0; }
   .app-theme .training-nav .nav-icon { background: transparent; }
+  .app-theme .training-nav-inner { background: transparent; }
   .app-theme .settings-group-nav { align-self: start; background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 20px; padding: 10px; gap: 6px; }
   .app-theme .settings-group-nav button { font-size: 13px; min-height: 44px; padding: 10px 12px; border-radius: 12px; }
   .app-theme .settings-group { padding-inline: 24px; }
