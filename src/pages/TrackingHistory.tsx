@@ -41,6 +41,17 @@ export default function TrackingHistory() {
     {data.loaded && !data.error && filter === 'all' && <HomeTrends data={data} rangeDays={chartDays} showAll />}
     {data.loaded && !data.error && selectedRoutine && selectedRoutine.kind !== 'exercise' && <RoutineTrends data={data} routineId={selectedRoutine.id} days={chartDays} />}
     {data.loaded && !data.error && selectedRoutine?.kind === 'exercise' && <HomeTrends key={selectedRoutine.id} data={data} rangeDays={chartDays} showAll activityFilter={selectedRoutine.activity} />}
+    {data.loaded && !data.error && (
+      <section className="tracking-panel daily-grid-history-cta">
+        <div className="section-heading">
+          <div>
+            <h2>Registro visual</h2>
+            <p className="helper">Grade dias × hábitos com status colorido e resumo do mês.</p>
+          </div>
+          <Link className="btn-secondary" to="/registrar?modo=dia">Abrir grade</Link>
+        </div>
+      </section>
+    )}
     {saved && <SavedNotice>Registro atualizado. Seus gráficos já refletem a alteração.</SavedNotice>}
     {!data.loaded ? <TrackingLoading /> : data.error ? <TrackingError retry={data.retry} /> : !dates.length ? <section className="tracking-panel"><EmptyBlock title="Nenhum registro por aqui ainda" action={<Link to="/registrar" className="btn-secondary">Fazer um registro</Link>}>Escolha outro filtro ou registre uma atividade ou como foi seu dia.</EmptyBlock></section> : <>
       {dates.slice(0, visible).map(date => {

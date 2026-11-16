@@ -12,9 +12,11 @@ import {
 import BottomSheet from '@/components/ui/BottomSheet'
 import { useTracking } from '@/hooks/useTracking'
 import { addCalendarDays, formatShortDate, weekday } from '@/lib/date'
-import { activitySummary, hasWellness, numberLabel, progressPoints } from '@/lib/tracking'
+import { activitySummary, hasWellness, numberLabel, progressPoints, type ChartMetric } from '@/lib/tracking'
+import { dayRegisterProgress, gridRoutines } from '@/lib/routineStatus'
 import CheckInForm from '@/components/tracking/CheckInForm'
 import HomeTrends from '@/components/tracking/HomeTrends'
+import HomeYesterdayRegister from '@/components/tracking/HomeYesterdayRegister'
 import SessionDetails from '@/components/tracking/SessionDetails'
 import { ActivityBadge, SavedNotice, TrackingError } from '@/components/tracking/TrackingState'
 import type { TrainingSettings } from '@/types'
@@ -24,21 +26,24 @@ const DAY_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 function HomeLoading() {
   return (
     <div className="home-start-loading" aria-label="Carregando seus registros" aria-busy="true">
-      <div className="home-start-actions"><div className="skeleton home-start-workout-skeleton" /><div className="skeleton home-start-checkin-skeleton" /></div>
-      <div className="home-start-summary"><div className="skeleton h-32" /><div className="skeleton h-32" /><div className="skeleton h-32" /></div>
-      <div className="home-start-secondary"><div className="skeleton h-44" /><div className="skeleton h-44" /></div>
       <div className="skeleton home-start-trends-skeleton" />
+      <div className="home-start-summary"><div className="skeleton h-32" /><div className="skeleton h-32" /><div className="skeleton h-32" /></div>
+      <div className="home-start-actions"><div className="skeleton home-start-workout-skeleton" /><div className="skeleton home-start-checkin-skeleton" /></div>
+      <div className="home-start-secondary"><div className="skeleton h-44" /><div className="skeleton h-44" /></div>
     </div>
   )
 }
 
 export default function TrackingHome({ settings }: { settings: TrainingSettings }) {
   const data = useTracking()
+  const yesterday = addCalendarDays(data.today, -1)
   const [details, setDetails] = useState(false)
   const [checkIn, setCheckIn] = useState(false)
+  const [checkInDate, setCheckInDate] = useState(yesterday)
   const [saved, setSaved] = useState('')
   const firstName = settings.name.trim().split(' ')[0] || 'atleta'
   const initials = (settings.name.trim() || 'A').slice(0, 1).toLocaleUpperCase('pt-BR')
+  const registerWorkout = `/registrar?modo=treino&data=${yesterday}`
 
   const week = useMemo(() => {
     const startOffset = (weekday(data.today) + 6) % 7
@@ -79,9 +84,28 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
     : null
 
   const latest = data.activities.at(-1)
-  const todayLog = data.byDate.get(data.today)
-  const checkedIn = hasWellness(todayLog)
-  const todayDone = week.some(day => day.isToday && day.active)
+  const reviewLog = data.byDate.get(yesterday)
+  const checkedIn = hasWellness(reviewLog)
+  const yesterdayDone = data.activities.some(activity => activity.date === yesterday && activity.completed)
+    || Boolean(reviewLog?.workoutDone)
+  const yesterdayHabits = useMemo(
+    () => dayRegisterProgress(data.routines, yesterday, data),
+    [data, yesterday],
+  )
+  const habitsDashboard = yesterdayHabits.complete
+  const trendOmit = useMemo(() => {
+    if (!habitsDashboard) return [] as ChartMetric[]
+    const enabled = gridRoutines(data.routines)
+    const omit: ChartMetric[] = []
+    if (enabled.some(routine => routine.kind === 'weight')) omit.push('peso')
+    if (enabled.some(routine => routine.kind === 'sleep')) omit.push('sono')
+    return omit
+  }, [habitsDashboard, data.routines])
+
+  const openCheckIn = () => {
+    setCheckInDate(yesterday)
+    setCheckIn(true)
+  }
 
   return (
     <main className="page-content tracking-home home-start">
@@ -98,30 +122,12 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
       {!data.loaded ? <HomeLoading /> : data.error ? <TrackingError retry={data.retry} /> : <>
         {saved && <SavedNotice>{saved}</SavedNotice>}
 
-        <div className="home-start-actions">
-          <section className="home-start-workout" aria-labelledby="home-workout-title">
-            <div className="home-start-workout-top">
-              <Barbell size={26} aria-hidden="true" />
-              <span>{todayDone ? <><CheckCircle size={16} aria-hidden="true" />Treino salvo hoje</> : 'No seu ritmo'}</span>
-            </div>
-            <div>
-              <h2 id="home-workout-title">{todayDone ? 'Mais um passo hoje?' : 'Seu próximo movimento'}</h2>
-              <p>{todayDone ? 'Seu movimento de hoje já está registrado.' : 'Força, corrida ou o que fizer sentido hoje.'}</p>
-            </div>
-            <Link to="/registrar?modo=treino" className="home-start-primary">
-              {todayDone ? 'Novo treino' : 'Registrar treino'}<ArrowRight size={18} aria-hidden="true" />
-            </Link>
-          </section>
-          <button type="button" className="home-start-checkin" onClick={() => setCheckIn(true)}>
-            <span className="home-start-checkin-icon" aria-hidden="true"><Scales size={24} /></span>
-            <span className="home-start-checkin-copy">
-              <strong>{checkedIn ? 'Atualizar meu dia' : 'Peso e check-in'}</strong>
-              <span>Peso, sono e como você está.</span>
-              {checkedIn && <span className="home-start-checkin-status"><CheckCircle size={14} aria-hidden="true" />Registrado hoje</span>}
-            </span>
-            <CaretRight size={20} className="home-start-checkin-arrow" aria-hidden="true" />
-          </button>
-        </div>
+        <HomeYesterdayRegister
+          data={data}
+          onSaved={() => setSaved('Registro de ontem atualizado.')}
+        />
+
+        <HomeTrends data={data} showAll omitMetrics={trendOmit} />
 
         <section className="home-start-overview" aria-labelledby="home-summary-title">
           <div className="home-start-section-heading">
@@ -153,6 +159,31 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
             </article>
           </div>
         </section>
+
+        <div className="home-start-actions">
+          <section className="home-start-workout" aria-labelledby="home-workout-title">
+            <div className="home-start-workout-top">
+              <Barbell size={26} aria-hidden="true" />
+              <span>{yesterdayDone ? <><CheckCircle size={16} aria-hidden="true" />Treino de ontem salvo</> : 'No seu ritmo'}</span>
+            </div>
+            <div>
+              <h2 id="home-workout-title">{yesterdayDone ? 'Registrar outro treino?' : 'Seu próximo movimento'}</h2>
+              <p>{yesterdayDone ? 'Você já registrou o movimento de ontem.' : 'Registre como foi o treino de ontem.'}</p>
+            </div>
+            <Link to={registerWorkout} className="home-start-primary">
+              {yesterdayDone ? 'Novo treino' : 'Registrar treino'}<ArrowRight size={18} aria-hidden="true" />
+            </Link>
+          </section>
+          <button type="button" className="home-start-checkin" onClick={openCheckIn}>
+            <span className="home-start-checkin-icon" aria-hidden="true"><Scales size={24} /></span>
+            <span className="home-start-checkin-copy">
+              <strong>{checkedIn ? 'Atualizar ontem' : 'Check-in do dia'}</strong>
+              <span>Peso, sono, alimentação e como foi o dia.</span>
+              {checkedIn && <span className="home-start-checkin-status"><CheckCircle size={14} aria-hidden="true" />Ontem registrado</span>}
+            </span>
+            <CaretRight size={20} className="home-start-checkin-arrow" aria-hidden="true" />
+          </button>
+        </div>
 
         <div className="home-start-secondary">
           <section className="home-start-panel home-start-calendar" aria-labelledby="calendar-title">
@@ -199,13 +230,11 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
             ) : (
               <div className="home-start-empty">
                 <p>Seu primeiro treino começa por aqui.</p>
-                <Link to="/registrar?modo=treino" className="home-start-text-link">Fazer um registro<ArrowRight size={16} aria-hidden="true" /></Link>
+                <Link to={registerWorkout} className="home-start-text-link">Fazer um registro<ArrowRight size={16} aria-hidden="true" /></Link>
               </div>
             )}
           </section>
         </div>
-
-        <HomeTrends data={data} showAll />
       </>}
 
       {details && latest && (
@@ -220,10 +249,16 @@ export default function TrackingHome({ settings }: { settings: TrainingSettings 
         />
       )}
       {checkIn && (
-        <BottomSheet title="Peso e check-in" description={formatShortDate(data.today)} onClose={() => setCheckIn(false)}>
+        <BottomSheet
+          title={checkInDate === yesterday ? 'Revisar ontem' : 'Peso e check-in'}
+          description={formatShortDate(checkInDate)}
+          onClose={() => setCheckIn(false)}
+        >
           <CheckInForm
-            date={data.today}
-            log={todayLog}
+            key={checkInDate}
+            date={checkInDate}
+            log={data.byDate.get(checkInDate)}
+            onDateChange={setCheckInDate}
             onSaved={() => {
               setCheckIn(false)
               setSaved('Check-in salvo. Seu resumo já está em dia.')

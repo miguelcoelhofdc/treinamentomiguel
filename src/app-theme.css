@@ -46,6 +46,10 @@
 .app-theme .section-heading { gap: 12px; flex-wrap: wrap; }
 .app-theme .section-heading h2 { font-size: 18px; font-weight: 500; }
 .app-theme :is(.tracking-entry, .training-form-page) { max-width: 860px; }
+.app-theme .tracking-entry.is-daily-grid { max-width: 1120px; }
+.app-theme .daily-grid-view-tabs { margin-top: -10px; }
+.app-theme .daily-grid-history-cta { margin-bottom: 20px; }
+.app-theme .daily-grid-history-cta .section-heading { align-items: center; }
 .app-theme .tracking-panel { background: hsl(var(--color-surface)); border: 1px solid hsl(var(--color-line) / .5); border-radius: 22px; padding: 24px; box-shadow: none; min-width: 0; overflow-x: clip; }
 .app-theme .btn-primary { background: var(--brand-violet); color: #fff; box-shadow: none; border-radius: 14px; font-weight: 500; }
 .app-theme .btn-primary:hover { background: var(--brand-violet-hover); }

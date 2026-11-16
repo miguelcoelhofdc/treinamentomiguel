@@ -93,7 +93,20 @@ function ChartTooltip({
   )
 }
 
-export default function HomeTrends({ data, rangeDays, showAll = false, activityFilter }: { data: TrackingData; rangeDays?: number; showAll?: boolean; activityFilter?: string }) {
+export default function HomeTrends({
+  data,
+  rangeDays,
+  showAll = false,
+  activityFilter,
+  omitMetrics = [],
+}: {
+  data: TrackingData
+  rangeDays?: number
+  showAll?: boolean
+  activityFilter?: string
+  /** Métricas já cobertas pela grade de hábitos (ex.: peso/sono). */
+  omitMetrics?: ChartMetric[]
+}) {
   const fillId = useId().replace(/:/g, '')
   const barId = useId().replace(/:/g, '')
   const latestStrength = [...data.strength].sort((a, b) => b.date.localeCompare(a.date) || (b.id ?? 0) - (a.id ?? 0))[0]
@@ -101,20 +114,21 @@ export default function HomeTrends({ data, rangeDays, showAll = false, activityF
     ?? data.catalogue.find(item => item.name === latestStrength?.exercise)?.exerciseId
     ?? data.catalogue[0]?.exerciseId
     ?? ''
+  const omitted = useMemo(() => new Set(omitMetrics), [omitMetrics])
   const [selectedMetric, setMetric] = useState<ChartMetric>(() => {
     if (activityFilter && activityFilter !== 'all') return ['forca', 'calistenia'].includes(activityFilter) ? 'forca' : activityFilter === 'corrida' ? 'corrida' : 'atividade'
-    const hasWeight = data.daily.some(log => log.weightKg != null)
+    const hasWeight = data.daily.some(log => log.weightKg != null) && !omitMetrics.includes('peso')
     const hasActivity = data.activities.some(activity => activity.completed)
     if (hasWeight) return 'peso'
     if (hasActivity) return 'atividade'
-    return 'peso'
+    return omitMetrics.includes('peso') ? 'atividade' : 'peso'
   })
   const [exercise, setExercise] = useState(defaultExercise)
   const [period, setDays] = useState(30)
   const days = rangeDays ?? period
-  const tabs = TABS.filter(item => (!activityFilter || item.id === 'atividade' || item.id === 'forca' && ['all', 'forca', 'calistenia'].includes(activityFilter) || item.id === 'corrida' && ['all', 'corrida'].includes(activityFilter)) && (showAll || (item.id === 'peso' || item.id === 'sono' ? data.routines.some(routine => routine.enabled && routine.kind === (item.id === 'peso' ? 'weight' : 'sleep')) : data.routines.some(routine => routine.enabled && routine.kind === 'exercise' && (routine.activity === 'all' || item.id === 'atividade' || item.id === 'forca' && ['forca', 'calistenia'].includes(routine.activity!) || item.id === 'corrida' && routine.activity === 'corrida')))))
-  const tab = tabs.find(item => item.id === selectedMetric) ?? tabs[0] ?? TABS[0]
-  const metric = tab.id
+  const tabs = TABS.filter(item => !omitted.has(item.id) && (!activityFilter || item.id === 'atividade' || item.id === 'forca' && ['all', 'forca', 'calistenia'].includes(activityFilter) || item.id === 'corrida' && ['all', 'corrida'].includes(activityFilter)) && (showAll || (item.id === 'peso' || item.id === 'sono' ? data.routines.some(routine => routine.enabled && routine.kind === (item.id === 'peso' ? 'weight' : 'sleep')) : data.routines.some(routine => routine.enabled && routine.kind === 'exercise' && (routine.activity === 'all' || item.id === 'atividade' || item.id === 'forca' && ['forca', 'calistenia'].includes(routine.activity!) || item.id === 'corrida' && routine.activity === 'corrida')))))
+  const tab = tabs.find(item => item.id === selectedMetric) ?? tabs[0]
+  const metric = tab?.id ?? 'atividade'
   const activities = useMemo(() => data.activities.filter(item => !activityFilter || activityFilter === 'all' || item.activity === activityFilter), [data.activities, activityFilter])
   const points = useMemo(
     () => progressPoints(metric, days, data.today, activities, data.daily, data.strength, exercise, 'distance', data.catalogue),
@@ -123,11 +137,13 @@ export default function HomeTrends({ data, rangeDays, showAll = false, activityF
   const chartData = points.map(point => ({ ...point, label: formatShortDate(point.date) }))
   const noData = !points.length || (metric === 'atividade' && !points.some(point => point.value > 0))
   const value = headlineValue(points, metric)
-  const trend = trendCopy(points, tab.unit, metric)
+  const trend = tab ? trendCopy(points, tab.unit, metric) : null
   const formatted = (amount: number) => numberLabel(amount)
   const exerciseName = data.catalogue.find(item => item.exerciseId === exercise)?.name
   const peak = Math.max(0, ...points.map(point => point.value))
-  const TabIcon = tab.icon
+  const TabIcon = tab?.icon ?? ChartLineUp
+
+  if (!tab) return null
 
   return (
     <section className="home-trends home-trends-hero tracking-panel" aria-labelledby="home-trends-title">
