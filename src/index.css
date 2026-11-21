@@ -65,13 +65,29 @@
   button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
   button, a { touch-action: manipulation; }
 
+  /* Sem deslocamento/escala em hover ou clique (exceto controles de layout da nav). */
+  :where(button, a, [role='button']):is(:hover, :active):not(.training-nav-collapse) {
+    transform: none !important;
+  }
+
+  button:focus,
   button:focus-visible,
+  a:focus,
   a:focus-visible,
+  summary:focus,
+  summary:focus-visible,
+  [role='button']:focus,
+  [role='button']:focus-visible {
+    outline: none;
+  }
+
+  input:focus,
   input:focus-visible,
+  textarea:focus,
   textarea:focus-visible,
+  select:focus,
   select:focus-visible {
-    outline: 3px solid hsl(var(--color-accent) / 0.28);
-    outline-offset: 3px;
+    outline: none;
   }
 }
 
@@ -111,7 +127,7 @@
   }
 
   .tab-bar-item {
-    @apply inline-flex min-h-11 items-center justify-center rounded-[13px] px-2 text-[13px] font-semibold text-ink-muted transition duration-200 active:scale-[0.98];
+    @apply inline-flex min-h-11 items-center justify-center rounded-[13px] px-2 text-[13px] font-semibold text-ink-muted transition-colors duration-200;
   }
 
   .tab-bar-item-active {
@@ -119,23 +135,27 @@
   }
 
   .btn-primary {
-    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-accent px-5 py-3 text-[15px] font-semibold text-canvas shadow-[0_14px_28px_-18px_rgba(17,20,24,0.55)] transition duration-200 ease-out hover:bg-accent-strong active:translate-y-px active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-accent px-5 py-3 text-[15px] font-semibold text-canvas shadow-[0_14px_28px_-18px_rgba(17,20,24,0.55)] transition-colors duration-200 ease-out hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-line bg-surface px-5 py-3 text-[15px] font-semibold text-ink transition duration-200 ease-out hover:bg-surface-raised active:translate-y-px active:scale-[0.985];
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] border border-line bg-surface px-5 py-3 text-[15px] font-semibold text-ink transition-colors duration-200 ease-out hover:bg-surface-raised;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] px-4 py-2 text-[14px] font-semibold text-ink-soft transition duration-200 ease-out hover:bg-surface-raised active:translate-y-px active:scale-[0.985];
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] px-4 py-2 text-[14px] font-semibold text-ink-soft transition-colors duration-200 ease-out hover:bg-surface-raised;
   }
 
   .btn-icon {
-    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] text-ink-muted transition duration-200 ease-out hover:bg-surface-raised active:scale-[0.96];
+    @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] text-ink-muted transition-colors duration-200 ease-out hover:bg-surface-raised;
   }
 
   .input {
-    @apply min-h-12 w-full rounded-[14px] border border-line bg-surface px-3.5 py-3 text-[16px] font-medium text-ink placeholder:font-normal placeholder:text-ink-muted/70 transition duration-200 focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10;
+    @apply min-h-12 w-full rounded-[14px] border border-line bg-surface px-3.5 py-3 text-[16px] font-medium text-ink placeholder:font-normal placeholder:text-ink-muted/70 transition duration-200 focus:border-line focus:outline-none focus:ring-0;
+  }
+  .input:focus,
+  .input:focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--color-ink) / 0.05);
   }
 
   textarea.input { @apply leading-6; }
@@ -200,7 +220,7 @@
 }
 
 input[type='checkbox'] {
-  @apply h-5 w-5 cursor-pointer rounded-md border-2 border-line checked:border-accent checked:bg-accent focus:ring-2 focus:ring-accent/30;
+  @apply h-5 w-5 cursor-pointer rounded-md border-2 border-line checked:border-accent checked:bg-accent focus:outline-none focus:ring-0;
   accent-color: hsl(var(--color-accent));
 }
 
@@ -275,9 +295,14 @@ input[type='range']::-webkit-slider-thumb {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.goals-shell button:focus-visible,
+.goals-shell button:focus,
+.goals-shell button:focus-visible {
+  outline: none;
+}
+.goals-shell input:focus,
 .goals-shell input:focus-visible {
-  outline-color: rgb(50 115 85 / 0.45);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(24 34 30 / 0.06);
 }
 
 @media (min-width: 375px) {

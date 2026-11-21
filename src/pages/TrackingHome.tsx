@@ -1,122 +1,165 @@
 import { useMemo, useState } from 'react'
+import { ArrowDown, ArrowUpRight, CalendarCheck, ClipboardText, Fire, ThumbsUp, Warning } from '@phosphor-icons/react'
 import { Link } from 'react-router-dom'
+import { useTracking, type TrackingData } from '@/hooks/useTracking'
+import HomeGoalProgress from '@/components/tracking/HomeGoalProgress'
+import HomeHabitsEvolution from '@/components/tracking/HomeHabitsEvolution'
+import { HomeHabitProgress } from '@/components/tracking/HomeHabitsInsight'
+import HomeWeightEvolution from '@/components/tracking/HomeWeightEvolution'
+import HomeYesterdayRegister, { loadSkippedCheckIns } from '@/components/tracking/HomeYesterdayRegister'
+import { TrackingError } from '@/components/tracking/TrackingState'
+import { featuredBodyGoal } from '@/lib/bodyGoals'
+import { addCalendarDays, monthKey } from '@/lib/date'
 import {
-  ArrowRight,
-  Barbell,
-  CheckCircle,
-  MoonStars,
-  Scales,
-} from '@phosphor-icons/react'
-import { useTracking } from '@/hooks/useTracking'
-import { addCalendarDays, formatShortDate } from '@/lib/date'
-import { numberLabel, progressPoints } from '@/lib/tracking'
-import HomeYesterdayRegister from '@/components/tracking/HomeYesterdayRegister'
-import { SavedNotice, TrackingError } from '@/components/tracking/TrackingState'
+  daysWithStatus,
+  gridRoutines,
+  homeCheckInProgress,
+  monthDates,
+  monthStatusSummary,
+  pendingHomeCheckInDates,
+  percent,
+  statusStreak,
+} from '@/lib/routineStatus'
 import type { TrainingSettings } from '@/types'
 
-function HomeLoading() {
+function HomeDashboard({
+  data,
+  showCheckIn,
+  onSettlingChange,
+  onSkippedChange,
+}: {
+  data: TrackingData
+  showCheckIn: boolean
+  onSettlingChange: (settling: boolean) => void
+  onSkippedChange: (dates: string[]) => void
+}) {
+  const yesterday = addCalendarDays(data.today, -1)
+  const routines = useMemo(() => gridRoutines(data.routines).filter(routine => routine.kind !== 'weight'), [data.routines])
+  const dates = monthDates(`${monthKey(data.today)}-01`, data.today, data.today)
+  const progress = homeCheckInProgress(data.routines, yesterday, data)
+  const month = monthStatusSummary(routines, dates, data)
+  const daysLogged = daysWithStatus(routines, dates, data)
+  const streak = statusStreak(routines, data.today, data)
+  const metrics = [
+    {
+      label: 'Check-in de ontem',
+      value: progress.total > 0 ? `${progress.done}/${progress.total}` : '–',
+      detail: progress.complete ? 'Dia completo' : progress.total ? 'Hábitos avaliados' : 'Sem hábitos previstos',
+      Icon: ClipboardText,
+    },
+    {
+      label: 'Dias registrados',
+      value: daysLogged,
+      detail: 'Neste mês',
+      Icon: CalendarCheck,
+    },
+    {
+      label: 'Registros positivos',
+      value: month.total ? `${percent(month.otimo, month.total)}%` : '–',
+      detail: month.total ? `${month.otimo} de ${month.total} neste mês` : 'Sem avaliações no mês',
+      Icon: ThumbsUp,
+    },
+    {
+      label: 'Sequência atual',
+      value: `${streak} ${streak === 1 ? 'dia' : 'dias'}`,
+      detail: 'Com registro de hábitos',
+      Icon: Fire,
+    },
+  ]
+
   return (
-    <div className="home-start-loading" aria-label="Carregando seus registros" aria-busy="true">
-      <div className="home-start-summary"><div className="skeleton h-32" /><div className="skeleton h-32" /><div className="skeleton h-32" /></div>
-      <div className="home-start-actions"><div className="skeleton home-start-workout-skeleton" /></div>
-    </div>
+    <>
+      <section className="home-metrics" aria-label="Resumo de hábitos">
+        {metrics.map(({ label, value, detail, Icon }) => (
+          <article className="home-metric home-card" key={label}>
+            <span className="home-icon" aria-hidden="true"><Icon size={20} /></span>
+            <h2>{label}</h2>
+            <strong>{value}</strong>
+            <p>{detail}</p>
+          </article>
+        ))}
+      </section>
+      <div className={`home-dashboard-grid${showCheckIn ? '' : ' is-checkin-done'}`}>
+        <div className="home-dashboard-primary">
+          <HomeHabitsEvolution data={data} routines={routines} showCheckIn={showCheckIn} />
+          <HomeGoalProgress data={data} />
+          <HomeWeightEvolution progress={featuredBodyGoal(data.personalGoals)} weights={data.measurements.weightKg} today={data.today} />
+        </div>
+        <div className="home-dashboard-secondary">
+          {showCheckIn && (
+            <HomeYesterdayRegister
+              data={data}
+              onSettlingChange={onSettlingChange}
+              onSkippedChange={onSkippedChange}
+            />
+          )}
+          <HomeHabitProgress data={data} routines={routines} dates={dates} yesterday={yesterday} />
+        </div>
+      </div>
+    </>
   )
 }
 
 export default function TrackingHome({ settings }: { settings: TrainingSettings }) {
   const data = useTracking()
+  return <TrackingHomeDay key={data.today} data={data} settings={settings} />
+}
+
+function TrackingHomeDay({ data, settings }: { data: TrackingData; settings: TrainingSettings }) {
   const yesterday = addCalendarDays(data.today, -1)
-  const [saved, setSaved] = useState('')
-  const firstName = settings.name.trim().split(' ')[0] || 'atleta'
-  const registerWorkout = `/registrar?modo=treino&data=${yesterday}`
+  const firstName = settings.name.trim().split(/\s+/)[0] || 'atleta'
+  const dateLabel = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long', weekday: 'long' })
+    .format(new Date(`${data.today}T12:00:00`))
+  const [settling, setSettling] = useState(false)
+  const [skipped, setSkipped] = useState(() => loadSkippedCheckIns(data.today))
 
-  const weekly = data.activities.filter(activity => activity.date >= addCalendarDays(data.today, -6) && activity.completed)
-  const activeDays = new Set(weekly.map(activity => activity.date)).size
-  const minutes = weekly.reduce((sum, activity) => sum + (activity.durationMin ?? 0), 0)
-  const hasTime = weekly.some(activity => activity.durationMin != null)
-
-  const weightPoints = useMemo(
-    () => progressPoints('peso', 30, data.today, data.activities, data.daily, data.strength),
-    [data],
+  const pending = useMemo(
+    () => data.loaded ? pendingHomeCheckInDates(data.routines, data.today, data, skipped) : [],
+    [data, skipped],
   )
-  const sleepPoints = useMemo(
-    () => progressPoints('sono', 7, data.today, data.activities, data.daily, data.strength),
-    [data],
-  )
-  const latestWeight = weightPoints.at(-1)
-  const previousWeight = weightPoints.length > 1 ? weightPoints.at(-2) : undefined
-  const weightDelta = latestWeight && previousWeight ? latestWeight.value - previousWeight.value : null
-  const sleepAvg = sleepPoints.length
-    ? sleepPoints.reduce((sum, point) => sum + point.value, 0) / sleepPoints.length
-    : null
 
-  const reviewLog = data.byDate.get(yesterday)
-  const yesterdayDone = data.activities.some(activity => activity.date === yesterday && activity.completed)
-    || Boolean(reviewLog?.workoutDone)
+  const showCheckIn = settling || pending.length > 0
+  const ctaIsOverdue = pending.length > 0 && pending[0] !== yesterday
 
   return (
     <main className="page-content tracking-home home-start">
       <header className="home-start-header">
-        <div className="min-w-0">
-          <h1 className="page-title">Olá, {firstName}</h1>
+        <div>
+          <time dateTime={data.today}>{dateLabel}</time>
+          <h1 className="page-title">Oi, {firstName}</h1>
         </div>
+        {pending.length > 0 && !data.error && (
+          <a className={`home-action${ctaIsOverdue ? ' is-overdue' : ''}`} href="#check-in">
+            {ctaIsOverdue
+              ? <Warning size={18} weight="fill" aria-hidden="true" />
+              : <ClipboardText size={18} aria-hidden="true" />}
+            {ctaIsOverdue ? 'Check-in pendente' : 'Check-in de ontem'}
+            <ArrowDown size={16} aria-hidden="true" />
+          </a>
+        )}
+        {data.loaded && !data.error && !showCheckIn && (
+          <Link className="home-action" to="/registrar?modo=dia">
+            <ClipboardText size={18} aria-hidden="true" />
+            Registrar hábitos
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        )}
       </header>
-
-      {!data.loaded ? <HomeLoading /> : data.error ? <TrackingError retry={data.retry} /> : <>
-        {saved && <SavedNotice>{saved}</SavedNotice>}
-
-        <HomeYesterdayRegister
-          data={data}
-          onSaved={() => setSaved('Registro de ontem atualizado.')}
-        />
-
-        <section className="home-start-overview" aria-labelledby="home-summary-title">
-          <div className="home-start-section-heading">
-            <h2 id="home-summary-title">Seu resumo</h2>
-            <span>Últimos registros</span>
+      {!data.loaded ? (
+        <div aria-label="Carregando seus registros" aria-busy="true">
+          <div className="home-metrics" aria-hidden="true">
+            {[1, 2, 3, 4].map(item => <div key={item} className="skeleton home-metric-skeleton" />)}
           </div>
-          <div className="home-start-summary">
-            <article className="home-start-metric">
-              <span className="home-start-metric-icon" aria-hidden="true"><Scales size={19} /></span>
-              <h3>Peso</h3>
-              <strong>{latestWeight ? <>{numberLabel(latestWeight.value)}<span> kg</span></> : '—'}</strong>
-              <p>
-                {weightDelta == null
-                  ? (latestWeight ? formatShortDate(latestWeight.date) : 'Sem registro')
-                  : `${weightDelta > 0 ? '+' : ''}${numberLabel(weightDelta)} kg`}
-              </p>
-            </article>
-            <article className="home-start-metric">
-              <span className="home-start-metric-icon is-sleep" aria-hidden="true"><MoonStars size={19} /></span>
-              <h3>Sono · 7d</h3>
-              <strong>{sleepAvg == null ? '—' : <>{numberLabel(Math.round(sleepAvg * 10) / 10)}<span> h</span></>}</strong>
-              <p>{sleepPoints.length ? 'Média diária' : 'Sem registro'}</p>
-            </article>
-            <article className="home-start-metric">
-              <span className="home-start-metric-icon is-activity" aria-hidden="true"><Barbell size={19} /></span>
-              <h3>Atividade · 7d</h3>
-              <strong>{activeDays}<span> / 7</span></strong>
-              <p>{hasTime ? `${numberLabel(minutes)} min` : 'Dias ativos'}</p>
-            </article>
-          </div>
-        </section>
-
-        <div className="home-start-actions">
-          <section className="home-start-workout" aria-labelledby="home-workout-title">
-            <div className="home-start-workout-top">
-              <Barbell size={26} aria-hidden="true" />
-              <span>{yesterdayDone ? <><CheckCircle size={16} aria-hidden="true" />Treino de ontem salvo</> : 'No seu ritmo'}</span>
-            </div>
-            <div>
-              <h2 id="home-workout-title">{yesterdayDone ? 'Registrar outro treino?' : 'Seu próximo movimento'}</h2>
-              <p>{yesterdayDone ? 'Você já registrou o movimento de ontem.' : 'Registre como foi o treino de ontem.'}</p>
-            </div>
-            <Link to={registerWorkout} className="home-start-primary">
-              {yesterdayDone ? 'Novo treino' : 'Registrar treino'}<ArrowRight size={18} aria-hidden="true" />
-            </Link>
-          </section>
+          <div className="skeleton home-panel-skeleton" aria-hidden="true" />
         </div>
-      </>}
+      ) : data.error ? <TrackingError retry={data.retry} /> : (
+        <HomeDashboard
+          data={data}
+          showCheckIn={showCheckIn}
+          onSettlingChange={setSettling}
+          onSkippedChange={setSkipped}
+        />
+      )}
     </main>
   )
 }

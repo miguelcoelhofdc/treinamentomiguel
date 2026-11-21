@@ -1,30 +1,31 @@
 import type { RoutineDefinition, RoutineKind } from '../types/index.ts'
-import { FIVE_RATINGS, type RoutineData, type RoutineReading, routineReading, scheduleOn } from './routines.ts'
-import { addCalendarDays, isDateKey, weekday } from './date.ts'
+import type { BodyGoalProgress } from './bodyGoals.ts'
+import { assessmentFormat, validAssessment, FIVE_RATINGS, type RoutineData, type RoutineReading, routineReading, scheduleOn } from './routines.ts'
+import { addCalendarDays, addCalendarMonths, isDateKey, monthKey, weekday } from './date.ts'
 
 /** Escala visual de 5 níveis para o registro rápido (heatmap). */
 export type StatusLevel = 1 | 2 | 3 | 4 | 5
 
 export const STATUS_SCALE: { level: StatusLevel; label: string; short: string; band: 'ruim' | 'regular' | 'otimo' }[] = [
-  { level: 1, label: FIVE_RATINGS[0], short: 'Péssimo', band: 'ruim' },
+  { level: 1, label: FIVE_RATINGS[0], short: 'Muito ruim', band: 'ruim' },
   { level: 2, label: FIVE_RATINGS[1], short: 'Ruim', band: 'ruim' },
-  { level: 3, label: FIVE_RATINGS[2], short: 'Regular', band: 'regular' },
+  { level: 3, label: FIVE_RATINGS[2], short: 'Mediano', band: 'regular' },
   { level: 4, label: FIVE_RATINGS[3], short: 'Bom', band: 'otimo' },
-  { level: 5, label: FIVE_RATINGS[4], short: 'Ótimo', band: 'otimo' },
+  { level: 5, label: FIVE_RATINGS[4], short: 'Excelente', band: 'otimo' },
 ]
 
 export const STATUS_BANDS = [
   { id: 'otimo' as const, label: 'Ótimo', levels: [4, 5] as StatusLevel[] },
-  { id: 'regular' as const, label: 'Regular', levels: [3] as StatusLevel[] },
+  { id: 'regular' as const, label: 'Mediano', levels: [3] as StatusLevel[] },
   { id: 'ruim' as const, label: 'Ruim', levels: [1, 2] as StatusLevel[] },
 ]
 
 export type CellEditMode = 'status' | 'binary' | 'value'
 
 export function cellEditMode(kind: RoutineKind): CellEditMode {
-  if (kind === 'rating' || kind === 'nutrition') return 'status'
+  if (kind === 'weight') return 'value'
   if (kind === 'check' || kind === 'exercise') return 'binary'
-  return 'value'
+  return 'status'
 }
 
 export function statusLabel(level: StatusLevel | null | undefined): string {
@@ -39,42 +40,20 @@ export function statusTone(level: StatusLevel | null | undefined): string {
 
 /** Converte leitura da rotina em nível 1–5 para cor na grade. */
 export function readingToStatus(routine: RoutineDefinition, reading: RoutineReading | null): StatusLevel | null {
-  if (!reading) return null
+  if (!reading || !Number.isFinite(reading.value)) return null
   const { value } = reading
-  if (routine.kind === 'rating' || routine.kind === 'nutrition') {
+  if (reading.format === 'rating' || (!reading.format && (routine.kind === 'rating' || routine.kind === 'nutrition'))) {
     if (!Number.isInteger(value) || value < 1 || value > 5) return null
     return value as StatusLevel
   }
-  if (routine.kind === 'check' || routine.kind === 'exercise') return value >= 1 ? 5 : 1
-  if (routine.kind === 'sleep') {
-    if (value < 5) return 1
-    if (value < 6) return 2
-    if (value < 7) return 3
-    if (value < 8) return 4
-    return 5
-  }
-  if (routine.kind === 'water') {
-    const liters = (reading.volumeMl ?? value * 1700) / 1000
-    if (liters < 0.5) return 1
-    if (liters < 1) return 2
-    if (liters < 1.5) return 3
-    if (liters < 2.5) return 4
-    return 5
-  }
-  if (routine.kind === 'count' || routine.kind === 'duration') {
-    if (value <= 0) return 1
-    if (value < 2) return 3
-    if (value < 4) return 4
-    return 5
-  }
-  // Peso: só marca presença (neutro-positivo), sem julgamento.
-  if (routine.kind === 'weight') return 4
+  if (reading.format === 'binary' || routine.kind === 'check' || routine.kind === 'exercise') return value >= 1 ? 5 : 1
+  // Historical liters, hours, counts and weight are measurements, not self-assessments.
   return null
 }
 
 export function gridRoutines(routines: RoutineDefinition[]) {
   return routines
-    .filter(routine => routine.enabled && !(routine.kind === 'exercise' && routine.activity === 'all'))
+    .filter(routine => routine.enabled)
     .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
 }
 
@@ -139,12 +118,63 @@ export function percent(part: number, total: number): number {
   return Math.round((part / total) * 100)
 }
 
-/** Valor a gravar quando o usuário escolhe um nível na grade. */
+/** Valor a gravar quando o usuário escolhe um nível na grade ou no check-in. */
 export function statusToSaveValue(routine: RoutineDefinition, level: StatusLevel | null): number | null {
   if (level == null) return null
-  if (routine.kind === 'rating' || routine.kind === 'nutrition') return level
-  if (routine.kind === 'check' || routine.kind === 'exercise') return level >= 4 ? 1 : 0
+  if (!validAssessment(level, 'rating')) throw new Error('Escolha uma avaliação de 1 a 5.')
+  const format = assessmentFormat(routine.kind)
+  return format === 'binary' ? level >= 4 ? 1 : 0 : format === 'rating' ? level : null
+}
+
+/** No check-in da home: só carinhas (ou feito/não fiz). Hábitos de valor ficam na grade. */
+export function homeCheckInMode(kind: RoutineKind): 'faces' | 'binary' | null {
+  if (kind === 'check' || kind === 'exercise') return 'binary'
+  if (kind === 'rating' || kind === 'nutrition' || kind === 'sleep' || kind === 'water' || kind === 'duration' || kind === 'count') {
+    return 'faces'
+  }
   return null
+}
+
+export function homeCheckInTargets(routines: RoutineDefinition[], date: string) {
+  return dayRegisterTargets(routines, date).filter(routine => homeCheckInMode(routine.kind) != null)
+}
+
+export function homeCheckInProgress(
+  routines: RoutineDefinition[],
+  date: string,
+  data: RoutineData,
+): { done: number; total: number; complete: boolean } {
+  const targets = homeCheckInTargets(routines, date)
+  const done = targets.filter(routine => readingToStatus(routine, routineReading(routine, date, data)) != null).length
+  return { done, total: targets.length, complete: targets.length > 0 && done === targets.length }
+}
+
+/**
+ * Lista check-ins até ontem, do mais antigo ao mais recente.
+ * A fila de atrasos cobre os últimos 14 dias a partir do início da meta ativa mais antiga.
+ * Sem meta ativa, oferece apenas o check-in de ontem.
+ */
+export function pendingHomeCheckInDates(
+  routines: RoutineDefinition[],
+  today: string,
+  data: RoutineData & { personalGoals: { open: BodyGoalProgress[] } },
+  exclude?: Iterable<string>,
+): string[] {
+  if (!isDateKey(today)) return []
+  let activeStart: string | undefined
+  for (const { goal, status } of data.personalGoals.open) {
+    if (status === 'active' && (!activeStart || goal.startDate < activeStart)) activeStart = goal.startDate
+  }
+
+  const yesterday = addCalendarDays(today, -1)
+  const cutoff = activeStart ? addCalendarDays(today, -14) : yesterday
+  const firstDate = activeStart && activeStart > cutoff ? activeStart : cutoff
+  const excludedDates = new Set(exclude)
+  return monthDates(firstDate, yesterday, today).filter(date => {
+    if (excludedDates.has(date)) return false
+    const progress = homeCheckInProgress(routines, date, data)
+    return progress.total > 0 && !progress.complete
+  })
 }
 
 export function cellMark(level: StatusLevel | null): string {
@@ -161,6 +191,7 @@ export function cellMark(level: StatusLevel | null): string {
  * Só restringe frequência quando o modo é "dias escolhidos".
  */
 export function dayRegisterTargets(routines: RoutineDefinition[], date: string) {
+  if (!isDateKey(date)) return []
   return gridRoutines(routines).filter(routine => {
     const schedule = scheduleOn(routine, date)
     return schedule.mode !== 'weekdays' || schedule.weekdays.includes(weekday(date))
@@ -173,9 +204,9 @@ export function isDayRegisterComplete(
   date: string,
   data: RoutineData,
 ): boolean {
-  const targets = dayRegisterTargets(routines, date)
+  const targets = homeCheckInTargets(routines, date)
   if (!targets.length) return false
-  return targets.every(routine => routineReading(routine, date, data) != null)
+  return targets.every(routine => readingToStatus(routine, routineReading(routine, date, data)) != null)
 }
 
 export function dayRegisterProgress(
@@ -183,8 +214,8 @@ export function dayRegisterProgress(
   date: string,
   data: RoutineData,
 ): { done: number; total: number; complete: boolean } {
-  const targets = dayRegisterTargets(routines, date)
-  const done = targets.filter(routine => routineReading(routine, date, data) != null).length
+  const targets = homeCheckInTargets(routines, date)
+  const done = targets.filter(routine => readingToStatus(routine, routineReading(routine, date, data)) != null).length
   return { done, total: targets.length, complete: targets.length > 0 && done === targets.length }
 }
 
@@ -194,11 +225,66 @@ export function habitShortLabel(name: string, max = 8): string {
   return `${trimmed.slice(0, Math.max(1, max - 1))}…`
 }
 
+function statusScoreTotal(counts: StatusCounts): number {
+  return STATUS_SCALE.reduce((sum, { level }) => sum + counts.byLevel[level] * level, 0)
+}
+
 export function averageStatusScore(counts: StatusCounts): number | null {
-  if (!counts.total) return null
-  let sum = 0
-  for (const level of [1, 2, 3, 4, 5] as StatusLevel[]) sum += counts.byLevel[level] * level
-  return Math.round((sum / counts.total) * 10) / 10
+  return counts.total ? Math.round((statusScoreTotal(counts) / counts.total) * 10) / 10 : null
+}
+
+/** Period result on a 0–100 scale. For binary habits, this is the completion rate. */
+export function habitPeriodScore(counts: StatusCounts): number | null {
+  return counts.total ? Math.round((statusScoreTotal(counts) - counts.total) * 25 / counts.total) : null
+}
+
+export interface HabitEvolutionPoint {
+  date: string
+  score: number | null
+  count: number
+}
+
+export const HABIT_HISTORY_MONTHS = 6
+export const HABIT_AVERAGE_DAYS = 30
+
+export function habitEvolution(routine: RoutineDefinition, today: string, source: RoutineData) {
+  const currentMonth = monthKey(today)
+  const firstMonth = addCalendarMonths(currentMonth, 1 - HABIT_HISTORY_MONTHS)
+  const firstDate = `${firstMonth}-01`
+  const data = {
+    ...source,
+    entries: source.entries.filter(entry => entry.routineId === routine.id && entry.date >= firstDate && entry.date <= today),
+  }
+  const dates = monthDates(firstDate, today, today)
+  const levels = dates.map(date => readingToStatus(routine, routineReading(routine, date, data)))
+  const countsByMonth = new Map<string, StatusCounts>()
+
+  dates.forEach((date, index) => {
+    const level = levels[index]
+    if (level == null) return
+    const month = monthKey(date)
+    const counts = countsByMonth.get(month) ?? emptyCounts()
+    bump(counts, level)
+    countsByMonth.set(month, counts)
+  })
+
+  const months: HabitEvolutionPoint[] = Array.from({ length: HABIT_HISTORY_MONTHS }, (_, index) => {
+    const month = addCalendarMonths(firstMonth, index)
+    const counts = countsByMonth.get(month) ?? emptyCounts()
+    return { date: `${month}-01`, score: habitPeriodScore(counts), count: counts.total }
+  })
+
+  const recentStart = Math.max(0, dates.length - HABIT_AVERAGE_DAYS)
+  const recent: HabitEvolutionPoint[] = dates.slice(recentStart).map((date, offset) => {
+    const end = recentStart + offset + 1
+    const counts = emptyCounts()
+    for (const level of levels.slice(Math.max(0, end - HABIT_AVERAGE_DAYS), end)) {
+      if (level != null) bump(counts, level)
+    }
+    return { date, score: habitPeriodScore(counts), count: counts.total }
+  })
+
+  return { months, recent }
 }
 
 export function dayAverageScore(
@@ -219,12 +305,13 @@ export function dayAverageScore(
 
 /** Dias consecutivos (até today) com ao menos um registro de status. */
 export function statusStreak(routines: RoutineDefinition[], today: string, data: RoutineData): number {
+  if (!isDateKey(today)) return 0
+  const hit = (date: string) => routines.some(routine => readingToStatus(routine, routineReading(routine, date, data)) != null)
+  // Yesterday is the normal check-in date; today's pending assessment is not a gap.
+  const start = hit(today) ? today : addCalendarDays(today, -1)
   let streak = 0
-  for (let date = today; ; date = addCalendarDays(date, -1)) {
-    const hit = routines.some(routine => readingToStatus(routine, routineReading(routine, date, data)) != null)
-    if (!hit) break
+  for (let date = start; hit(date); date = addCalendarDays(date, -1)) {
     streak += 1
-    if (streak > 60) break
   }
   return streak
 }
@@ -277,15 +364,12 @@ export interface HabitInsightRow {
 
 export function habitChartMode(kind: RoutineKind): HabitChartMode {
   if (kind === 'check' || kind === 'exercise') return 'binary'
-  if (kind === 'weight' || kind === 'sleep') return 'value'
+  if (kind === 'weight') return 'value'
   return 'status'
 }
 
 export function habitChartUnit(kind: RoutineKind): string {
   if (kind === 'weight') return 'kg'
-  if (kind === 'sleep') return 'h'
-  if (kind === 'water') return ''
-  if (kind === 'duration') return 'min'
   return ''
 }
 
@@ -350,7 +434,7 @@ function habitHeadlineScore(series: HabitDayPoint[], mode: HabitChartMode, month
   if (!values.length) return null
   if (mode === 'binary') {
     const done = values.filter(value => value >= 1).length
-    return Math.round((done / series.length) * 100)
+    return Math.round((done / values.length) * 100)
   }
   const avg = values.reduce((sum, value) => sum + value, 0) / values.length
   return Math.round(avg * 10) / 10

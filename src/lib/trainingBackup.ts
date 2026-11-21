@@ -1,10 +1,11 @@
-import type { ActivityLog, AppSettings, DailyLog, ExerciseCheck, Plan, PlannedSession, RunningLog, StrengthLog, WorkoutTemplate, RoutineDefinition, RoutineEntry, RoutineGoal } from '../types/index.ts'
+import type { ActivityLog, AppSettings, BodyGoal, DailyLog, ExerciseCheck, Plan, PlannedSession, RunningLog, StrengthLog, WorkoutTemplate, RoutineDefinition, RoutineEntry, RoutineGoal } from '../types/index.ts'
 import { validEntry, validHealthFields, validRoutine, validRoutineGoal } from './routines.ts'
 import { isDateKey } from './date.ts'
 import { isActivityLog, validateGoal } from './continuousTraining.ts'
 import { parsePerformanceTargets } from './trainingSettings.ts'
 import { validateCoaching, validatePlannedSession } from './coaching.ts'
 import { validDailyRatings, validTemplate } from './tracking.ts'
+import { validBodyGoal } from './bodyGoals.ts'
 
 export interface TrainingBackup {
   kind?: string
@@ -21,18 +22,28 @@ export interface TrainingBackup {
   routines: RoutineDefinition[]
   routineEntries: RoutineEntry[]
   routineGoals: RoutineGoal[]
+  bodyGoals: BodyGoal[]
 }
 
-const FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks', 'activities', 'plannedSessions', 'workoutTemplates', 'routines', 'routineEntries', 'routineGoals'] as const
+export const TRAINING_BACKUP_VERSION = 7
+const FIELDS = ['daily', 'running', 'strength', 'settings', 'exerciseChecks', 'activities', 'plannedSessions', 'workoutTemplates', 'routines', 'routineEntries', 'routineGoals', 'bodyGoals'] as const
 const object = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === 'object' && !Array.isArray(value))
 const number = (value: unknown) => value == null || (typeof value === 'number' && Number.isFinite(value))
 const string = (value: unknown) => value == null || typeof value === 'string'
 const unique = (values: string[]) => new Set(values).size === values.length
 
+export function stringifyTrainingBackup(payload: TrainingBackup, space?: number): string {
+  // JSON has no undefined value. An explicit null preserves fields cleared since the last backup.
+  const daily = payload.daily.map(log => Object.fromEntries(
+    Object.entries(log).map(([key, value]) => [key, value ?? null]),
+  ))
+  return JSON.stringify({ ...payload, daily }, null, space)
+}
+
 export function parseTrainingBackup(raw: string, plan: Plan): TrainingBackup {
   const parsed: unknown = JSON.parse(raw)
   if (!object(parsed) || !FIELDS.some(field => field in parsed)) throw new Error('O arquivo não contém dados reconhecidos.')
-  if (parsed.schemaVersion != null && (!Number.isInteger(parsed.schemaVersion) || Number(parsed.schemaVersion) < 1 || Number(parsed.schemaVersion) > 5)) throw new Error('Versão de backup incompatível.')
+  if (parsed.schemaVersion != null && (!Number.isInteger(parsed.schemaVersion) || Number(parsed.schemaVersion) < 1 || Number(parsed.schemaVersion) > TRAINING_BACKUP_VERSION)) throw new Error('Versão de backup incompatível.')
   for (const field of FIELDS) if (parsed[field] != null && !Array.isArray(parsed[field])) throw new Error(`A seção ${field} do backup é inválida.`)
   const payload = Object.fromEntries(FIELDS.map(field => [field, parsed[field] ?? []])) as unknown as TrainingBackup
   payload.kind = typeof parsed.kind === 'string' ? parsed.kind : undefined
@@ -56,9 +67,10 @@ export function parseTrainingBackup(raw: string, plan: Plan): TrainingBackup {
     || !payload.settings.every(value => object(value) && typeof value.key === 'string' && typeof value.value === 'string')
     || !payload.exerciseChecks.every(value => object(value) && validDate(value.date) && typeof value.exerciseId === 'string' && typeof value.done === 'boolean')
     || !payload.activities.every(value => isActivityLog(value) && string(value.createdAt) && string(value.updatedAt) && string(value.notes) && string(value.templateId))
-    || !payload.plannedSessions.every(validatePlannedSession) || !unique(payload.plannedSessions.map(value => value.id))
+    || !payload.plannedSessions.every(validatePlannedSession) || !unique(payload.plannedSessions.map(value => value.id)) || !unique(payload.plannedSessions.map(value => value.date))
     || !payload.workoutTemplates.every(validTemplate) || !unique(payload.workoutTemplates.map(value => value.id))
     || !unique(payload.activities.map(value => value.id))
+    || !unique(payload.activities.flatMap(value => value.recordingId ? [value.recordingId] : []))
     || !payload.routines.every(validRoutine) || !unique(payload.routines.map(value => value.id))
     || !payload.routineEntries.every(value => {
       const routine = payload.routines.find(item => item.id === value?.routineId)
@@ -67,7 +79,8 @@ export function parseTrainingBackup(raw: string, plan: Plan): TrainingBackup {
     || !payload.routineGoals.every(value => {
       const routine = payload.routines.find(item => item.id === value?.routineId)
       return Boolean(routine && validRoutineGoal(value, routine))
-    }) || !unique(payload.routineGoals.map(value => value.id))) throw new Error('Há registros corrompidos ou incompatíveis no backup.')
+    }) || !unique(payload.routineGoals.map(value => value.id))
+    || !payload.bodyGoals.every(validBodyGoal) || !unique(payload.bodyGoals.map(value => value.id))) throw new Error('Há registros corrompidos ou incompatíveis no backup.')
   const activityIds = new Set(payload.activities.map(activity => activity.id))
   if (payload.strength.some(record => record.activityLogId && !activityIds.has(record.activityLogId))) throw new Error('Há séries vinculadas a um treino ausente no backup.')
   for (const { key, value } of payload.settings) {

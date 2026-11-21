@@ -38,7 +38,7 @@ import plan from '@/data/activePlan'
 import { type UpdateTrainingSetting } from '@/lib/trainingSettings'
 import type { TrainingSettings } from '@/types'
 import { createTrainingBackup, restoreTrainingBackup } from '@/db/trainingBackup'
-import { backupRecordCount, parseTrainingBackup } from '@/lib/trainingBackup'
+import { backupRecordCount, parseTrainingBackup, stringifyTrainingBackup } from '@/lib/trainingBackup'
 
 type SettingsData = TrainingSettings
 
@@ -190,7 +190,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
     setBusy('export')
     try {
       const payload = await createTrainingBackup(profileId)
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const blob = new Blob([stringifyTrainingBackup(payload, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
@@ -417,7 +417,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
                 !settings.darkMode,
                 settings.darkMode ? 'Tema claro ativado.' : 'Tema escuro ativado.',
               )}
-              className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors duration-200 active:scale-[0.97] ${
+              className={`relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${
                 settings.darkMode ? 'bg-accent' : 'bg-line'
               }`}
             >
@@ -528,7 +528,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
               <button
                 type="button"
                 onClick={() => setConfirmReset(true)}
-                className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-[14px] border border-red-200 px-4 py-2 text-[14px] font-semibold text-red-600 transition duration-200 hover:bg-red-50 active:translate-y-px active:scale-[0.985] dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30 sm:w-auto"
+                className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-[14px] border border-red-200 px-4 py-2 text-[14px] font-semibold text-red-600 transition duration-200 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30 sm:w-auto"
                 disabled={busy !== null}
               >
                 <Trash size={18} weight="bold" />
@@ -550,7 +550,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
                 <button
                   type="button"
                   onClick={() => void handleReset()}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-red-600 px-5 py-3 text-[15px] font-semibold text-white transition duration-200 hover:bg-red-700 active:translate-y-px active:scale-[0.985] disabled:opacity-50"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-red-600 px-5 py-3 text-[15px] font-semibold text-white transition duration-200 hover:bg-red-700 disabled:opacity-50"
                   disabled={busy !== null}
                 >
                   {busy === 'reset'

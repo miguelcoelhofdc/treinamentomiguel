@@ -27,6 +27,7 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
   const [setupAmount, setSetupAmount] = useState(sale ? String(sale.setupAmount) : '')
   const [errors, setErrors] = useState<Errors>({})
   const [saving, setSaving] = useState(false)
+  const [requestId] = useState(() => crypto.randomUUID())
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -43,6 +44,7 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+    if (saving) return
     const nextErrors: Errors = {}
     const parsedCommissionMrr = parseLocaleNumber(commissionMrr)
     const parsedFarolMrr = parseLocaleNumber(farolMrr)
@@ -62,7 +64,7 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
     try {
       const now = new Date().toISOString()
       await onSave({
-        ...(sale?.id != null ? { id: sale.id } : {}),
+        ...(sale?.id != null ? { id: sale.id } : { requestId }),
         monthKey,
         date,
         customerName: customerName.trim(),
@@ -73,8 +75,8 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
         createdAt: sale?.createdAt ?? now,
         updatedAt: now,
       })
-    } catch {
-      setErrors({ form: 'Não foi possível salvar esta venda. Tente novamente.' })
+    } catch (error) {
+      setErrors({ form: error instanceof Error ? error.message : 'Não foi possível salvar esta venda. Tente novamente.' })
       setSaving(false)
     }
   }
@@ -88,7 +90,7 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
             <p className="text-[11px] font-semibold text-[#748078]">{sale ? 'Editar registro' : 'Novo registro'}</p>
             <h2 id="sale-form-title" className="mt-1 text-[22px] font-semibold tracking-[-0.025em]">{sale ? 'Editar venda' : 'Cadastrar venda'}</h2>
           </div>
-          <button type="button" onClick={onCancel} disabled={saving} className="flex h-10 w-10 items-center justify-center rounded-[10px] text-[#65736c] transition-colors hover:bg-[#edf2ef] active:scale-[0.98]" aria-label="Fechar"><X size={20} weight="bold" /></button>
+          <button type="button" onClick={onCancel} disabled={saving} className="flex h-10 w-10 items-center justify-center rounded-[10px] text-[#65736c] transition-colors hover:bg-[#edf2ef]" aria-label="Fechar"><X size={20} weight="bold" /></button>
         </div>
 
         <form onSubmit={(event) => void handleSubmit(event)} className="min-h-0 overflow-y-auto p-5 sm:p-6">
@@ -138,8 +140,8 @@ export default function SaleForm({ monthKey, sale, onCancel, onSave }: Props) {
           </div>
 
           <div className="mt-6 grid grid-cols-2 gap-2.5 border-t border-[#dfe6e1] pt-5">
-            <button type="button" onClick={onCancel} disabled={saving} className="min-h-11 rounded-[10px] border border-[#d8e1db] bg-white text-[13px] font-semibold transition-colors hover:bg-[#edf2ef] active:scale-[0.99]">Cancelar</button>
-            <button type="submit" disabled={saving} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] disabled:opacity-55"><FloppyDisk size={18} weight="bold" />{saving ? 'Salvando...' : sale ? 'Salvar alterações' : 'Salvar venda'}</button>
+            <button type="button" onClick={onCancel} disabled={saving} className="min-h-11 rounded-[10px] border border-[#d8e1db] bg-white text-[13px] font-semibold transition-colors hover:bg-[#edf2ef]">Cancelar</button>
+            <button type="submit" disabled={saving} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] disabled:opacity-55"><FloppyDisk size={18} weight="bold" />{saving ? 'Salvando...' : sale ? 'Salvar alterações' : 'Salvar venda'}</button>
           </div>
         </form>
       </div>

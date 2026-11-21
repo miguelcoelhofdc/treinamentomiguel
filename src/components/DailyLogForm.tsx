@@ -118,7 +118,7 @@ export default function DailyLogForm({ date, onSaved, initialEnergy }: Props) {
               aria-checked={form.energy === value}
               aria-label={`${value}: ${energyLabels[value]}`}
               onClick={() => set('energy', value)}
-              className={`min-h-[54px] rounded-[13px] border px-1 py-2 text-center transition duration-200 active:scale-[0.97] ${
+              className={`min-h-[54px] rounded-[13px] border px-1 py-2 text-center transition duration-200 ${
                 form.energy === value
                   ? 'border-accent bg-accent text-canvas'
                   : 'border-line bg-surface-raised text-ink-muted'
@@ -200,7 +200,7 @@ function PainSelector({ label, value, onChange }: { label: string; value: number
             onClick={() => onChange(index)}
             aria-label={`${label}: ${item}`}
             aria-pressed={value === index}
-            className={`min-h-12 rounded-[12px] border px-1 text-[10px] font-semibold leading-tight transition duration-200 active:scale-[0.97] ${
+            className={`min-h-12 rounded-[12px] border px-1 text-[10px] font-semibold leading-tight transition duration-200 ${
               value === index ? 'border-ink bg-ink text-canvas' : 'border-line bg-surface text-ink-muted'
             }`}
           >

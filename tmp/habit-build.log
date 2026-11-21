@@ -1,0 +1,67 @@
+
+> treino-miguel@1.0.0 build
+> vite build --outDir tmp/habit-backend-build
+
+vite v5.4.21 building for production...
+transforming...
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Ô£ô 5442 modules transformed.
+rendering chunks...
+computing gzip size...
+tmp/habit-backend-build/registerSW.js                                            0.13 kB
+tmp/habit-backend-build/manifest.webmanifest                                     0.45 kB
+tmp/habit-backend-build/index.html                                               1.15 kB Ôöé gzip:   0.54 kB
+tmp/habit-backend-build/assets/outfit-latin-ext-wght-normal-DdQaqQDo.woff2      14.81 kB
+tmp/habit-backend-build/assets/caveat-latin-ext-wght-normal-Byk3UhVp.woff2      29.47 kB
+tmp/habit-backend-build/assets/outfit-latin-wght-normal-Bc-8i84L.woff2          32.29 kB
+tmp/habit-backend-build/assets/caveat-cyrillic-ext-wght-normal-DiMfzA-V.woff2   42.86 kB
+tmp/habit-backend-build/assets/caveat-latin-wght-normal-C1hSzPvX.woff2          74.93 kB
+tmp/habit-backend-build/assets/caveat-cyrillic-wght-normal-D5lnP6kL.woff2       77.22 kB
+tmp/habit-backend-build/assets/index-CHuzJpgq.css                              208.39 kB Ôöé gzip:  33.26 kB
+tmp/habit-backend-build/assets/PageHeader-B7u0Gnck.js                            0.43 kB Ôöé gzip:   0.24 kB
+tmp/habit-backend-build/assets/CaretLeft.es-CppHzMQX.js                          1.30 kB Ôöé gzip:   0.52 kB
+tmp/habit-backend-build/assets/CaretDown.es-2yt8BT-d.js                          1.36 kB Ôöé gzip:   0.54 kB
+tmp/habit-backend-build/assets/CaretRight.es-GDBIGsjx.js                         1.37 kB Ôöé gzip:   0.54 kB
+tmp/habit-backend-build/assets/Plus.es-CPeHrT01.js                               1.53 kB Ôöé gzip:   0.55 kB
+tmp/habit-backend-build/assets/Check.es-BL5u89_I.js                              1.53 kB Ôöé gzip:   0.56 kB
+tmp/habit-backend-build/assets/Copy.es-C6-8ewo7.js                               1.78 kB Ôöé gzip:   0.59 kB
+tmp/habit-backend-build/assets/Clock.es-wftoxSfB.js                              1.79 kB Ôöé gzip:   0.62 kB
+tmp/habit-backend-build/assets/WarningCircle.es-C9mLJw55.js                      1.84 kB Ôöé gzip:   0.64 kB
+tmp/habit-backend-build/assets/X.es-Bp5S652L.js                                  1.92 kB Ôöé gzip:   0.64 kB
+tmp/habit-backend-build/assets/ArrowClockwise.es-DFDbh2lp.js                     1.99 kB Ôöé gzip:   0.76 kB
+tmp/habit-backend-build/assets/CheckCircle.es-cFui6tF8.js                        2.08 kB Ôöé gzip:   0.70 kB
+tmp/habit-backend-build/assets/Target.es-CG-pbx5a.js                             2.20 kB Ôöé gzip:   0.80 kB
+tmp/habit-backend-build/assets/PencilSimple.es-CLgLDTqr.js                       2.44 kB Ôöé gzip:   0.87 kB
+tmp/habit-backend-build/assets/Trash.es-DdbDuKhj.js                              2.53 kB Ôöé gzip:   0.77 kB
+tmp/habit-backend-build/assets/BottomSheet-DbPZSnjw.js                           2.68 kB Ôöé gzip:   1.25 kB
+tmp/habit-backend-build/assets/ForkKnife.es-DV5Tn4qJ.js                          3.26 kB Ôöé gzip:   1.08 kB
+tmp/habit-backend-build/assets/ExercisePicker-x6wL3dyr.js                        3.26 kB Ôöé gzip:   1.41 kB
+tmp/habit-backend-build/assets/MoonStars.es-Dnoe0JR7.js                          3.29 kB Ôöé gzip:   1.09 kB
+tmp/habit-backend-build/assets/Sparkle.es-C2SV-nZY.js                            4.44 kB Ôöé gzip:   1.38 kB
+tmp/habit-backend-build/assets/FloppyDisk.es-t8VENon9.js                         7.45 kB Ôöé gzip:   1.97 kB
+tmp/habit-backend-build/assets/WorkoutTemplates-BUe1AIkv.js                      8.10 kB Ôöé gzip:   2.90 kB
+tmp/habit-backend-build/assets/Recorder-wtQas4qx.js                              9.81 kB Ôöé gzip:   3.38 kB
+tmp/habit-backend-build/assets/Routines-avDj1IuK.js                             12.29 kB Ôöé gzip:   4.30 kB
+tmp/habit-backend-build/assets/RoutineReviewForm-CgxprJGk.js                    16.69 kB Ôöé gzip:   5.62 kB
+tmp/habit-backend-build/assets/TrackingState-eSiACyce.js                        18.04 kB Ôöé gzip:   6.37 kB
+tmp/habit-backend-build/assets/routineStatus-BWmjrhzn.js                        18.97 kB Ôöé gzip:   4.49 kB
+tmp/habit-backend-build/assets/TrackingHistory-BIIONDmN.js                      19.74 kB Ôöé gzip:   6.80 kB
+tmp/habit-backend-build/assets/routines-LZg9Fg2F.js                             21.48 kB Ôöé gzip:   7.39 kB
+tmp/habit-backend-build/assets/Guides-EVNVEP45.js                               22.27 kB Ôöé gzip:   6.76 kB
+tmp/habit-backend-build/assets/BarChart-BKbUfWzy.js                             26.94 kB Ôöé gzip:   7.58 kB
+tmp/habit-backend-build/assets/TrackingHome-ITVolRCH.js                         27.34 kB Ôöé gzip:   8.18 kB
+tmp/habit-backend-build/assets/Settings-Dro2X5Vc.js                             46.25 kB Ôöé gzip:  12.44 kB
+tmp/habit-backend-build/assets/Goals-DCNb9DJP.js                                85.82 kB Ôöé gzip:  21.01 kB
+tmp/habit-backend-build/assets/Whiteboard-DkGAw7Zs.js                          100.20 kB Ôöé gzip:  25.21 kB
+tmp/habit-backend-build/assets/index-De2mcLAw.js                               326.45 kB Ôöé gzip: 107.22 kB
+tmp/habit-backend-build/assets/ComposedChart-DZNfTJN_.js                       407.75 kB Ôöé gzip: 110.24 kB
+Ô£ô built in 12.60s
+
+PWA v0.20.5
+mode      generateSW
+precache  56 entries (1694.11 KiB)
+files generated
+  tmp/habit-backend-build/sw.js
+  tmp/habit-backend-build/workbox-9c191d2f.js

@@ -5,10 +5,6 @@ const DEFAULT_OPENROUTER_MODEL = 'openai/gpt-4o-mini'
 
 type RecognitionProvider = 'openrouter' | 'openai'
 
-interface RecognitionRequestBody {
-  image?: unknown
-}
-
 interface OpenAIContent {
   type?: unknown
   text?: unknown
@@ -222,10 +218,8 @@ async function handleRecognitionRequest(request: Request): Promise<Response> {
     return json({ error: 'Configure OPENROUTER_API_KEY ou OPENAI_API_KEY para ativar a conversão.' }, 503)
   }
 
-  let body: RecognitionRequestBody
-  try {
-    body = await request.json() as RecognitionRequestBody
-  } catch {
+  const body: unknown = await request.json().catch(() => null)
+  if (!body || typeof body !== 'object' || !('image' in body)) {
     return json({ error: 'Requisição inválida.' }, 400)
   }
 

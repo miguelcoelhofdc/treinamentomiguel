@@ -1,5 +1,7 @@
 import { db, saveDailyLog, setSetting } from './index'
-import type { TrainingBackup } from '@/lib/trainingBackup'
+import { parseTrainingBackup, stringifyTrainingBackup, TRAINING_BACKUP_VERSION, type TrainingBackup } from '@/lib/trainingBackup'
+import { archiveLegacyRoutineGoals } from './routines'
+import plan from '@/data/activePlan'
 
 function stripId<T extends { id?: number }>(value: T): Omit<T, 'id'> {
   const { id: _id, ...record } = value
@@ -7,30 +9,42 @@ function stripId<T extends { id?: number }>(value: T): Omit<T, 'id'> {
 }
 
 export async function createTrainingBackup(profileId: string): Promise<TrainingBackup> {
-  return db.transaction('r', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates, db.routines, db.routineEntries, db.routineGoals], async () => {
+  return db.transaction('r', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates, db.routines, db.routineEntries, db.routineGoals, db.bodyGoals], async () => {
     const [daily, running, strength, settings, exerciseChecks, activities, plannedSessions, workoutTemplates] = await Promise.all([db.dailyLogs.toArray(), db.runningLogs.toArray(), db.strengthLogs.toArray(), db.settings.toArray(), db.exerciseChecks.toArray(), db.activityLogs.toArray(), db.plannedSessions.toArray(), db.workoutTemplates.toArray()])
-    const [routines, routineEntries, routineGoals] = await Promise.all([db.routines.toArray(), db.routineEntries.toArray(), db.routineGoals.toArray()])
-    return { kind: `treino-${profileId}-backup`, schemaVersion: 5, exportedAt: new Date().toISOString(), daily, running, strength, settings, exerciseChecks, activities, plannedSessions, workoutTemplates, routines, routineEntries, routineGoals }
+    const [routines, routineEntries, routineGoals, bodyGoals] = await Promise.all([db.routines.toArray(), db.routineEntries.toArray(), db.routineGoals.toArray(), db.bodyGoals.toArray()])
+    return { kind: `treino-${profileId}-backup`, schemaVersion: TRAINING_BACKUP_VERSION, exportedAt: new Date().toISOString(), daily, running, strength, settings, exerciseChecks, activities, plannedSessions, workoutTemplates, routines, routineEntries, routineGoals, bodyGoals }
   })
 }
 
 export async function restoreTrainingBackup(payload: TrainingBackup, profileId: string) {
   if (payload.kind && payload.kind !== `treino-${profileId}-backup`) throw new Error('Este backup pertence a outro perfil. Entre na conta correta antes de restaurar.')
-  await db.transaction('rw', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates, db.routines, db.routineEntries, db.routineGoals], async () => {
+  payload = parseTrainingBackup(stringifyTrainingBackup(payload), plan)
+  await db.transaction('rw', [db.dailyLogs, db.runningLogs, db.strengthLogs, db.settings, db.exerciseChecks, db.activityLogs, db.plannedSessions, db.workoutTemplates, db.routines, db.routineEntries, db.routineGoals, db.bodyGoals], async () => {
     for (const log of payload.daily) await saveDailyLog({
-      ...stripId(log),
+      ...Object.fromEntries(Object.entries(stripId(log)).map(([key, value]) => [key, value ?? undefined])),
+      date: log.date,
       ...(log.nutritionRating != null && log.nutritionScore == null ? { nutritionScore: undefined } : {}),
       ...(log.sleepH != null && !log.sleepStart && !log.sleepEnd ? { sleepStart: undefined, sleepEnd: undefined } : {}),
     })
     const runIdMap = new Map<number, number>()
     const claimedRuns = new Set<number>()
     const storedActivities = await db.activityLogs.toArray()
+    const importedActivities = new Map(payload.activities.map(activity => [activity.id, activity]))
+    const storedById = new Map(storedActivities.map(activity => [activity.id, activity]))
+    const storedByRecordingId = new Map(storedActivities.filter(activity => activity.recordingId).map(activity => [activity.recordingId, activity]))
+    const storedRunsByCreatedAt = new Map(storedActivities.filter(activity => /^run:\d+$/.test(activity.id) && activity.createdAt).map(activity => [activity.createdAt, activity]))
     for (const source of payload.running) {
       const run = stripId(source)
-      const sourceActivity = payload.activities.find(activity => activity.id === `run:${source.id}`)
-      const sameIdentity = sourceActivity?.createdAt ? storedActivities.find(activity => activity.createdAt === sourceActivity.createdAt && activity.activity === 'corrida') : undefined
+      const sourceActivity = importedActivities.get(`run:${source.id}`)
+      const identified = sourceActivity?.recordingId || sourceActivity?.createdAt
+      const sameIdentity = sourceActivity?.recordingId
+        ? (storedByRecordingId.get(sourceActivity.recordingId) ?? (sourceActivity.createdAt ? storedRunsByCreatedAt.get(sourceActivity.createdAt) : undefined))
+        : (sourceActivity?.createdAt ? storedRunsByCreatedAt.get(sourceActivity.createdAt) : undefined)
       const identityId = sameIdentity ? Number(/^run:(\d+)$/.exec(sameIdentity.id)?.[1]) : undefined
-      const candidates = (await db.runningLogs.where('date').equals(run.date).toArray()).filter(item => item.type === run.type && item.distanceKm === run.distanceKm && Math.abs(item.durationMin - run.durationMin) < .000001 && !claimedRuns.has(item.id!))
+      const candidates = identified ? [] : (await db.runningLogs.where('date').equals(run.date).toArray()).filter(item => {
+        const stored = storedById.get(`run:${item.id}`)
+        return !stored?.recordingId && !stored?.createdAt && item.type === run.type && item.distanceKm === run.distanceKm && Math.abs(item.durationMin - run.durationMin) < .000001 && !claimedRuns.has(item.id!)
+      })
       const match = candidates.find(item => item.id === source.id) ?? candidates[0]
       const targetId = identityId != null && Number.isFinite(identityId) && !claimedRuns.has(identityId) ? identityId : match?.id
       const restored = targetId ?? await db.runningLogs.add(run)
@@ -43,7 +57,17 @@ export async function restoreTrainingBackup(payload: TrainingBackup, profileId: 
       const restored = source ? runIdMap.get(Number(source[1])) : undefined
       return restored == null ? id : `run:${restored}`
     }
-    for (const activity of payload.activities) await db.activityLogs.put({ ...activity, id: remapActivityId(activity.id)! })
+    for (const activity of payload.activities) {
+      const id = remapActivityId(activity.id)!
+      const previous = activity.recordingId ? storedByRecordingId.get(activity.recordingId) : undefined
+      if (previous && previous.id !== id) {
+        await db.activityLogs.delete(previous.id)
+        await db.strengthLogs.where('activityLogId').equals(previous.id).delete()
+        const run = /^run:(\d+)$/.exec(previous.id)
+        if (run) await db.runningLogs.delete(Number(run[1]))
+      }
+      await db.activityLogs.put({ ...activity, id })
+    }
     for (const session of payload.plannedSessions) await db.plannedSessions.put({ ...session, activityLogId: remapActivityId(session.activityLogId) })
     // A linked session snapshot replaces its own sets even if its date changed.
     // Unlinked legacy rows remain a separate merge by date/exercise.
@@ -67,8 +91,25 @@ export async function restoreTrainingBackup(payload: TrainingBackup, profileId: 
     }
     await db.workoutTemplates.bulkPut(payload.workoutTemplates)
     await db.routines.bulkPut(payload.routines)
-    await db.routineEntries.bulkPut(payload.routineEntries)
-    await db.routineGoals.bulkPut(payload.routineGoals)
+    for (const entry of payload.routineEntries) {
+      const existing = await db.routineEntries.get(entry.id)
+      if (!entry.format && existing?.format) {
+        await db.routineEntries.put({ ...existing, legacy: { value: entry.value!, ...(entry.bottleMl != null ? { bottleMl: entry.bottleMl } : {}) } })
+      } else {
+        const legacy = entry.legacy ?? existing?.legacy ?? (existing && !existing.format ? { value: existing.value!, ...(existing.bottleMl != null ? { bottleMl: existing.bottleMl } : {}) } : undefined)
+        await db.routineEntries.put({ ...entry, ...(entry.format && legacy ? { legacy } : {}) })
+      }
+    }
+    // A merged legacy daily row must not overwrite an explicit current food assessment.
+    for (const entry of await db.routineEntries.where('routineId').equals('nutrition').toArray()) {
+      if (entry.format === 'rating') await saveDailyLog({ date: entry.date, nutritionScore: entry.value ?? undefined, nutritionRating: undefined })
+    }
+    for (const goal of payload.routineGoals) {
+      const existing = await db.routineGoals.get(goal.id)
+      await db.routineGoals.put({ ...goal, ...(!goal.format && existing?.archivedAt ? { archivedAt: existing.archivedAt } : {}) })
+    }
+    await archiveLegacyRoutineGoals()
+    await db.bodyGoals.bulkPut(payload.bodyGoals)
     // Old backups may bring previously unseen health data or an explicit legacy goal.
     if (!payload.routines.length) await db.settings.where('key').equals('routinesInitialized').delete()
   })

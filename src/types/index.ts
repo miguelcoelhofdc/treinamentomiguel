@@ -169,6 +169,7 @@ export interface DailyLog {
   id?: number
   date: string // YYYY-MM-DD
   weightKg?: number
+  leanMassKg?: number
   sleepH?: number
   sleepStart?: string // Local YYYY-MM-DDTHH:mm; date is the wake-up day.
   sleepEnd?: string
@@ -189,6 +190,17 @@ export interface DailyLog {
   exerciseRating?: DailyRating
   mentalState?: DailyRating
   sleepQuality?: DailyRating
+}
+
+export type BodyGoalType = 'weightLoss' | 'leanMassGain'
+
+export interface BodyGoal {
+  id: string
+  type: BodyGoalType
+  baselineKg: number
+  amountKg: number
+  startDate: string
+  endDate: string
 }
 
 export type DailyRating = 'ruim' | 'ok' | 'bom'
@@ -280,6 +292,7 @@ export interface PlannedSession {
 
 export interface ActivityLog {
   id: string
+  recordingId?: string
   date: string
   activity: string
   name: string
@@ -316,7 +329,9 @@ export interface RoutineEntry {
   id: string
   routineId: string
   date: string
-  value: number
+  value: number | null // Null explicitly clears an assessment without reviving legacy data.
+  format?: 'rating' | 'binary' // Absent only on legacy quantitative records.
+  legacy?: { value: number; bottleMl?: number } // Original measurement retained when assessing the same date.
   bottleMl?: number
 }
 export type RoutineGoalMetric = 'value' | 'days' | 'sessions' | 'minutes' | 'distance' | 'runTime'
@@ -333,6 +348,8 @@ export interface RoutineGoal {
   baseline?: number
   distanceKm?: number
   changes?: { from: string; target: number }[]
+  format?: 'rating' | 'binary'
+  archivedAt?: string // Old quantitative goals remain available as history.
 }
 
 export interface TrainingGoal {
@@ -390,6 +407,7 @@ export interface ExerciseCheck {
 
 export interface Sale {
   id?: number
+  requestId?: string
   monthKey: string // YYYY-MM
   date: string // YYYY-MM-DD
   customerName?: string

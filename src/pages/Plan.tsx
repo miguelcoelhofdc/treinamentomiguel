@@ -75,7 +75,7 @@ function LegacyPlan({ settings, updateSetting }: Props) {
                     onClick={() => setExpandedDay(isExpanded ? null : dayOfWeek)}
                     aria-expanded={isExpanded}
                     aria-controls={contentId}
-                    className="flex min-h-[72px] w-full items-center justify-between gap-3 py-3 text-left transition duration-200 active:translate-y-px"
+                    className="flex min-h-[72px] w-full items-center justify-between gap-3 py-3 text-left transition duration-200"
                   >
                     <span className="min-w-0">
                       <span className="flex items-center gap-2 text-[12px] font-semibold text-ink-muted">

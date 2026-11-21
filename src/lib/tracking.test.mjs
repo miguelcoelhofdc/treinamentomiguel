@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { describe, it } from 'node:test'
 import { decimal, durationMinutes, durationInput, hasWellness, initialTemplates, exerciseCatalogue, progressPoints, trackingActivities, validTemplate, sessionStrength, validRecordDate } from './tracking.ts'
-import { parseTrainingBackup, backupRecordCount } from './trainingBackup.ts'
+import { parseTrainingBackup, backupRecordCount, TRAINING_BACKUP_VERSION } from './trainingBackup.ts'
 import { buildCoachingPlan } from './coaching.ts'
 const plan = JSON.parse(readFileSync(new URL('../data/plan.json', import.meta.url), 'utf8'))
 const today = '2026-10-05'
@@ -107,6 +107,6 @@ describe('workout sheets and backup compatibility', () => {
     assert.equal(parsed.daily[0].nutritionRating, undefined)
   })
   it('rejects unknown versions, invalid ratings and malformed linked sets before any write', () => {
-    for (const payload of [{ schemaVersion: 6, daily: [] }, { daily: [{ date: today, mentalState: 'great' }] }, { strength: [strength('a', -1)] }, { strength: [strength('missing', 20)] }, { activities: [session('a'), session('a')] }]) assert.throws(() => parseTrainingBackup(JSON.stringify(payload), plan))
+    for (const payload of [{ schemaVersion: TRAINING_BACKUP_VERSION + 1, daily: [] }, { daily: [{ date: today, mentalState: 'great' }] }, { strength: [strength('a', -1)] }, { strength: [strength('missing', 20)] }, { activities: [session('a'), session('a')] }]) assert.throws(() => parseTrainingBackup(JSON.stringify(payload), plan))
   })
 })

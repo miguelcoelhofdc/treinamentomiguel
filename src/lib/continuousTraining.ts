@@ -85,6 +85,7 @@ export function isActivityLog(value: unknown): value is ActivityLog {
   const log = value as ActivityLog
   return typeof log.id === 'string' && !!log.id && isDateKey(log.date) && typeof log.activity === 'string' && !!log.activity
     && typeof log.name === 'string' && !!log.name.trim() && typeof log.completed === 'boolean'
+    && (log.recordingId == null || (typeof log.recordingId === 'string' && Boolean(log.recordingId.trim())))
     && (log.plannedSessionId == null || typeof log.plannedSessionId === 'string')
     && [log.durationMin, log.distanceKm].every(number => number == null || (typeof number === 'number' && Number.isFinite(number) && number > 0))
 }

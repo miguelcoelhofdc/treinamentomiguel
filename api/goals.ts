@@ -1,4 +1,5 @@
-import { get, put } from '@vercel/blob'
+import { timingSafeEqual } from 'node:crypto'
+import { BlobPreconditionFailedError, get, put } from '@vercel/blob'
 
 const DATA_PATH = 'metas/dashboard.json'
 const MAX_SALES = 10_000
@@ -7,6 +8,7 @@ const FIXED_TIER_IDS = ['below-80', '80-to-99', '100-plus'] as const
 
 interface Sale {
   id?: number
+  requestId?: string
   monthKey: string
   date: string
   customerName?: string
@@ -57,15 +59,15 @@ interface StoredGoalsSnapshot {
 }
 
 interface GoalsStorage {
-  read: (request: Request) => Promise<StoredGoalsSnapshot | GoalsSnapshot>
-  write: (snapshot: GoalsSnapshot, request: Request) => Promise<void>
+  read: (request: Request) => Promise<{ snapshot: StoredGoalsSnapshot | GoalsSnapshot; revision: string | null }>
+  write: (snapshot: GoalsSnapshot, revision: string | null, request: Request) => Promise<boolean>
 }
 
 const emptySnapshot = (): GoalsSnapshot => ({
   version: 2,
   sales: [],
   monthlySalesConfigs: [],
-  updatedAt: new Date().toISOString(),
+  updatedAt: new Date(0).toISOString(),
 })
 
 function json(payload: unknown, status = 200) {
@@ -86,12 +88,28 @@ function storageIsConfigured(request: Request) {
   )
 }
 
+function hasGoalsAccess(request: Request) {
+  const token = process.env.GOALS_ACCESS_TOKEN
+  if (!token || !/^[A-Za-z0-9_-]{32,}$/.test(token)) return null
+  const supplied = request.headers.get('Authorization')
+  const expected = `Bearer ${token}`
+  return supplied?.length === expected.length
+    && Buffer.byteLength(supplied) === Buffer.byteLength(expected)
+    && timingSafeEqual(Buffer.from(supplied), Buffer.from(expected))
+}
+
 function isMonthKey(value: unknown): value is string {
   return typeof value === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(value)
 }
 
 function isIsoDate(value: unknown): value is string {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
+
+function isCalendarDate(value: unknown): value is string {
+  if (!isIsoDate(value)) return false
+  const date = new Date(`${value}T12:00:00Z`)
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
 }
 
 function isFiniteNonNegative(value: unknown): value is number {
@@ -136,8 +154,12 @@ function isIncomingSale(value: unknown): value is Sale {
   const sale = value as Partial<StoredSale>
   return (
     hasValidSaleMetadata(sale)
+    && isCalendarDate(sale.date)
+    && sale.date?.slice(0, 7) === sale.monthKey
+    && /^\S+@\S+\.\S+$/.test(sale.email ?? '')
     && isFinitePositive(sale.commissionMrr)
     && (sale.farolMrr == null || isFinitePositive(sale.farolMrr))
+    && (sale.requestId == null || (typeof sale.requestId === 'string' && /^[a-f0-9-]{36}$/i.test(sale.requestId)))
   )
 }
 
@@ -147,6 +169,7 @@ function normalizeSale(sale: StoredSale): Sale {
     : (sale.planAmount ?? 0)
   return {
     ...(sale.id != null ? { id: sale.id } : {}),
+    ...(typeof sale.requestId === 'string' ? { requestId: sale.requestId } : {}),
     monthKey: sale.monthKey as string,
     date: sale.date as string,
     ...(sale.customerName ? { customerName: sale.customerName } : {}),
@@ -237,50 +260,60 @@ function normalizeSnapshot(snapshot: StoredGoalsSnapshot | GoalsSnapshot): Goals
     version: 2,
     sales: snapshot.sales.map(normalizeSale),
     monthlySalesConfigs: snapshot.monthlySalesConfigs.map(normalizeConfig),
-    updatedAt: typeof snapshot.updatedAt === 'string' ? snapshot.updatedAt : new Date().toISOString(),
+    updatedAt: typeof snapshot.updatedAt === 'string' && Number.isFinite(Date.parse(snapshot.updatedAt)) ? snapshot.updatedAt : new Date(0).toISOString(),
   }
 }
 
-async function readSnapshot(request: Request): Promise<GoalsSnapshot> {
+async function readSnapshot(request: Request) {
   const result = await get(DATA_PATH, {
     access: 'private',
     useCache: false,
     oidcToken: getOidcToken(request),
   })
-  if (!result?.stream) return emptySnapshot()
+  if (!result) return { snapshot: emptySnapshot(), revision: null }
+  if (!result.stream) throw new Error('INVALID_BLOB_RESPONSE')
 
   const payload: unknown = await new Response(result.stream).json()
   if (!isSnapshotData(payload)) throw new Error('INVALID_STORED_DATA')
-  return normalizeSnapshot(payload)
+  return { snapshot: payload, revision: result.blob.etag }
 }
 
-async function writeSnapshot(snapshot: GoalsSnapshot, request: Request): Promise<void> {
-  snapshot.updatedAt = new Date().toISOString()
-  await put(DATA_PATH, JSON.stringify(snapshot), {
-    access: 'private',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: 'application/json',
-    cacheControlMaxAge: 60,
-    oidcToken: getOidcToken(request),
-  })
+async function writeSnapshot(snapshot: GoalsSnapshot, revision: string | null, request: Request): Promise<boolean> {
+  try {
+    await put(DATA_PATH, JSON.stringify(snapshot), {
+      access: 'private',
+      addRandomSuffix: false,
+      ...(revision === null ? { allowOverwrite: false } : { ifMatch: revision }),
+      contentType: 'application/json',
+      cacheControlMaxAge: 60,
+      oidcToken: getOidcToken(request),
+    })
+    return true
+  } catch (error) {
+    if (error instanceof BlobPreconditionFailedError) return false
+    if (revision === null && (await readSnapshot(request)).revision !== null) return false
+    throw error
+  }
 }
 
 export function createGoalsHandler(
   storage: GoalsStorage,
   isConfigured: (request: Request) => boolean = storageIsConfigured,
+  authorize: (request: Request) => boolean | null = hasGoalsAccess,
 ) {
   return async function handleRequest(request: Request): Promise<Response> {
     if (request.method !== 'GET' && request.method !== 'POST') {
       return json({ error: 'Método não permitido.' }, 405)
     }
+    const authorized = authorize(request)
+    if (authorized === null) return json({ error: 'O acesso ao painel comercial ainda não foi configurado.', code: 'ACCESS_NOT_CONFIGURED' }, 503)
+    if (!authorized) return json({ error: 'Informe uma chave de acesso válida.', code: 'ACCESS_DENIED' }, 401)
     if (!isConfigured(request)) {
       return json({ error: 'O armazenamento de Metas ainda não foi configurado.', code: 'STORAGE_NOT_CONFIGURED' }, 503)
     }
 
     try {
-      const snapshot = normalizeSnapshot(await storage.read(request))
-      if (request.method === 'GET') return json(snapshot)
+      if (request.method === 'GET') return json(normalizeSnapshot((await storage.read(request)).snapshot))
 
       const body: unknown = await request.json().catch(() => null)
       if (!body || typeof body !== 'object' || !('operation' in body)) {
@@ -288,40 +321,57 @@ export function createGoalsHandler(
       }
 
       const operation = (body as { operation?: unknown }).operation
-      if (operation === 'saveSale') {
-        const sale = (body as { sale?: unknown }).sale
-        if (!isIncomingSale(sale)) return json({ error: 'Venda inválida.' }, 400)
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const { snapshot: stored, revision } = await storage.read(request)
+        if (!isSnapshotData(stored)) throw new Error('INVALID_STORED_DATA')
+        const snapshot = normalizeSnapshot(stored)
+        const previousTime = Date.parse(snapshot.updatedAt)
+        snapshot.updatedAt = new Date(Math.max(Date.now(), Number.isFinite(previousTime) ? previousTime + 1 : 0)).toISOString()
+        const expectedUpdate = (body as { expectedUpdatedAt?: unknown }).expectedUpdatedAt
+        const changed = () => json({ error: 'O registro mudou desde a abertura. Atualize os dados e tente novamente.', code: 'RECORD_CHANGED' }, 409)
+        if (operation === 'saveSale') {
+          const sale = (body as { sale?: unknown }).sale
+          if (!isIncomingSale(sale)) return json({ error: 'Venda inválida.' }, 400)
 
-        const nextSale = normalizeSale(sale)
-        if (nextSale.id == null) {
-          nextSale.id = Math.max(Date.now(), ...snapshot.sales.map((item) => item.id ?? 0)) + 1
-          snapshot.sales.push(nextSale)
+          const nextSale = normalizeSale(sale)
+          if (nextSale.id == null) {
+            if (nextSale.requestId && snapshot.sales.some(item => item.requestId === nextSale.requestId)) return json(normalizeSnapshot(stored))
+            nextSale.id = Math.max(Date.now(), ...snapshot.sales.map((item) => item.id ?? 0)) + 1
+            nextSale.createdAt = snapshot.updatedAt
+            nextSale.updatedAt = snapshot.updatedAt
+            snapshot.sales.push(nextSale)
+          } else {
+            const index = snapshot.sales.findIndex((item) => item.id === nextSale.id)
+            if (index < 0 || (expectedUpdate !== undefined && expectedUpdate !== snapshot.sales[index].updatedAt)) return changed()
+            const previous = snapshot.sales[index]
+            snapshot.sales[index] = { ...nextSale, requestId: previous.requestId, createdAt: previous.createdAt, updatedAt: snapshot.updatedAt }
+          }
+        } else if (operation === 'deleteSale') {
+          const id = (body as { id?: unknown }).id
+          if (!Number.isSafeInteger(id) || (id as number) <= 0) return json({ error: 'Venda inválida.' }, 400)
+          const previous = snapshot.sales.find(sale => sale.id === id)
+          if (!previous) return json(normalizeSnapshot(stored))
+          if (expectedUpdate !== undefined && expectedUpdate !== previous.updatedAt) return changed()
+          snapshot.sales = snapshot.sales.filter((sale) => sale.id !== id)
+        } else if (operation === 'saveConfig') {
+          const config = (body as { config?: unknown }).config
+          if (!isIncomingMonthlyConfig(config)) return json({ error: 'Configuração inválida.' }, 400)
+          const normalizedConfig = { ...normalizeConfig(config), updatedAt: snapshot.updatedAt }
+          const index = snapshot.monthlySalesConfigs.findIndex((item) => item.monthKey === config.monthKey)
+          if (expectedUpdate !== undefined && expectedUpdate !== (snapshot.monthlySalesConfigs[index]?.updatedAt ?? null)) return changed()
+          if (index >= 0) snapshot.monthlySalesConfigs[index] = normalizedConfig
+          else snapshot.monthlySalesConfigs.push(normalizedConfig)
         } else {
-          const index = snapshot.sales.findIndex((item) => item.id === nextSale.id)
-          if (index >= 0) snapshot.sales[index] = nextSale
-          else snapshot.sales.push(nextSale)
+          return json({ error: 'Operação desconhecida.' }, 400)
         }
-      } else if (operation === 'deleteSale') {
-        const id = (body as { id?: unknown }).id
-        if (!Number.isSafeInteger(id) || (id as number) <= 0) return json({ error: 'Venda inválida.' }, 400)
-        snapshot.sales = snapshot.sales.filter((sale) => sale.id !== id)
-      } else if (operation === 'saveConfig') {
-        const config = (body as { config?: unknown }).config
-        if (!isIncomingMonthlyConfig(config)) return json({ error: 'Configuração inválida.' }, 400)
-        const normalizedConfig = normalizeConfig(config)
-        const index = snapshot.monthlySalesConfigs.findIndex((item) => item.monthKey === config.monthKey)
-        if (index >= 0) snapshot.monthlySalesConfigs[index] = normalizedConfig
-        else snapshot.monthlySalesConfigs.push(normalizedConfig)
-      } else {
-        return json({ error: 'Operação desconhecida.' }, 400)
-      }
 
-      if (snapshot.sales.length > MAX_SALES || snapshot.monthlySalesConfigs.length > MAX_CONFIGS) {
-        return json({ error: 'Limite de armazenamento atingido.' }, 413)
-      }
+        if (snapshot.sales.length > MAX_SALES || snapshot.monthlySalesConfigs.length > MAX_CONFIGS) {
+          return json({ error: 'Limite de armazenamento atingido.' }, 413)
+        }
 
-      await storage.write(snapshot, request)
-      return json(snapshot)
+        if (await storage.write(snapshot, revision, request)) return json(snapshot)
+      }
+      return json({ error: 'Houve gravações simultâneas. Tente salvar novamente.', code: 'CONCURRENT_WRITE' }, 409)
     } catch (error) {
       console.error('Goals storage request failed', error instanceof Error ? error.message : 'unknown')
       return json({

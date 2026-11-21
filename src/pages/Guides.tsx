@@ -183,7 +183,7 @@ export default function Guides({ routineType }: GuidesProps) {
                         key={item}
                         onClick={() => toggleCheck(id)}
                         aria-pressed={done}
-                        className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left transition duration-200 active:translate-y-px"
+                        className="flex min-h-12 w-full items-center gap-3 py-2.5 text-left transition duration-200"
                       >
                         <span
                           className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-[8px] border transition-colors duration-200 ${
@@ -292,7 +292,7 @@ export default function Guides({ routineType }: GuidesProps) {
                     key={tab}
                     onClick={() => setRoutineTab(tab)}
                     aria-pressed={active}
-                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[12px] px-3 text-[13px] font-semibold transition duration-200 active:scale-[0.98] ${
+                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-[12px] px-3 text-[13px] font-semibold transition duration-200 ${
                       active ? 'bg-accent-soft text-accent-strong' : 'text-ink-muted'
                     }`}
                   >

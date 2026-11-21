@@ -58,6 +58,7 @@ export default function CommissionSettingsForm({ monthKey, config, previousConfi
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
+    if (status === 'saving') return
     const goalAmount = parseLocaleNumber(draft.goalAmount)
     const setupCommissionPercent = parseLocaleNumber(draft.setupCommissionPercent)
     const weeklyBonusPercent = parseLocaleNumber(draft.weeklyBonusPercent)
@@ -91,8 +92,8 @@ export default function CommissionSettingsForm({ monthKey, config, previousConfi
         updatedAt: new Date().toISOString(),
       })
       setStatus('saved')
-    } catch {
-      setError('Não foi possível salvar a configuração. Tente novamente.')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível salvar a configuração. Tente novamente.')
       setStatus('idle')
     }
   }
@@ -105,11 +106,11 @@ export default function CommissionSettingsForm({ monthKey, config, previousConfi
           <h3 className="mt-4 text-[18px] font-semibold tracking-[-0.02em]">Como deseja iniciar este mês?</h3>
           <p className="mt-2 text-[13px] leading-5 text-[#6f7d75]">A meta mensal será informada novamente. Os percentuais podem ser repetidos do mês anterior ou ajustados agora.</p>
           <div className="mt-6 space-y-3">
-            <button type="button" onClick={() => startInitialization('repeat')} className="flex min-h-[68px] w-full items-center gap-3 rounded-xl border border-[#bcd5c6] bg-[#eef6f1] px-4 text-left transition-colors hover:bg-[#e2f0e7] active:scale-[0.99]">
+            <button type="button" onClick={() => startInitialization('repeat')} className="flex min-h-[68px] w-full items-center gap-3 rounded-xl border border-[#bcd5c6] bg-[#eef6f1] px-4 text-left transition-colors hover:bg-[#e2f0e7]">
               <Copy size={21} weight="duotone" className="shrink-0 text-[#246348]" />
               <span><span className="block text-[13px] font-semibold text-[#1f5d43]">Sim, repetir percentuais</span><span className="mt-1 block text-[11px] leading-4 text-[#60756a]">Mantém faixas, setup e bônus semanal do mês anterior.</span></span>
             </button>
-            <button type="button" onClick={() => startInitialization('change')} className="flex min-h-[68px] w-full items-center gap-3 rounded-xl border border-[#dce3df] bg-white px-4 text-left transition-colors hover:bg-[#f3f6f4] active:scale-[0.99]">
+            <button type="button" onClick={() => startInitialization('change')} className="flex min-h-[68px] w-full items-center gap-3 rounded-xl border border-[#dce3df] bg-white px-4 text-left transition-colors hover:bg-[#f3f6f4]">
               <PencilSimple size={21} weight="duotone" className="shrink-0 text-[#66766d]" />
               <span><span className="block text-[13px] font-semibold">Não, vou mudar</span><span className="mt-1 block text-[11px] leading-4 text-[#748078]">Parte dos valores anteriores e libera todos os percentuais.</span></span>
             </button>
@@ -178,7 +179,7 @@ export default function CommissionSettingsForm({ monthKey, config, previousConfi
 
       <div className="sticky bottom-0 mt-auto border-t border-[#dfe6e1] bg-white/95 p-5 backdrop-blur-xl sm:px-6">
         {error && <p className="mb-3 rounded-[10px] bg-[#fff0ed] px-3 py-2.5 text-[12px] font-semibold leading-4 text-[#9a463b]" role="alert">{error}</p>}
-        <button type="submit" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] disabled:opacity-55" disabled={status === 'saving'}>
+        <button type="submit" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] disabled:opacity-55" disabled={status === 'saving'}>
           {status === 'saved' ? <CheckCircle size={18} weight="fill" /> : <FloppyDisk size={18} weight="bold" />}
           {status === 'saving' ? 'Salvando...' : status === 'saved' ? 'Configuração salva' : 'Salvar configuração do mês'}
         </button>

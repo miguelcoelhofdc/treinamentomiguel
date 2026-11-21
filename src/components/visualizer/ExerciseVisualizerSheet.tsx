@@ -94,7 +94,7 @@ export default function ExerciseVisualizerSheet({ exerciseId, exerciseName, phas
               <button
                 type="button"
                 onClick={() => setPlaying(current => !current)}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-accent text-canvas transition active:scale-[0.95]"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] bg-accent text-canvas transition"
                 aria-label={playing ? 'Pausar animação' : 'Reproduzir animação'}
               >
                 {playing ? <Pause size={20} weight="fill" /> : <Play size={20} weight="fill" />}

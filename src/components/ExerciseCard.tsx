@@ -89,7 +89,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
           disabled={disabled}
           aria-label={checked ? `${exercise.name} concluído` : `Marcar ${exercise.name} como concluído`}
           aria-pressed={checked}
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] transition duration-200 active:scale-[0.94]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[15px] transition duration-200"
         >
           {checked ? (
             <CheckCircle size={29} weight="fill" className={`text-accent ${animating ? 'animate-check-bounce' : ''}`} />
@@ -218,7 +218,7 @@ export default function ExerciseCard({ exercise, phase, checked, onToggle, isDel
                 </div>
                 <button
                   type="submit"
-                  className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-accent text-canvas transition active:scale-[0.96] disabled:opacity-50"
+                  className="flex h-12 w-12 items-center justify-center rounded-[14px] bg-accent text-canvas transition disabled:opacity-50"
                   aria-label="Adicionar série"
                   disabled={disabled || !weight || !reps || savingSet}
                 >

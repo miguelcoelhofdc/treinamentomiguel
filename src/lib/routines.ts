@@ -2,10 +2,17 @@ import type { ActivityLog, DailyLog, RoutineDefinition, RoutineEntry, RoutineGoa
 import { addCalendarDays, isDateKey, weekday } from './date.ts'
 import { dailyLogMap } from './journey.ts'
 
-export const FIVE_RATINGS = ['Muito ruim', 'Ruim', 'Regular', 'Bom', 'Excelente']
+export const FIVE_RATINGS = ['Muito ruim', 'Ruim', 'Mediano', 'Bom', 'Excelente']
 export const KIND_LABELS: Record<RoutineKind, string> = { water: 'Água', nutrition: 'Alimentação', sleep: 'Sono', weight: 'Peso', exercise: 'Exercício', check: 'Feito ou não fiz', count: 'Contar vezes', duration: 'Duração', rating: 'Cinco notas' }
 export interface RoutineData { daily: DailyLog[]; activities: ActivityLog[]; entries: RoutineEntry[] }
-export interface RoutineReading { value: number; volumeMl?: number }
+export interface RoutineReading { value: number; volumeMl?: number; format?: 'rating' | 'binary' }
+export function assessmentFormat(kind: RoutineKind): 'rating' | 'binary' | null {
+  return kind === 'weight' ? null : kind === 'check' || kind === 'exercise' ? 'binary' : 'rating'
+}
+export function validAssessment(value: unknown, format: 'rating' | 'binary'): value is number {
+  return typeof value === 'number' && Number.isInteger(value)
+    && (format === 'binary' ? value === 0 || value === 1 : value >= 1 && value <= 5)
+}
 const finite = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value)
 const object = (value: unknown): value is Record<string, unknown> => Boolean(value && typeof value === 'object' && !Array.isArray(value))
 const positive = (value: unknown): value is number => finite(value) && value > 0
@@ -29,6 +36,7 @@ export function validHealthFields(log: DailyLog): boolean {
   if (log.nutritionScore != null && (!Number.isInteger(log.nutritionScore) || log.nutritionScore < 1 || log.nutritionScore > 5)) return false
   if (log.sleepH != null && (!finite(log.sleepH) || log.sleepH < 0 || log.sleepH > 24)) return false
   if (log.weightKg != null && (!positive(log.weightKg) || log.weightKg > 500)) return false
+  if (log.leanMassKg != null && (!positive(log.leanMassKg) || log.leanMassKg > 500)) return false
   if (log.sleepStart != null || log.sleepEnd != null) {
     const hours = sleepHours(log.sleepStart ?? '', log.sleepEnd ?? '', log.date)
     if (hours == null || log.sleepH == null || Math.abs(hours - log.sleepH) > .00001) return false
@@ -46,15 +54,22 @@ export function validSchedule(value: unknown): value is RoutineSchedule {
 
 export function validRoutine(value: unknown): value is RoutineDefinition {
   if (!object(value) || !named(value.id) || !named(value.name, 80) || !Object.hasOwn(KIND_LABELS, String(value.kind)) || typeof value.enabled !== 'boolean' || typeof value.createdDate !== 'string' || !isDateKey(value.createdDate) || !validSchedule(value.schedule)) return false
-  if (value.kind === 'water' && (!positive(value.bottleMl) || value.bottleMl > 20_000)) return false
+  if (value.bottleMl != null && (!positive(value.bottleMl) || value.bottleMl > 20_000)) return false
   if (value.kind === 'exercise' && !named(value.activity, 80)) return false
   return (value.scheduleChanges == null || (Array.isArray(value.scheduleChanges) && value.scheduleChanges.every(change => object(change) && typeof change.from === 'string' && isDateKey(change.from) && validSchedule(change.schedule))))
     && (value.stateChanges == null || (Array.isArray(value.stateChanges) && value.stateChanges.every(change => object(change) && typeof change.from === 'string' && isDateKey(change.from) && typeof change.enabled === 'boolean')))
 }
 
 export function validEntry(value: unknown, routine?: RoutineDefinition): value is RoutineEntry {
-  if (!object(value) || !named(value.id, 250) || !named(value.routineId) || typeof value.date !== 'string' || !isDateKey(value.date) || !finite(value.value) || value.value < 0) return false
+  if (!object(value) || !named(value.id, 250) || !named(value.routineId) || typeof value.date !== 'string' || !isDateKey(value.date)) return false
   if (value.id !== `${value.routineId}:${value.date}`) return false
+  if (value.format != null) {
+    if (value.format !== 'rating' && value.format !== 'binary') return false
+    if (value.legacy != null && (!object(value.legacy) || !validEntry({ id: value.id, routineId: value.routineId, date: value.date, value: value.legacy.value, bottleMl: value.legacy.bottleMl }, routine))) return false
+    return (!routine || (routine.id === value.routineId && assessmentFormat(routine.kind) === value.format))
+      && value.bottleMl == null && (value.value === null || validAssessment(value.value, value.format))
+  }
+  if (!finite(value.value) || value.value < 0) return false
   if (value.bottleMl != null && (!positive(value.bottleMl) || value.bottleMl > 20_000)) return false
   if (!routine) return true
   if (routine.id !== value.routineId || ['weight', 'sleep', 'nutrition'].includes(routine.kind)) return false
@@ -65,7 +80,9 @@ export function validEntry(value: unknown, routine?: RoutineDefinition): value i
   return true
 }
 
-export function goalMetrics(routine: RoutineDefinition): RoutineGoalMetric[] {
+export function goalMetrics(routine: RoutineDefinition, legacy = false): RoutineGoalMetric[] {
+  if (!legacy && routine.kind === 'exercise') return ['days']
+  if (!legacy) return routine.kind === 'weight' ? [] : ['value', 'days']
   if (routine.kind === 'exercise') return routine.activity === 'corrida' ? ['sessions', 'minutes', 'distance', 'days', 'runTime'] : ['sessions', 'minutes', 'distance', 'days']
   if (routine.kind === 'weight') return ['value']
   return ['value', 'days']
@@ -78,8 +95,17 @@ export function validRoutineGoal(value: unknown, routine?: RoutineDefinition): v
   if (value.metric === 'days' && (value.period !== 'week' || value.target > 7 || !positive(value.threshold))) return false
   if (value.metric === 'runTime' && (value.period !== 'target' || !positive(value.distanceKm))) return false
   if (value.baseline != null && !positive(value.baseline)) return false
+  if (value.archivedAt != null && (typeof value.archivedAt !== 'string' || !isDateKey(value.archivedAt))) return false
+  if (value.format != null) {
+    if (value.format !== 'rating' && value.format !== 'binary') return false
+    if (value.baseline != null || value.distanceKm != null || (value.metric === 'value' && value.threshold != null)) return false
+    if (value.metric === 'value' ? value.period !== 'day' || !validAssessment(value.target, value.format) || value.target === 0
+      : value.metric !== 'days' || !validAssessment(value.threshold, value.format) || value.threshold === 0) return false
+    if (routine && (routine.id !== value.routineId || assessmentFormat(routine.kind) !== value.format || !goalMetrics(routine).includes(value.metric as RoutineGoalMetric))) return false
+    return value.changes == null || (Array.isArray(value.changes) && value.changes.every(change => object(change) && typeof change.from === 'string' && isDateKey(change.from) && validRoutineGoal({ ...value, target: change.target, changes: undefined }, routine)))
+  }
   if (routine) {
-    if (routine.id !== value.routineId || !goalMetrics(routine).includes(value.metric as RoutineGoalMetric)) return false
+    if (routine.id !== value.routineId || !goalMetrics(routine, true).includes(value.metric as RoutineGoalMetric)) return false
     if (routine.kind === 'weight' && (value.period !== 'target' || value.target > 500)) return false
     if (['nutrition', 'rating'].includes(routine.kind) && (value.metric === 'value' ? value.target > 5 || !Number.isInteger(value.target) : Number(value.threshold) > 5 || !Number.isInteger(value.threshold))) return false
     if (routine.kind === 'check' && (value.metric === 'value' ? value.target !== 1 : value.threshold !== 1)) return false
@@ -108,6 +134,8 @@ export function routineSessions(routine: RoutineDefinition, data: RoutineData, s
 }
 export function routineReading(routine: RoutineDefinition, date: string, data: RoutineData): RoutineReading | null {
   if (!isDateKey(date)) return null
+  const entry = data.entries.find(item => item.routineId === routine.id && item.date === date)
+  if (entry?.format) return validEntry(entry, routine) && entry.value != null ? { value: entry.value, format: entry.format } : null
   if (routine.kind === 'exercise') {
     const sessions = routineSessions(routine, data, date, date)
     if (sessions.length) return { value: sessions.length }
@@ -115,30 +143,43 @@ export function routineReading(routine: RoutineDefinition, date: string, data: R
   if (['weight', 'sleep', 'nutrition'].includes(routine.kind)) {
     const log = dailyLogMap(data.daily, date).get(date)
     const value = routine.kind === 'weight' ? log?.weightKg : routine.kind === 'sleep' ? log?.sleepH : nutritionScore(log)
-    return value == null ? null : { value }
+    return value == null || !Number.isFinite(value) ? null : { value, ...(routine.kind === 'nutrition' ? { format: 'rating' as const } : {}) }
   }
-  const entry = data.entries.find(item => item.routineId === routine.id && item.date === date)
-  return entry ? { value: entry.value, ...(routine.kind === 'water' ? { volumeMl: entry.value * entry.bottleMl! } : {}) } : null
+  return entry && entry.value != null && validEntry(entry, routine) ? { value: entry.value, ...(routine.kind === 'rating' ? { format: 'rating' as const } : {}), ...(routine.kind === 'water' ? { volumeMl: entry.value * entry.bottleMl! } : {}) } : null
 }
 export function readingLabel(routine: RoutineDefinition, reading: RoutineReading | null): string {
   if (!reading) return 'Sem registro'
   const n = (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+  if (reading.format === 'rating' || routine.kind === 'nutrition' || routine.kind === 'rating') {
+    return FIVE_RATINGS[reading.value - 1] ?? `${n(reading.value)} vezes`
+  }
+  if (reading.format === 'binary' || routine.kind === 'check') return reading.value ? 'Feito' : 'Não fiz'
   if (routine.kind === 'water') return `${n(reading.value)} garrafas · ${n((reading.volumeMl ?? 0) / 1000)} L`
-  if (routine.kind === 'nutrition' || routine.kind === 'rating') return FIVE_RATINGS[reading.value - 1]
-  if (routine.kind === 'check') return reading.value ? 'Feito' : 'Não fiz'
-  const unit = routine.kind === 'sleep' ? 'h' : routine.kind === 'weight' ? 'kg' : routine.kind === 'duration' ? 'min' : routine.kind === 'exercise' ? 'sessões' : 'vezes'
+  const unit = routine.kind === 'sleep' ? 'h' : routine.kind === 'duration' ? 'min' : routine.kind === 'weight' ? 'kg' : routine.kind === 'exercise' ? 'sessões' : 'vezes'
   return `${n(reading.value)} ${unit}`
 }
 export function goalUnit(goal: RoutineGoal, routine: RoutineDefinition) {
+  if (goal.format) return goal.metric === 'days' ? 'dias' : goal.format === 'rating' ? 'de 5' : 'vez'
   return goal.metric === 'days' ? 'dias' : goal.metric === 'sessions' ? 'sessões' : goal.metric === 'minutes' || goal.metric === 'runTime' ? 'min' : goal.metric === 'distance' ? 'km' : routine.kind === 'water' ? 'garrafas' : routine.kind === 'weight' ? 'kg' : routine.kind === 'sleep' ? 'h' : routine.kind === 'duration' ? 'min' : ['nutrition', 'rating'].includes(routine.kind) ? 'de 5' : routine.kind === 'check' ? 'vez' : 'vezes'
 }
 export function routineGoalProgress(goal: RoutineGoal, routine: RoutineDefinition, data: RoutineData, date: string) {
-  const evaluationDate = goal.endDate && goal.endDate < date ? goal.endDate : date
+  const endDate = [goal.endDate, goal.archivedAt ? addCalendarDays(goal.archivedAt, -1) : undefined].filter((value): value is string => Boolean(value)).sort()[0]
+  const evaluationDate = endDate && endDate < date ? endDate : date
   const periodStart = goal.period === 'week' ? weekStart(evaluationDate) : goal.period === 'day' ? evaluationDate : goal.startDate
   const configDate = goal.period === 'target' ? evaluationDate : periodStart
   const target = [...(goal.changes ?? [])].filter(change => change.from <= configDate).sort((a, b) => b.from.localeCompare(a.from))[0]?.target ?? goal.target
   const start = [periodStart, goal.startDate].sort().at(-1)!
-  const end = goal.endDate && goal.endDate < date ? goal.endDate : date
+  const end = evaluationDate
+  const goalReading = (day: string) => {
+    if (!goal.format) {
+      // Quantitative goals never consume new assessments (even when both are numbers).
+      const entries = data.entries.flatMap(entry => entry.format ? entry.legacy ? [{ id: entry.id, routineId: entry.routineId, date: entry.date, ...entry.legacy }] : [] : [entry])
+      return routineReading(routine, day, { ...data, entries })
+    }
+    const reading = routineReading(routine, day, data)
+    if (goal.format === 'binary' && reading && !reading.format && (routine.kind === 'exercise' || routine.kind === 'check')) return { value: reading.value >= 1 ? 1 : 0, format: 'binary' as const }
+    return reading?.format === goal.format ? reading : null
+  }
   let current: number | null = null
   let baseline = goal.baseline
   if (date >= goal.startDate && start <= end) {
@@ -146,10 +187,11 @@ export function routineGoalProgress(goal: RoutineGoal, routine: RoutineDefinitio
       current = 0
       for (let day = start; day <= end; day = addCalendarDays(day, 1)) {
         if (!scheduledOn(routine, day)) continue
-        const reading = routineReading(routine, day, data)
+        const reading = goalReading(day)
         if (reading && reading.value >= (goal.threshold ?? 1)) current++
       }
-    } else if (routine.kind === 'exercise') {
+    } else if (goal.format) current = goalReading(evaluationDate)?.value ?? null
+    else if (routine.kind === 'exercise') {
       const sessions = routineSessions(routine, data, start, end)
       if (goal.metric === 'runTime') {
         const attempts = sessions.filter(item => item.distanceKm != null && item.distanceKm >= (goal.distanceKm ?? Infinity) && item.durationMin != null)
@@ -159,26 +201,38 @@ export function routineGoalProgress(goal: RoutineGoal, routine: RoutineDefinitio
       const records = [...dailyLogMap(data.daily, end).values()].filter(log => log.date >= start && log.weightKg != null).sort((a, b) => a.date.localeCompare(b.date))
       current = records.at(-1)?.weightKg ?? null
       baseline ??= records[0]?.weightKg
-    } else current = routineReading(routine, evaluationDate, data)?.value ?? null
+    } else current = goalReading(evaluationDate)?.value ?? null
   }
   const lower = routine.kind === 'weight' ? (baseline ?? target) >= target : goal.metric === 'runTime'
   const achieved = current != null && (lower ? current <= target : current >= target)
   let percent = current == null ? null : current / target * 100
   if (routine.kind === 'weight') percent = current == null || baseline == null ? (achieved ? 100 : null) : baseline === target ? (achieved ? 100 : 0) : (current - baseline) / (target - baseline) * 100
   if (goal.metric === 'runTime') percent = current == null ? null : target / current * 100
-  return { current, target, achieved, percent: percent == null ? null : Math.max(0, Math.min(100, Math.round(percent))), upcoming: date < goal.startDate, expired: Boolean(goal.endDate && date > goal.endDate) }
+  return { current, target, achieved, percent: percent == null ? null : Math.max(0, Math.min(100, Math.round(percent))), upcoming: date < goal.startDate, expired: Boolean(endDate && date > endDate) }
+}
+
+export function defaultHabitRoutines(createdDate: string): RoutineDefinition[] {
+  const habits = [
+    { id: 'exercise', name: 'Exercícios', kind: 'exercise', activity: 'all' },
+    { id: 'water', name: 'Água', kind: 'water', bottleMl: 1700 },
+    { id: 'nutrition', name: 'Alimentação', kind: 'nutrition' },
+    { id: 'sleep', name: 'Sono', kind: 'sleep' },
+    { id: 'teeth', name: 'Escovar os dentes', kind: 'count' },
+  ] as const
+  return habits.map(habit => ({
+    ...habit,
+    enabled: true,
+    createdDate,
+    schedule: { mode: habit.kind === 'exercise' ? 'any' : 'daily', weekdays: [] },
+  }))
 }
 
 export function initialRoutines(daily: DailyLog[], activities: ActivityLog[], today: string): RoutineDefinition[] {
   const earliest = [...daily.map(log => log.date), ...activities.map(item => item.date), today].filter(isDateKey).sort()[0]
   const make = (id: string, name: string, kind: RoutineKind, enabled: boolean, extras: Partial<RoutineDefinition> = {}): RoutineDefinition => ({ id, name, kind, enabled, createdDate: earliest, schedule: { mode: ['weight', 'exercise'].includes(kind) ? 'any' : 'daily', weekdays: [] }, ...extras })
   return [
-    make('exercise', 'Exercícios', 'exercise', true, { activity: 'all' }),
+    ...defaultHabitRoutines(earliest),
     ...Object.entries({ forca: 'Musculação', corrida: 'Corrida', calistenia: 'Calistenia', caminhada: 'Caminhada', mobilidade: 'Mobilidade', outro: 'Outro exercício' }).map(([activity, name]) => make(activity, name, 'exercise', activities.some(item => item.activity === activity), { activity })),
-    make('water', 'Água', 'water', false, { bottleMl: 1700 }),
-    make('nutrition', 'Alimentação', 'nutrition', daily.some(log => nutritionScore(log) != null)),
-    make('sleep', 'Sono', 'sleep', daily.some(log => log.sleepH != null)),
     make('weight', 'Peso', 'weight', daily.some(log => log.weightKg != null)),
-    make('teeth', 'Escovar os dentes', 'count', false),
   ]
 }

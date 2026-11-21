@@ -18,7 +18,9 @@ describe('health routines and snapshots', () => {
   it('starts with ready models, no imposed goals or weekly targets', () => {
     assert.ok(routines.every(validRoutine))
     assert.equal(routine('water').bottleMl, 1700)
-    assert.equal(routines.find(item => item.id === 'water').enabled, false)
+    for (const id of ['water', 'nutrition', 'sleep', 'teeth', 'exercise']) {
+      assert.equal(routines.find(item => item.id === id)?.enabled, true, id)
+    }
     assert.equal(routines.find(item => item.id === 'exercise').schedule.mode, 'any')
   })
   it('counts 1.7 L bottles, fractions and historical bottle sizes', () => {

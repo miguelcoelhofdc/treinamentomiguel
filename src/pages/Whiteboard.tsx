@@ -222,7 +222,7 @@ function ToolButton({ active = false, disabled = false, icon: IconComponent, lab
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className={`inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[11px] px-2.5 text-[13px] font-semibold transition duration-200 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-35 ${
+      className={`inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-[11px] px-2.5 text-[13px] font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-35 ${
         active ? 'bg-[#6d5bd0] text-white shadow-[0_8px_18px_-11px_rgba(109,91,208,0.72)]' : 'text-[#607089] hover:bg-[#f5f2ff] hover:text-[#2b2a2d]'
       }`}
     >
@@ -431,7 +431,7 @@ function ConfirmDialog({ kind, onCancel, onConfirm }: ConfirmDialogProps) {
               {isNew ? 'Iniciar um novo quadro?' : 'Limpar todo o quadro?'}
             </h2>
           </div>
-          <button type="button" aria-label="Fechar" onClick={onCancel} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#718097] transition hover:bg-[#f2f5f8] active:scale-[0.96]">
+          <button type="button" aria-label="Fechar" onClick={onCancel} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#718097] transition hover:bg-[#f2f5f8]">
             <X size={18} weight="bold" />
           </button>
         </div>
@@ -441,10 +441,10 @@ function ConfirmDialog({ kind, onCancel, onConfirm }: ConfirmDialogProps) {
             : 'Todos os objetos do quadro serão apagados. Você ainda poderá usar Desfazer logo depois.'}
         </p>
         <div className="mt-6 grid grid-cols-2 gap-2.5">
-          <button ref={cancelRef} type="button" onClick={onCancel} className="h-11 rounded-[12px] border border-[#dfe5ec] px-4 text-[14px] font-semibold text-[#526177] transition hover:bg-[#f5f7fa] active:scale-[0.98]">
+          <button ref={cancelRef} type="button" onClick={onCancel} className="h-11 rounded-[12px] border border-[#dfe5ec] px-4 text-[14px] font-semibold text-[#526177] transition hover:bg-[#f5f7fa]">
             Cancelar
           </button>
-          <button type="button" onClick={onConfirm} className="h-11 rounded-[12px] bg-[#17223b] px-4 text-[14px] font-semibold text-white transition hover:bg-[#223250] active:scale-[0.98]">
+          <button type="button" onClick={onConfirm} className="h-11 rounded-[12px] bg-[#17223b] px-4 text-[14px] font-semibold text-white transition hover:bg-[#223250]">
             {isNew ? 'Novo quadro' : 'Limpar quadro'}
           </button>
         </div>
@@ -470,6 +470,7 @@ export default function Whiteboard() {
   const [pendingFocusId, setPendingFocusId] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<Confirmation>(null)
   const [isFullscreen, setIsFullscreen] = useState(Boolean(document.fullscreenElement))
+  const [storageError, setStorageError] = useState(false)
 
   const pageRef = useRef<HTMLElement>(null)
   const surfaceRef = useRef<HTMLDivElement>(null)
@@ -477,6 +478,7 @@ export default function Whiteboard() {
   const draftCanvasRef = useRef<HTMLCanvasElement>(null)
   const penCursorRef = useRef<HTMLDivElement>(null)
   const stateRef = useRef(board)
+  const persistedBoardRef = useRef(board)
   const draftStrokeRef = useRef<Stroke | null>(null)
   const strokePointerIdRef = useRef<number | null>(null)
   const draftShapeRef = useRef<ShapeItem | null>(null)
@@ -489,7 +491,6 @@ export default function Whiteboard() {
   const moveOriginalRef = useRef(new Map<string, BoardState>())
   const draftRenderFrameRef = useRef<number | null>(null)
   const suppressClickRef = useRef(false)
-  const skipNextPersistRef = useRef(false)
 
   const applyBoard = useCallback((next: BoardState) => {
     stateRef.current = next
@@ -583,32 +584,30 @@ export default function Whiteboard() {
     if (draftRenderFrameRef.current !== null) window.cancelAnimationFrame(draftRenderFrameRef.current)
   }, [])
 
-  useEffect(() => {
-    if (skipNextPersistRef.current) {
-      skipNextPersistRef.current = false
-      return
+  const persistBoard = useCallback((next: BoardState) => {
+    if (next === persistedBoardRef.current) return
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      persistedBoardRef.current = next
+      setStorageError(false)
+    } catch {
+      setStorageError(true)
     }
-    const timeout = window.setTimeout(() => {
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(board))
-      } catch {
-        // The board remains usable even when browser storage is unavailable.
-      }
-    }, 180)
-    return () => window.clearTimeout(timeout)
-  }, [board])
+  }, [])
 
   useEffect(() => {
-    const saveNow = () => {
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateRef.current))
-      } catch {
-        // Ignore storage restrictions on page exit.
-      }
-    }
+    const timeout = window.setTimeout(() => persistBoard(stateRef.current), 180)
+    return () => window.clearTimeout(timeout)
+  }, [board, persistBoard])
+
+  useEffect(() => {
+    const saveNow = () => persistBoard(stateRef.current)
     window.addEventListener('pagehide', saveNow)
-    return () => window.removeEventListener('pagehide', saveNow)
-  }, [])
+    return () => {
+      window.removeEventListener('pagehide', saveNow)
+      saveNow()
+    }
+  }, [persistBoard])
 
   useEffect(() => {
     const previousTitle = document.title
@@ -1149,14 +1148,19 @@ export default function Whiteboard() {
         current.strokes.length || current.texts.length || current.shapes.length ? EMPTY_BOARD : current
       ))
     } else if (confirmation === 'new') {
-      skipNextPersistRef.current = true
       applyBoard(EMPTY_BOARD)
       setHistory([])
       setFuture([])
       setSelectedShapeIds([])
       editOriginalRef.current.clear()
       moveOriginalRef.current.clear()
-      try { window.localStorage.removeItem(STORAGE_KEY) } catch { /* Storage may be restricted. */ }
+      try {
+        window.localStorage.removeItem(STORAGE_KEY)
+        persistedBoardRef.current = EMPTY_BOARD
+        setStorageError(false)
+      } catch {
+        setStorageError(true)
+      }
     }
     setConfirmation(null)
   }
@@ -1183,6 +1187,11 @@ export default function Whiteboard() {
   return (
     <main ref={pageRef} className="fixed inset-0 isolate overflow-hidden bg-[#fffdfa] font-sans text-[#2b2a2d]" style={{ colorScheme: 'light' }}>
       <h1 className="sr-only">Quadro de reunião Letalk</h1>
+      {storageError && (
+        <p role="alert" className="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-lg bg-[#fff0ed] px-4 py-2 text-sm font-semibold text-[#9a463b]">
+          O navegador não conseguiu salvar o quadro. Mantenha esta aba aberta.
+        </p>
+      )}
       <p className="sr-only">Use Selecionar para mover e organizar objetos, Texto para anotações, Caneta para desenhar, Formas para criar blocos, setas e faixas, e Borracha para remover itens.</p>
 
       <div
@@ -1300,16 +1309,16 @@ export default function Whiteboard() {
               aria-label={label}
               title={label}
               onClick={() => alignSelectedShapes(alignment)}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8] hover:text-[#344060] active:scale-[0.94]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8] hover:text-[#344060]"
             >
               <AlignmentIcon size={18} aria-hidden="true" />
             </button>
           ))}
           <span className="mx-1 h-6 w-px shrink-0 bg-[#e3e8ee]" aria-hidden="true" />
           <span className="flex shrink-0 items-center gap-0.5 rounded-[10px] bg-[#eef1f8] p-0.5">
-            <button type="button" aria-label="Organizar em linha" title="Organizar em linha" onClick={() => arrangeSelectedShapes('row')} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#4f5e9b] transition hover:bg-white active:scale-[0.94]"><Rows size={17} /></button>
-            <button type="button" aria-label="Organizar em grade" title="Organizar automaticamente em grade" onClick={() => arrangeSelectedShapes('grid')} className="flex h-8 items-center justify-center gap-1 rounded-[8px] px-2 text-[11px] font-semibold text-[#4f5e9b] transition hover:bg-white active:scale-[0.96]"><Sparkle size={16} weight="fill" /><span className="hidden sm:inline">Arrumar</span></button>
-            <button type="button" aria-label="Organizar em coluna" title="Organizar em coluna" onClick={() => arrangeSelectedShapes('column')} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#4f5e9b] transition hover:bg-white active:scale-[0.94]"><Columns size={17} /></button>
+            <button type="button" aria-label="Organizar em linha" title="Organizar em linha" onClick={() => arrangeSelectedShapes('row')} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#4f5e9b] transition hover:bg-white"><Rows size={17} /></button>
+            <button type="button" aria-label="Organizar em grade" title="Organizar automaticamente em grade" onClick={() => arrangeSelectedShapes('grid')} className="flex h-8 items-center justify-center gap-1 rounded-[8px] px-2 text-[11px] font-semibold text-[#4f5e9b] transition hover:bg-white"><Sparkle size={16} weight="fill" /><span className="hidden sm:inline">Arrumar</span></button>
+            <button type="button" aria-label="Organizar em coluna" title="Organizar em coluna" onClick={() => arrangeSelectedShapes('column')} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#4f5e9b] transition hover:bg-white"><Columns size={17} /></button>
           </span>
         </div>
       )}
@@ -1329,7 +1338,7 @@ export default function Whiteboard() {
               aria-pressed={shapeKind === kind}
               title={label}
               onClick={() => setShapeKind(kind)}
-              className={`flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-[11px] px-2 text-[11px] font-semibold transition active:scale-[0.95] ${
+              className={`flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded-[11px] px-2 text-[11px] font-semibold transition ${
                 shapeKind === kind ? 'bg-[#e7ecfb] text-[#4f5e9b]' : 'text-[#607089] hover:bg-[#f3f5f8] hover:text-[#2b2a2d]'
               }`}
             >
@@ -1346,7 +1355,7 @@ export default function Whiteboard() {
                 aria-label={`Usar ${color.label}`}
                 aria-pressed={shapeColorIndex === index}
                 onClick={() => setShapeColorIndex(index)}
-                className={`h-5 w-5 rounded-full border-2 transition active:scale-90 ${shapeColorIndex === index ? 'border-white ring-2 ring-[#4f5e9b]' : 'border-white ring-1 ring-[#cfd6df]'}`}
+                className={`h-5 w-5 rounded-full border-2 transition ${shapeColorIndex === index ? 'border-white ring-2 ring-[#4f5e9b]' : 'border-white ring-1 ring-[#cfd6df]'}`}
                 style={{ backgroundColor: color.fill }}
               />
             ))}
@@ -1373,7 +1382,7 @@ export default function Whiteboard() {
                 aria-label={`Aplicar ${color.label}`}
                 aria-pressed={primarySelectedShape.fill === color.fill}
                 onClick={() => updateSelectedShapeStyle(color.fill, color.stroke)}
-                className={`h-6 w-6 rounded-full border-2 transition active:scale-90 ${primarySelectedShape.fill === color.fill ? 'border-white ring-2 ring-[#4f5e9b]' : 'border-white ring-1 ring-[#cfd6df]'}`}
+                className={`h-6 w-6 rounded-full border-2 transition ${primarySelectedShape.fill === color.fill ? 'border-white ring-2 ring-[#4f5e9b]' : 'border-white ring-1 ring-[#cfd6df]'}`}
                 style={{ backgroundColor: color.fill }}
               />
             ))}
@@ -1391,16 +1400,16 @@ export default function Whiteboard() {
             </label>
           </div>
           <span className="mx-0.5 h-6 w-px shrink-0 bg-[#e3e8ee]" aria-hidden="true" />
-          <button type="button" aria-label="Alterar espessura da borda" title="Espessura da borda" onClick={cycleSelectedStrokeWidth} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8] active:scale-[0.94]"><BoundingBox size={18} weight="bold" /></button>
+          <button type="button" aria-label="Alterar espessura da borda" title="Espessura da borda" onClick={cycleSelectedStrokeWidth} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8]"><BoundingBox size={18} weight="bold" /></button>
           {selectedShapeIds.length === 1 && primarySelectedShape.kind === 'arrow' && (
             <div className="flex shrink-0 items-center gap-0.5 rounded-[10px] bg-[#f1f3f8] px-0.5" aria-label="Ângulo da seta">
-              <button type="button" aria-label="Girar seta 15 graus para a esquerda" title="Girar 15° para a esquerda" onClick={() => rotateSelectedShapes(-15)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#607089] transition hover:bg-white active:scale-[0.94]"><ArrowCounterClockwise size={16} /></button>
+              <button type="button" aria-label="Girar seta 15 graus para a esquerda" title="Girar 15° para a esquerda" onClick={() => rotateSelectedShapes(-15)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#607089] transition hover:bg-white"><ArrowCounterClockwise size={16} /></button>
               <span className="min-w-[3.25rem] text-center text-[10px] font-semibold tabular-nums text-[#607089]" aria-live="polite">{Math.round(primarySelectedShape.rotation ?? 0)}°</span>
-              <button type="button" aria-label="Girar seta 15 graus para a direita" title="Girar 15° para a direita" onClick={() => rotateSelectedShapes(15)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#607089] transition hover:bg-white active:scale-[0.94]"><ArrowClockwise size={16} /></button>
+              <button type="button" aria-label="Girar seta 15 graus para a direita" title="Girar 15° para a direita" onClick={() => rotateSelectedShapes(15)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-[#607089] transition hover:bg-white"><ArrowClockwise size={16} /></button>
             </div>
           )}
-          <button type="button" aria-label="Duplicar seleção" title="Duplicar (Ctrl+D)" onClick={duplicateSelectedShapes} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8] active:scale-[0.94]"><Copy size={18} /></button>
-          <button type="button" aria-label="Excluir seleção" title="Excluir" onClick={() => deleteShapes(selectedShapeIds)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#a65145] transition hover:bg-[#faece9] active:scale-[0.94]"><Trash size={18} /></button>
+          <button type="button" aria-label="Duplicar seleção" title="Duplicar (Ctrl+D)" onClick={duplicateSelectedShapes} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#607089] transition hover:bg-[#f1f3f8]"><Copy size={18} /></button>
+          <button type="button" aria-label="Excluir seleção" title="Excluir" onClick={() => deleteShapes(selectedShapeIds)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#a65145] transition hover:bg-[#faece9]"><Trash size={18} /></button>
           {selectedShapeIds.length === 1 && primarySelectedShape.kind !== 'arrow' && (
             <span className="hidden shrink-0 border-l border-[#e3e8ee] pl-2 pr-1 text-[10px] leading-4 text-[#8995a6] md:inline">Duplo clique para escrever</span>
           )}
@@ -1422,7 +1431,7 @@ export default function Whiteboard() {
                 aria-label={`Usar ${color.label}`}
                 aria-pressed={penColor === color.value}
                 onClick={() => setPenColor(color.value)}
-                className={`h-5 w-5 rounded-full border-2 transition active:scale-[0.92] sm:h-6 sm:w-6 ${penColor === color.value ? 'border-white ring-2 ring-[#6d5bd0]' : 'border-white ring-1 ring-[#d8dee7]'}`}
+                className={`h-5 w-5 rounded-full border-2 transition sm:h-6 sm:w-6 ${penColor === color.value ? 'border-white ring-2 ring-[#6d5bd0]' : 'border-white ring-1 ring-[#d8dee7]'}`}
                 style={{ backgroundColor: color.value }}
               />
             ))}
@@ -1460,10 +1469,10 @@ export default function Whiteboard() {
           role="menu"
           aria-label="Mais ações do quadro"
         >
-          <button type="button" role="menuitem" onClick={() => { setConfirmation('new'); setMoreMenuOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold text-[#526177] transition hover:bg-[#f3f5f8] active:scale-[0.98]"><FilePlus size={18} /><span>Novo quadro</span></button>
-          <button type="button" role="menuitem" onClick={() => { setConfirmation('clear'); setMoreMenuOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold text-[#a65145] transition hover:bg-[#faece9] active:scale-[0.98]"><Trash size={18} /><span>Limpar tudo</span></button>
+          <button type="button" role="menuitem" onClick={() => { setConfirmation('new'); setMoreMenuOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold text-[#526177] transition hover:bg-[#f3f5f8]"><FilePlus size={18} /><span>Novo quadro</span></button>
+          <button type="button" role="menuitem" onClick={() => { setConfirmation('clear'); setMoreMenuOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold text-[#a65145] transition hover:bg-[#faece9]"><Trash size={18} /><span>Limpar tudo</span></button>
           <span className="my-1 block h-px bg-[#e7ebf0]" aria-hidden="true" />
-          <button type="button" role="menuitem" onClick={() => { void toggleFullscreen(); setMoreMenuOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold text-[#526177] transition hover:bg-[#f3f5f8] active:scale-[0.98]">
+          <button type="button" role="menuitem" onClick={() => { void toggleFullscreen(); setMoreMenuOpen(false) }} className="flex h-10 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold text-[#526177] transition hover:bg-[#f3f5f8]">
             {isFullscreen ? <ArrowsInSimple size={18} /> : <ArrowsOutSimple size={18} />}
             <span>{isFullscreen ? 'Sair da tela cheia' : 'Tela cheia'}</span>
           </button>

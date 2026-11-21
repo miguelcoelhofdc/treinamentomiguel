@@ -1,269 +1,328 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, Minus, X } from '@phosphor-icons/react'
+import {
+  ArrowUpRight,
+  Check,
+  CheckCircle,
+  ClipboardText,
+  Smiley,
+  SmileyMeh,
+  SmileySad,
+  SmileyWink,
+  SmileyXEyes,
+} from '@phosphor-icons/react'
 import type { TrackingData } from '@/hooks/useTracking'
 import { saveRoutineValues } from '@/db/routines'
 import { addCalendarDays, formatShortDate } from '@/lib/date'
-import { readingLabel, routineReading, routineSessions } from '@/lib/routines'
-import { numberLabel } from '@/lib/tracking'
+import { getStoredProfileId } from '@/lib/auth'
+import { habitIcon } from '@/lib/habitIcons'
+import { routineReading } from '@/lib/routines'
 import {
   STATUS_SCALE,
-  cellEditMode,
-  dayRegisterProgress,
-  dayRegisterTargets,
-  gridRoutines,
+  homeCheckInMode,
+  homeCheckInProgress,
+  homeCheckInTargets,
+  pendingHomeCheckInDates,
   readingToStatus,
-  statusLabel,
   statusToSaveValue,
-  statusTone,
   type StatusLevel,
 } from '@/lib/routineStatus'
 import type { RoutineDefinition } from '@/types'
-import BottomSheet from '@/components/ui/BottomSheet'
-import RoutineReviewForm from './RoutineReviewForm'
-import HomeHabitsInsight from './HomeHabitsInsight'
 
-function StatusIcon({ level, size = 16 }: { level: StatusLevel | null; size?: number }) {
-  if (!level) return <span aria-hidden="true">·</span>
-  if (level >= 4) return <Check size={size} weight="bold" aria-hidden="true" />
-  if (level === 3) return <Minus size={size} weight="bold" aria-hidden="true" />
-  return <X size={size} weight="bold" aria-hidden="true" />
+const FACE_ICONS = [SmileyXEyes, SmileySad, SmileyMeh, Smiley, SmileyWink] as const
+const FACES = STATUS_SCALE.map((item, index) => ({ level: item.level, label: item.label, Icon: FACE_ICONS[index] }))
+const BINARY = [{ level: 1, label: 'Não fiz', Icon: SmileySad }, { level: 5, label: 'Feito', Icon: Smiley }] as const
+
+type DraftMap = Record<string, StatusLevel | null>
+type Phase = 'edit' | 'success' | 'leaving'
+type Outcome = { date: string; mode: 'saved' | 'skipped'; remaining: number }
+
+function skippedStorageKey(today: string) {
+  return `home-checkin-skipped:${getStoredProfileId() ?? 'miguel'}:${today}`
 }
 
-function StatusPicker({
-  routine,
-  level,
-  locked,
-  onPick,
-  onClose,
-}: {
-  routine: RoutineDefinition
-  level: StatusLevel | null
-  locked?: boolean
-  onPick: (next: StatusLevel | null) => void
-  onClose: () => void
-}) {
-  const mode = cellEditMode(routine.kind)
-  if (mode === 'value') return null
-  const options = mode === 'binary'
-    ? [
-        { level: 5 as StatusLevel, label: 'Feito' },
-        { level: 1 as StatusLevel, label: 'Não fiz' },
-      ]
-    : STATUS_SCALE.map(item => ({ level: item.level, label: item.short }))
-  return (
-    <div className="daily-grid-picker" role="dialog" aria-label={`Status de ${routine.name}`}>
-      <p className="helper">{routine.name}</p>
-      {locked && <p className="helper">Treino já registrado no histórico — edite por lá.</p>}
-      <div className="daily-grid-picker-options" role="group">
-        {options.map(option => (
-          <button
-            key={option.level}
-            type="button"
-            className={`daily-grid-cell is-${statusTone(option.level)}${level === option.level ? ' is-selected' : ''}`}
-            disabled={locked}
-            aria-pressed={level === option.level}
-            onClick={() => onPick(option.level)}
-          >
-            <StatusIcon level={option.level} />
-            <span>{option.label}</span>
-          </button>
-        ))}
-        <button type="button" className="daily-grid-cell is-empty" disabled={locked} onClick={() => onPick(null)}>
-          <span>·</span>
-          <span>Limpar</span>
-        </button>
-      </div>
-      <button type="button" className="inline-link" onClick={onClose}>Fechar</button>
-    </div>
+export function loadSkippedCheckIns(today: string): string[] {
+  try {
+    const raw = sessionStorage.getItem(skippedStorageKey(today))
+    const parsed = raw ? JSON.parse(raw) as unknown : []
+    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function persistSkipped(today: string, dates: string[]) {
+  try {
+    sessionStorage.setItem(skippedStorageKey(today), JSON.stringify(dates))
+  } catch { /* The current page still keeps the skipped dates. */ }
+}
+
+function readDraft(targets: RoutineDefinition[], date: string, data: TrackingData): DraftMap {
+  return Object.fromEntries(
+    targets.map(routine => [routine.id, readingToStatus(routine, routineReading(routine, date, data))]),
   )
+}
+
+/** Ex.: "Ontem - Quarta-Feira (20)" ou "Pendente - Segunda-Feira (16)". */
+function checkInTitle(dateKey: string, yesterday: string): string {
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' })
+    .format(new Date(year, month - 1, day))
+  const weekdayLabel = weekday
+    .split('-')
+    .map(part => part.charAt(0).toLocaleUpperCase('pt-BR') + part.slice(1))
+    .join('-')
+  const prefix = dateKey === yesterday ? 'Ontem' : 'Pendente'
+  return `${prefix} - ${weekdayLabel} (${day})`
 }
 
 export default function HomeYesterdayRegister({
   data,
-  onSaved,
+  onSettlingChange,
+  onSkippedChange,
 }: {
   data: TrackingData
-  onSaved?: () => void
+  onSettlingChange?: (settling: boolean) => void
+  onSkippedChange?: (dates: string[]) => void
 }) {
   const yesterday = addCalendarDays(data.today, -1)
-  const enabledHabits = useMemo(() => gridRoutines(data.routines), [data.routines])
-  const targets = useMemo(() => dayRegisterTargets(data.routines, yesterday), [data.routines, yesterday])
-  const progress = useMemo(
-    () => dayRegisterProgress(data.routines, yesterday, data),
-    [data, yesterday],
-  )
-  const [busyId, setBusyId] = useState<string | null>(null)
+  const [skipped, setSkipped] = useState(() => loadSkippedCheckIns(data.today))
+  const [resolved, setResolved] = useState<string[]>([])
+  const [confirmSkip, setConfirmSkip] = useState(false)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [openId, setOpenId] = useState<string | null>(null)
-  const [valueEdit, setValueEdit] = useState<string | null>(null)
-  const pickerRef = useRef<HTMLDivElement>(null)
+  const [phase, setPhase] = useState<Phase>('edit')
+  const [outcome, setOutcome] = useState<Outcome | null>(null)
+  const [edits, setEdits] = useState<{ date: string; values: DraftMap } | null>(null)
+  const leaveTimer = useRef<number | null>(null)
+  const submitting = useRef(false)
 
-  const openRoutine = openId ? targets.find(item => item.id === openId) : undefined
-  const openLevel = openRoutine
-    ? readingToStatus(openRoutine, routineReading(openRoutine, yesterday, data))
-    : null
-  const openLocked = Boolean(
-    openRoutine?.kind === 'exercise'
-    && routineSessions(openRoutine, data, yesterday, yesterday).some(item => item.id !== `routine:${openRoutine.id}:${yesterday}`),
+  const pending = useMemo(
+    () => pendingHomeCheckInDates(data.routines, data.today, data, [...skipped, ...resolved]),
+    [data, skipped, resolved],
   )
+
+  const date = pending[0] ?? null
+  const targets = useMemo(
+    () => (date ? homeCheckInTargets(data.routines, date) : []),
+    [data.routines, date],
+  )
+  const changed = edits?.date === date ? edits?.values : undefined
+  const draft = date ? { ...readDraft(targets, date, data), ...changed } : {}
 
   useEffect(() => {
-    if (!openId) return
-    const onPointer = (event: MouseEvent | TouchEvent) => {
-      if (!pickerRef.current?.contains(event.target as Node)) setOpenId(null)
-    }
-    document.addEventListener('mousedown', onPointer)
-    document.addEventListener('touchstart', onPointer)
-    return () => {
-      document.removeEventListener('mousedown', onPointer)
-      document.removeEventListener('touchstart', onPointer)
-    }
-  }, [openId])
+    setConfirmSkip(false)
+    setError('')
+  }, [date])
 
-  const saveStatus = async (routine: RoutineDefinition, level: StatusLevel | null) => {
-    if (cellEditMode(routine.kind) === 'value' || busyId) return
-    setBusyId(routine.id)
+  useEffect(() => {
+    if (!resolved.length || !resolved.some(day => homeCheckInProgress(data.routines, day, data).complete)) return
+    setResolved(current => current.filter(day => !homeCheckInProgress(data.routines, day, data).complete))
+  }, [data, resolved])
+
+  useEffect(() => () => {
+    if (leaveTimer.current) window.clearTimeout(leaveTimer.current)
+  }, [])
+
+  const rated = targets.filter(routine => draft[routine.id] != null).length
+  const canSave = Boolean(date) && targets.length > 0 && rated === targets.length && !busy && phase === 'edit'
+
+  const finishCurrent = (mode: 'saved' | 'skipped') => {
+    if (!date) return
+    const nextResolved = mode === 'saved' ? [...resolved, date] : resolved
+    const nextSkipped = mode === 'skipped' ? [...skipped, date] : skipped
+    setOutcome({ date, mode, remaining: Math.max(0, pending.length - 1) })
+    if (mode === 'saved') setResolved(nextResolved)
+    if (mode === 'skipped') {
+      setSkipped(nextSkipped)
+      persistSkipped(data.today, nextSkipped)
+      onSkippedChange?.(nextSkipped)
+    }
+    setPhase('success')
+    setEdits(null)
+    leaveTimer.current = window.setTimeout(() => {
+      setPhase('leaving')
+      leaveTimer.current = window.setTimeout(() => {
+        setOutcome(null)
+        setBusy(false)
+        setPhase('edit')
+        submitting.current = false
+        onSettlingChange?.(false)
+      }, 380)
+    }, 900)
+  }
+
+  const pickStatus = (routine: RoutineDefinition, level: StatusLevel) => {
+    if (busy || phase !== 'edit') return
+    if (!date) return
+    setEdits({
+      date,
+      values: { ...changed, [routine.id]: draft[routine.id] === level ? null : level },
+    })
+    setError('')
+  }
+
+  const saveAndFinish = async () => {
+    if (!canSave || !date || submitting.current) return
+    submitting.current = true
+    onSettlingChange?.(true)
+    setBusy(true)
     setError('')
     try {
-      await saveRoutineValues(yesterday, [{ routineId: routine.id, value: statusToSaveValue(routine, level) }])
-      setOpenId(null)
-      onSaved?.()
+      await saveRoutineValues(
+        date,
+        targets.filter(routine => changed && Object.hasOwn(changed, routine.id)).map(routine => ({
+          routineId: routine.id,
+          value: statusToSaveValue(routine, draft[routine.id] ?? null),
+        })),
+      )
+      finishCurrent('saved')
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Não foi possível salvar.')
-    } finally {
-      setBusyId(null)
+      setError(cause instanceof Error ? cause.message : 'Não foi possível salvar. Tente novamente.')
+      setBusy(false)
+      submitting.current = false
+      onSettlingChange?.(false)
     }
   }
 
-  const openCell = (routine: RoutineDefinition) => {
-    setError('')
-    if (cellEditMode(routine.kind) === 'value') {
-      setOpenId(null)
-      setValueEdit(routine.id)
+  const skipCurrent = () => {
+    if (!date || busy || phase !== 'edit') return
+    if (!confirmSkip) {
+      setConfirmSkip(true)
       return
     }
-    setValueEdit(null)
-    setOpenId(current => current === routine.id ? null : routine.id)
+    setConfirmSkip(false)
+    onSettlingChange?.(true)
+    finishCurrent('skipped')
   }
 
-  if (!enabledHabits.length) {
-    return (
-      <section className="tracking-panel home-yesterday-empty" aria-labelledby="home-yesterday-empty-title">
-        <p className="page-kicker">Rotina</p>
-        <h2 id="home-yesterday-empty-title">Registrar ontem</h2>
-        <p className="helper">Nenhum hábito ativo ainda. Ative Água, Sono, Alimentação ou crie os seus para marcar o dia aqui.</p>
-        <div className="home-yesterday-empty-actions">
-          <Link className="btn-primary" to="/rotinas">Configurar rotinas</Link>
-          <Link className="inline-link" to="/registrar?modo=dia">Abrir grade do mês</Link>
-        </div>
-      </section>
-    )
-  }
+  if (!date && phase === 'edit') return null
 
-  if (!targets.length) {
-    return (
-      <section className="tracking-panel home-yesterday-empty" aria-labelledby="home-yesterday-empty-title">
-        <p className="page-kicker">Rotina</p>
-        <h2 id="home-yesterday-empty-title">Nada agendado para ontem</h2>
-        <p className="helper">
-          Você tem {enabledHabits.length} {enabledHabits.length === 1 ? 'hábito ativo' : 'hábitos ativos'}, mas nenhum cai em {formatShortDate(yesterday)} pela frequência escolhida.
-        </p>
-        <div className="home-yesterday-empty-actions">
-          <Link className="btn-secondary" to="/rotinas">Ajustar frequência</Link>
-          <Link className="inline-link" to="/registrar?modo=dia">Ver grade do mês</Link>
-        </div>
-      </section>
-    )
-  }
+  const showDate = outcome?.date ?? date
+  if (!showDate) return null
 
-  if (progress.complete) {
-    return <HomeHabitsInsight data={data} yesterday={yesterday} />
-  }
+  const title = checkInTitle(showDate, yesterday)
 
   return (
-    <section className="tracking-panel home-yesterday-register" aria-labelledby="home-yesterday-title">
-      <div className="section-heading">
-        <div>
-          <p className="page-kicker">Rotina</p>
-          <h2 id="home-yesterday-title">Registrar ontem</h2>
-          <p className="helper">
-            {formatShortDate(yesterday)} · {progress.done} de {progress.total} hábitos
+    <section
+      id="check-in"
+      data-checkin-date={showDate}
+      tabIndex={-1}
+      className={`home-card home-checkin is-${phase}${showDate === yesterday ? '' : ' is-overdue'}`}
+      aria-labelledby="home-checkin-title"
+      aria-busy={busy || phase !== 'edit'}
+    >
+      {phase === 'success' || phase === 'leaving' ? (
+        <div className="home-checkin-success" role="status" aria-live="polite">
+          <span className="home-checkin-success-icon" aria-hidden="true">
+            <CheckCircle size={42} weight="fill" />
+          </span>
+          <h2>{outcome?.mode === 'skipped' ? 'Dia pulado' : 'Check-in registrado'}</h2>
+          <p>
+            {outcome?.mode === 'skipped'
+              ? `${formatShortDate(showDate)} foi pulado.`
+              : showDate === yesterday
+                ? 'Seus hábitos de ontem foram salvos.'
+                : `Check-in de ${formatShortDate(showDate)} concluído.`}
+            {outcome && outcome.remaining > 0
+              ? ` · ${outcome.remaining} ${outcome.remaining === 1 ? 'pendente' : 'pendentes'} na fila`
+              : ''}
           </p>
         </div>
-        <Link className="inline-link" to="/registrar?modo=dia">Grade do mês</Link>
-      </div>
-
-      {error && <p className="field-error" role="alert">{error}</p>}
-
-      <ul className="home-yesterday-list">
-        {targets.map(routine => {
-          const reading = routineReading(routine, yesterday, data)
-          const level = readingToStatus(routine, reading)
-          const mode = cellEditMode(routine.kind)
-          const label = mode === 'value' && reading
-            ? readingLabel(routine, reading)
-            : statusLabel(level)
-          const open = openId === routine.id
-          return (
-            <li key={routine.id} className="home-yesterday-row">
-              <div className="home-yesterday-copy">
-                <strong>{routine.name}</strong>
-                <span className="helper">{label}</span>
+      ) : (
+        <>
+          <header className="home-section-header">
+            <div className="home-section-heading">
+              <span className="home-icon" aria-hidden="true"><ClipboardText size={21} /></span>
+              <div>
+                <h2 id="home-checkin-title">{title}</h2>
+                <p>
+                  {formatShortDate(showDate)}
+                  {pending.length > 1 ? ` · 1 de ${pending.length}` : ''}
+                  {' · Escolha uma carinha'}
+                </p>
               </div>
-              <div className="home-yesterday-action">
-                <button
-                  type="button"
-                  className={`daily-grid-cell is-${statusTone(level)}${open ? ' is-open' : ''}${busyId === routine.id ? ' is-busy' : ''}`}
-                  aria-label={`${routine.name}: ${label}`}
-                  aria-haspopup={mode === 'value' ? 'dialog' : 'menu'}
-                  aria-expanded={open}
-                  disabled={busyId === routine.id}
-                  onClick={() => openCell(routine)}
-                >
-                  {mode === 'value' && reading ? (
-                    <span className="daily-grid-value">
-                      {numberLabel(routine.kind === 'water' ? (reading.volumeMl ?? 0) / 1000 : reading.value)}
-                    </span>
-                  ) : (
-                    <StatusIcon level={level} />
-                  )}
-                </button>
-                {open && openRoutine && (
-                  <div className="daily-grid-popover home-yesterday-popover" ref={pickerRef}>
-                    <StatusPicker
-                      routine={openRoutine}
-                      level={openLevel}
-                      locked={openLocked}
-                      onPick={next => void saveStatus(openRoutine, next)}
-                      onClose={() => setOpenId(null)}
-                    />
-                  </div>
+            </div>
+            {targets.length > 0 && (
+              <span className={`home-checkin-count${rated === targets.length ? ' is-complete' : ''}`} role="status" aria-live="polite">
+                {rated === targets.length && <Check size={15} weight="bold" aria-hidden="true" />}
+                {rated === targets.length ? 'Completo' : `${rated}/${targets.length}`}
+              </span>
+            )}
+          </header>
+
+          {error && <p className="field-error" role="alert">{error}</p>}
+
+          {targets.length ? (
+            <ul className="home-checkin-list">
+              {targets.map(routine => {
+                const level = draft[routine.id] ?? null
+                const binary = homeCheckInMode(routine.kind) === 'binary'
+                const Icon = habitIcon(routine.kind, routine.name)
+                return (
+                  <li key={routine.id} className="home-checkin-item">
+                    <div className="home-checkin-name">
+                      <Icon size={20} aria-hidden="true" />
+                      <h3>{routine.name}</h3>
+                    </div>
+                    <div className={`home-checkin-faces${binary ? ' is-binary' : ''}`} role="group" aria-label={routine.name}>
+                      {(binary ? BINARY : FACES).map(({ level: option, label, Icon: Face }) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={`home-checkin-face is-level-${option}`}
+                          aria-pressed={level === option}
+                          disabled={busy}
+                          onClick={() => pickStatus(routine, option)}
+                        >
+                          <Face size={21} weight={level === option ? 'fill' : 'regular'} aria-hidden="true" />
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : <p className="home-empty">Nenhum hábito previsto neste dia.</p>}
+
+          <div className="home-checkin-footer">
+            {confirmSkip ? (
+              <div className="home-checkin-skip-confirm" role="group" aria-label="Confirmar pular dia">
+                <p>Pular {formatShortDate(showDate)}? Você pode registrar depois em Registrar.</p>
+                <div className="home-checkin-skip-actions">
+                  <button type="button" className="home-text-link" onClick={() => setConfirmSkip(false)}>
+                    Voltar
+                  </button>
+                  <button type="button" className="home-action home-checkin-skip is-confirm" onClick={skipCurrent}>
+                    Sim, pular
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="home-checkin-footer-links">
+                  <button type="button" className="home-text-link" onClick={skipCurrent} disabled={busy}>
+                    Pular este dia
+                  </button>
+                  <Link className="home-text-link home-checkin-link" to={targets.length ? '/registrar?modo=dia' : '/rotinas'}>
+                    {targets.length ? 'Registrar outro dia' : 'Configurar hábitos'} <ArrowUpRight size={15} aria-hidden="true" />
+                  </Link>
+                </div>
+                {targets.length > 0 && (
+                  <button
+                    type="button"
+                    className="home-action home-checkin-save"
+                    disabled={!canSave}
+                    onClick={() => void saveAndFinish()}
+                  >
+                    {busy ? 'Salvando…' : 'Registrar e salvar'}
+                  </button>
                 )}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-      <p className="helper home-yesterday-hint">Toque na bolinha colorida para marcar cada hábito.</p>
-
-      {valueEdit && (
-        <BottomSheet
-          title={targets.find(item => item.id === valueEdit)?.name ?? 'Registrar'}
-          description={formatShortDate(yesterday)}
-          onClose={() => setValueEdit(null)}
-        >
-          <RoutineReviewForm
-            key={`${valueEdit}:${yesterday}`}
-            data={data}
-            date={yesterday}
-            routineId={valueEdit}
-            onSaved={() => {
-              setValueEdit(null)
-              onSaved?.()
-            }}
-          />
-        </BottomSheet>
+              </>
+            )}
+          </div>
+        </>
       )}
     </section>
   )

@@ -8,6 +8,7 @@ import './training.css'
 import './tracking.css'
 import './app-theme.css'
 import './home.css'
+import './body-goals.css'
 import App from './App'
 
 createRoot(document.getElementById('root')!).render(

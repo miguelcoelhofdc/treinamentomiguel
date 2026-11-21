@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie'
-import type { ActivityLog, DailyLog, RunningLog, StrengthLog, AppSettings, ExerciseCheck, PlannedSession, WorkoutTemplate, RoutineDefinition, RoutineEntry, RoutineGoal } from '@/types'
+import type { ActivityLog, AppSettings, BodyGoal, DailyLog, ExerciseCheck, PlannedSession, RoutineDefinition, RoutineEntry, RoutineGoal, RunningLog, StrengthLog, WorkoutTemplate } from '@/types'
 import { ACCESS_PROFILES, getStoredProfileId } from '@/lib/auth'
 
 export class TrainingDB extends Dexie {
@@ -14,6 +14,7 @@ export class TrainingDB extends Dexie {
   routines!: Table<RoutineDefinition, string>
   routineEntries!: Table<RoutineEntry, string>
   routineGoals!: Table<RoutineGoal, string>
+  bodyGoals!: Table<BodyGoal, string>
 
   constructor(databaseName: string) {
     super(databaseName)
@@ -42,6 +43,8 @@ export class TrainingDB extends Dexie {
       routineEntries: 'id, date, routineId, &[routineId+date]',
       routineGoals: 'id, routineId, startDate',
     })
+    this.version(7).stores({ bodyGoals: 'id' })
+    this.version(8).stores({ activityLogs: 'id, date, activity, &recordingId' })
   }
 }
 
@@ -56,12 +59,11 @@ export async function getSetting(key: string): Promise<string | null> {
 }
 
 export async function setSetting(key: string, value: string): Promise<void> {
-  const existing = await db.settings.where('key').equals(key).first()
-  if (existing?.id) {
-    await db.settings.update(existing.id, { value })
-  } else {
-    await db.settings.add({ key, value })
-  }
+  await db.transaction('rw', db.settings, async () => {
+    const existing = await db.settings.where('key').equals(key).first()
+    if (existing?.id != null) await db.settings.update(existing.id, { value })
+    else await db.settings.add({ key, value })
+  })
 }
 
 // Daily log helpers
@@ -72,13 +74,15 @@ export async function getDailyLog(date: string): Promise<DailyLog | undefined> {
 
 export async function saveDailyLog(log: DailyLog): Promise<void> {
   await db.transaction('rw', db.dailyLogs, async () => {
-    const existing = await getDailyLog(log.date)
+    const rows = await db.dailyLogs.where('date').equals(log.date).sortBy('id')
     const { id: _id, ...patch } = log
-    const rows = await db.dailyLogs.where('date').equals(log.date).toArray()
-    if (existing?.id) {
-      await db.dailyLogs.put({ ...existing, ...patch })
-      await db.dailyLogs.bulkDelete(rows.filter(row => row.id !== existing.id).map(row => row.id!))
-    } else await db.dailyLogs.add(patch)
+    const existing = rows.at(-1)
+    if (!existing) {
+      await db.dailyLogs.add(patch)
+      return
+    }
+    await db.dailyLogs.put(Object.assign({}, ...rows, patch))
+    if (rows.length > 1) await db.dailyLogs.bulkDelete(rows.slice(0, -1).map(row => row.id!))
   })
 }
 
@@ -89,15 +93,11 @@ export async function getExerciseChecks(date: string): Promise<Map<string, boole
 }
 
 export async function toggleExerciseCheck(date: string, exerciseId: string): Promise<void> {
-  const existing = await db.exerciseChecks
-    .where('[date+exerciseId]')
-    .equals([date, exerciseId])
-    .first()
-  if (existing?.id) {
-    await db.exerciseChecks.update(existing.id, { done: !existing.done })
-  } else {
-    await db.exerciseChecks.add({ date, exerciseId, done: true })
-  }
+  await db.transaction('rw', db.exerciseChecks, async () => {
+    const existing = await db.exerciseChecks.where('[date+exerciseId]').equals([date, exerciseId]).last()
+    if (existing?.id != null) await db.exerciseChecks.update(existing.id, { done: !existing.done })
+    else await db.exerciseChecks.add({ date, exerciseId, done: true })
+  })
 }
 
 // Running log helpers
@@ -115,16 +115,15 @@ export async function getAllRunningLogs(): Promise<RunningLog[]> {
 // Strength log helpers
 export async function getStrengthLog(date: string, exercise: string): Promise<StrengthLog | undefined> {
   const logs = await db.strengthLogs.where('date').equals(date).toArray()
-  return logs.find(log => log.exercise === exercise)
+  return logs.find(log => !log.activityLogId && log.exercise === exercise)
 }
 
 export async function saveStrengthLog(log: StrengthLog): Promise<void> {
-  const existing = await getStrengthLog(log.date, log.exercise)
-  if (existing?.id) {
-    await db.strengthLogs.update(existing.id, log)
-  } else {
-    await db.strengthLogs.add(log)
-  }
+  await db.transaction('rw', db.strengthLogs, async () => {
+    const existing = await getStrengthLog(log.date, log.exercise)
+    if (existing?.id != null) await db.strengthLogs.update(existing.id, { ...log, id: existing.id })
+    else await db.strengthLogs.add(log)
+  })
 }
 
 export async function getStrengthPRs(): Promise<Map<string, { weightKg: number; reps: number; date: string }>> {

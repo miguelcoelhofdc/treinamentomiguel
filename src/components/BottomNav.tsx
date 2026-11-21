@@ -1,92 +1,41 @@
-import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
-  CaretDoubleLeft,
-  CaretDoubleRight,
   ChartLineUp,
   House,
   Leaf,
   PlusCircle,
+  Target,
   UserCircle,
 } from '@phosphor-icons/react'
+import { BODY_GOALS_PATH } from '@/lib/bodyGoals'
 
 const tabs = [
   { to: '/', icon: House, label: 'Início' },
   { to: '/historico', icon: ChartLineUp, label: 'Análise' },
   { to: '/registrar', icon: PlusCircle, label: 'Registrar' },
+  { to: BODY_GOALS_PATH, icon: Target, label: 'Metas' },
   { to: '/ajustes', icon: UserCircle, label: 'Perfil' },
 ]
 
-export default function BottomNav({
-  collapsed = false,
-  onToggleCollapse,
-}: {
-  collapsed?: boolean
-  onToggleCollapse?: () => void
-}) {
+export default function BottomNav() {
   const { pathname } = useLocation()
-  const [allowExpandReveal, setAllowExpandReveal] = useState(true)
-
-  useEffect(() => {
-    if (!collapsed) setAllowExpandReveal(true)
-  }, [collapsed])
-
-  const handleToggle = () => {
-    if (!collapsed) {
-      setAllowExpandReveal(false)
-      if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
-    }
-    onToggleCollapse?.()
-  }
 
   return (
     <nav
-      className={`training-nav${collapsed ? ' is-collapsed' : ''}`}
+      className="training-nav is-collapsed"
       aria-label="Navegação principal"
-      data-collapsed={collapsed ? 'true' : 'false'}
+      data-collapsed="true"
     >
-      <div
-        className="training-nav-header"
-        onMouseLeave={() => {
-          if (collapsed) setAllowExpandReveal(true)
-        }}
-      >
+      <div className="training-nav-header">
         <div className="training-nav-brand">
           <span className="training-nav-mark" aria-hidden="true">
-            <Leaf size={22} weight="fill" />
+            <Leaf size={22} weight="regular" />
           </span>
           <span className="training-nav-brand-copy">
             <span className="training-nav-brand-name">Meu ritmo</span>
             <span className="brand-caption">Um de cada vez</span>
           </span>
         </div>
-
-        {onToggleCollapse && (
-          <>
-            <button
-              type="button"
-              className="training-nav-collapse is-minimize"
-              onClick={handleToggle}
-              tabIndex={collapsed ? -1 : 0}
-              aria-hidden={collapsed}
-              aria-label="Recolher menu"
-              title="Recolher menu"
-            >
-              <CaretDoubleLeft size={16} weight="bold" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className={`training-nav-collapse is-expand${allowExpandReveal ? ' is-revealable' : ''}`}
-              onClick={handleToggle}
-              tabIndex={collapsed && allowExpandReveal ? 0 : -1}
-              aria-hidden={!collapsed}
-              aria-label="Expandir menu"
-              title="Expandir menu"
-            >
-              <CaretDoubleRight size={16} weight="bold" aria-hidden="true" />
-            </button>
-          </>
-        )}
       </div>
 
       <div className="training-nav-inner">
@@ -97,13 +46,13 @@ export default function BottomNav({
               key={to}
               to={to}
               end={to === '/'}
-              className={`training-nav-item ${active ? 'nav-active' : ''}`}
+              className={`training-nav-item${active ? ' nav-active' : ''}`}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              title={collapsed ? label : undefined}
+              title={label}
             >
               <span className="nav-icon">
-                <Icon size={20} weight={active ? 'fill' : 'regular'} />
+                <Icon size={22} weight="regular" />
               </span>
               <span className="nav-label">{label}</span>
             </NavLink>

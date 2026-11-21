@@ -11,18 +11,24 @@ function emptySnapshot() {
   }
 }
 
-function createMemoryHandler({ configured = true, failWrite = false, initialSnapshot } = {}) {
+function createMemoryHandler({ configured = true, failWrite = false, initialSnapshot, authorize = () => true } = {}) {
   let snapshot = initialSnapshot ?? emptySnapshot()
   let writes = 0
+  let reads = 0
   const handler = createGoalsHandler({
-    read: async () => structuredClone(snapshot),
-    write: async (nextSnapshot) => {
+    read: async () => {
+      reads += 1
+      return { snapshot: structuredClone(snapshot), revision: String(writes) }
+    },
+    write: async (nextSnapshot, revision) => {
       if (failWrite) throw new Error('WRITE_FAILED')
+      if (revision !== String(writes)) return false
       snapshot = structuredClone(nextSnapshot)
       writes += 1
+      return true
     },
-  }, () => configured)
-  return { handler, getSnapshot: () => snapshot, getWrites: () => writes }
+  }, () => configured, authorize)
+  return { handler, getSnapshot: () => snapshot, getWrites: () => writes, getReads: () => reads }
 }
 
 function post(handler, body) {
@@ -34,12 +40,60 @@ function post(handler, body) {
 }
 
 describe('goals API', () => {
+  const saleDraft = {
+    monthKey: '2026-09',
+    date: '2026-09-21',
+    email: 'cliente@example.com',
+    commissionMrr: 1200,
+    setupAmount: 0,
+    createdAt: '2026-09-21T12:00:00.000Z',
+    updatedAt: '2026-09-21T12:00:00.000Z',
+  }
+
+  it('requires the configured server credential before accessing storage', async () => {
+    const previous = process.env.GOALS_ACCESS_TOKEN
+    const token = 'test-only-token-for-goals-api-123456'
+    try {
+      const handler = createGoalsHandler({
+        read: async () => ({ snapshot: emptySnapshot(), revision: null }),
+        write: async () => { assert.fail('No unauthorized writes') },
+      }, () => true)
+      delete process.env.GOALS_ACCESS_TOKEN
+      const request = headers => new Request('https://example.test/api/goals', { headers })
+      assert.equal((await handler(request())).status, 503)
+      process.env.GOALS_ACCESS_TOKEN = token
+      assert.equal((await handler(request())).status, 401)
+      assert.equal((await handler(request({ Authorization: 'Bearer unauthorized' }))).status, 401)
+      assert.equal((await handler(request({ Authorization: `Bearer ${token}` }))).status, 200)
+      assert.equal((await post(handler, { operation: 'saveSale', sale: saleDraft })).status, 401)
+    } finally {
+      if (previous === undefined) delete process.env.GOALS_ACCESS_TOKEN
+      else process.env.GOALS_ACCESS_TOKEN = previous
+    }
+  })
+
+  it('preserves simultaneous writes, deduplicates retries and rejects stale edits', async () => {
+    const { handler, getSnapshot, getWrites } = createMemoryHandler()
+    const requestId = crypto.randomUUID()
+    const create = (email, key) => post(handler, { operation: 'saveSale', sale: { ...saleDraft, email, requestId: key } })
+    const responses = await Promise.all([create('a@example.com', requestId), create('b@example.com', crypto.randomUUID()), create('a@example.com', requestId)])
+    assert.deepEqual(responses.map(response => response.status), [200, 200, 200])
+    assert.equal(getWrites(), 2)
+    assert.equal(getSnapshot().sales.length, 2)
+    const first = getSnapshot().sales[0]
+    const change = commissionMrr => post(handler, { operation: 'saveSale', sale: { ...first, commissionMrr }, expectedUpdatedAt: first.updatedAt })
+    assert.equal((await change(1500)).status, 200)
+    assert.equal((await change(2000)).status, 409)
+    assert.equal(getSnapshot().sales[0].commissionMrr, 1500)
+  })
+
   it('returns a clear error when the cloud store is not configured', async () => {
-    const { handler, getWrites } = createMemoryHandler({ configured: false })
+    const { handler, getReads, getWrites } = createMemoryHandler({ configured: false })
     const response = await handler(new Request('https://example.test/api/goals'))
 
     assert.equal(response.status, 503)
     assert.equal((await response.json()).code, 'STORAGE_NOT_CONFIGURED')
+    assert.equal(getReads(), 0)
     assert.equal(getWrites(), 0)
   })
 

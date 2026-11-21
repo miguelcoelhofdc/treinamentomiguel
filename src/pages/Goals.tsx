@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ArrowClockwise,
@@ -30,9 +30,11 @@ import {
   getGoalsStorageState,
   getMonthlySalesConfig,
   getSalesForMonth,
+  GoalsAccessError,
   initializeGoalsDatabase,
   saveMonthlySalesConfig,
   saveSale,
+  unlockGoalsDatabase,
   type GoalsStorageState,
 } from '@/db/goals'
 import {
@@ -123,7 +125,7 @@ function Sidebar({ active, onNavigate, storageState }: {
               onClick={() => onNavigate(id)}
               disabled={disabled}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold transition-colors active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 ${
+              className={`flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 text-left text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${
                 isActive ? 'bg-[#e8f1eb] text-[#1f5d43]' : 'text-[#66736c] hover:bg-[#f0f3f1] hover:text-[#26322d]'
               }`}
             >
@@ -172,6 +174,41 @@ function CompactMetric({ label, value, icon: IconComponent, tone = 'light' }: {
 }
 
 export default function Goals() {
+  const [unlocked, setUnlocked] = useState(false)
+  const [token, setToken] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const lock = useCallback(() => setUnlocked(false), [])
+  const unlock = async (event: FormEvent) => {
+    event.preventDefault()
+    if (busy) return
+    setBusy(true)
+    setError('')
+    try {
+      await unlockGoalsDatabase(token.trim())
+      setToken('')
+      setUnlocked(true)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Não foi possível abrir o painel.')
+    } finally {
+      setBusy(false)
+    }
+  }
+  if (unlocked) return <GoalsDashboard onLock={lock} />
+  return (
+    <main className="goals-shell grid min-h-[100dvh] place-items-center bg-[#f6f7f6] p-5 text-[#18221e]" style={{ colorScheme: 'light' }}>
+      <form className="w-full max-w-sm space-y-4 rounded-2xl border border-[#dce3df] bg-white p-6" onSubmit={event => void unlock(event)}>
+        <h1 className="text-2xl font-semibold">Painel comercial</h1>
+        <label className="block text-sm font-semibold" htmlFor="goals-access-token">Chave de acesso</label>
+        <input id="goals-access-token" type="password" autoComplete="current-password" required value={token} onChange={event => setToken(event.target.value)} className="w-full rounded-lg border border-[#dce3df] bg-white px-3 py-2.5" />
+        {error && <p role="alert" className="text-sm text-[#9a463b]">{error}</p>}
+        <button type="submit" disabled={busy} className="rounded-lg bg-[#246348] px-4 py-2.5 font-semibold text-white disabled:opacity-60">{busy ? 'Verificando…' : 'Entrar'}</button>
+      </form>
+    </main>
+  )
+}
+
+function GoalsDashboard({ onLock }: { onLock: () => void }) {
   const [monthKey, setMonthKey] = useState(getCurrentMonthKey)
   const [sales, setSales] = useState<Sale[]>([])
   const [config, setConfig] = useState<MonthlySalesConfig | undefined>()
@@ -189,6 +226,9 @@ export default function Goals() {
     updatedAt: null,
   })
   const lastRefreshStartedAt = useRef(0)
+  const refreshRequest = useRef(0)
+  const currentMonth = useRef(monthKey)
+  currentMonth.current = monthKey
 
   useEffect(() => {
     const previousTitle = document.title
@@ -237,31 +277,39 @@ export default function Goals() {
   }, [loading])
 
   const loadMonth = useCallback(async (selectedMonth: string, showSkeleton = false) => {
+    const request = ++refreshRequest.current
+    const isCurrent = () => request === refreshRequest.current && selectedMonth === currentMonth.current
     lastRefreshStartedAt.current = Date.now()
     if (showSkeleton) setLoading(true)
     setLoadError(null)
     setActionError(null)
     try {
       const nextStorageState = await initializeGoalsDatabase()
-      setStorageState(nextStorageState)
       const [monthSales, monthConfig, priorConfig] = await Promise.all([
         getSalesForMonth(selectedMonth),
         getMonthlySalesConfig(selectedMonth),
         getMonthlySalesConfig(shiftMonth(selectedMonth, -1)),
       ])
+      if (!isCurrent()) return
+      setStorageState(nextStorageState)
       setSales(monthSales)
       setConfig(monthConfig)
       setPreviousConfig(priorConfig)
       if (nextStorageState.status === 'unavailable') {
         setLoadError('A nuvem está indisponível e este dispositivo ainda não possui uma cópia sincronizada.')
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof GoalsAccessError) {
+        onLock()
+        return
+      }
+      if (!isCurrent()) return
       setStorageState({ status: 'unavailable', updatedAt: null })
       setLoadError('Não foi possível carregar os dados deste mês.')
     } finally {
-      setLoading(false)
+      if (isCurrent()) setLoading(false)
     }
-  }, [])
+  }, [onLock])
 
   useEffect(() => {
     void loadMonth(monthKey, true)
@@ -303,10 +351,11 @@ export default function Goals() {
 
   const handleSaleSave = async (sale: Sale) => {
     try {
-      await saveSale(sale)
+      await saveSale(sale, formSale?.updatedAt)
       setFormSale(undefined)
-      await loadMonth(monthKey)
+      await loadMonth(currentMonth.current)
     } catch (error) {
+      if (error instanceof GoalsAccessError) onLock()
       setStorageState(getGoalsStorageState())
       throw error
     }
@@ -314,11 +363,11 @@ export default function Goals() {
 
   const handleConfigSave = async (nextConfig: MonthlySalesConfig) => {
     try {
-      await saveMonthlySalesConfig(nextConfig)
-      setConfig(nextConfig)
+      await saveMonthlySalesConfig(nextConfig, config?.updatedAt ?? null)
       setShowSettings(false)
-      await loadMonth(monthKey)
+      await loadMonth(currentMonth.current)
     } catch (error) {
+      if (error instanceof GoalsAccessError) onLock()
       setStorageState(getGoalsStorageState())
       throw error
     }
@@ -328,12 +377,13 @@ export default function Goals() {
     if (saleToDelete?.id == null) return
     setActionError(null)
     try {
-      await deleteSale(saleToDelete.id)
+      await deleteSale(saleToDelete.id, saleToDelete.updatedAt)
       setSaleToDelete(null)
-      await loadMonth(monthKey)
-    } catch {
+      await loadMonth(currentMonth.current)
+    } catch (error) {
+      if (error instanceof GoalsAccessError) onLock()
       setStorageState(getGoalsStorageState())
-      setActionError('Não foi possível excluir esta venda. Tente novamente.')
+      setActionError(error instanceof Error ? error.message : 'Não foi possível excluir esta venda. Tente novamente.')
     }
   }
 
@@ -366,22 +416,22 @@ export default function Goals() {
 
             <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <div className="col-span-2 grid min-w-[230px] grid-cols-[42px_minmax(0,1fr)_42px] items-center rounded-[10px] border border-[#dce3df] bg-white p-0.5 sm:col-span-1">
-                <button type="button" onClick={() => setMonthKey(shiftMonth(monthKey, -1))} className="flex h-10 items-center justify-center rounded-lg text-[#748078] transition-colors hover:bg-[#f1f4f2] active:scale-[0.98]" aria-label="Mês anterior">
+                <button type="button" onClick={() => setMonthKey(shiftMonth(monthKey, -1))} className="flex h-10 items-center justify-center rounded-lg text-[#748078] transition-colors hover:bg-[#f1f4f2]" aria-label="Mês anterior">
                   <CaretLeft size={18} weight="bold" />
                 </button>
                 <label className="relative min-w-0 cursor-pointer text-center">
                   <span className="block truncate text-[13px] font-semibold">{formatMonth(monthKey)}</span>
                   <input type="month" value={monthKey} onChange={(event) => event.target.value && setMonthKey(event.target.value)} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" aria-label="Selecionar mês e ano" />
                 </label>
-                <button type="button" onClick={() => setMonthKey(shiftMonth(monthKey, 1))} className="flex h-10 items-center justify-center rounded-lg text-[#748078] transition-colors hover:bg-[#f1f4f2] active:scale-[0.98]" aria-label="Próximo mês">
+                <button type="button" onClick={() => setMonthKey(shiftMonth(monthKey, 1))} className="flex h-10 items-center justify-center rounded-lg text-[#748078] transition-colors hover:bg-[#f1f4f2]" aria-label="Próximo mês">
                   <CaretRight size={18} weight="bold" />
                 </button>
               </div>
-              <button type="button" onClick={requestOpenSettings} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#dce3df] bg-white px-4 text-[13px] font-semibold transition-colors hover:bg-[#f1f4f2] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
+              <button type="button" onClick={requestOpenSettings} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] border border-[#dce3df] bg-white px-4 text-[13px] font-semibold transition-colors hover:bg-[#f1f4f2] disabled:cursor-not-allowed disabled:opacity-45">
                 <GearSix size={18} weight="bold" />
                 Configurar mês
               </button>
-              <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
+              <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] disabled:cursor-not-allowed disabled:opacity-45">
                 <Plus size={18} weight="bold" />
                 Nova venda
               </button>
@@ -443,7 +493,7 @@ export default function Goals() {
                   </div>
 
                   {!config && (
-                    <button type="button" onClick={requestOpenSettings} disabled={!canMutate} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-[#eef4f0] px-3.5 text-[12px] font-semibold text-[#246348] transition-colors hover:bg-[#dfece4] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45">
+                    <button type="button" onClick={requestOpenSettings} disabled={!canMutate} className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-[9px] bg-[#eef4f0] px-3.5 text-[12px] font-semibold text-[#246348] transition-colors hover:bg-[#dfece4] disabled:cursor-not-allowed disabled:opacity-45">
                       <SlidersHorizontal size={16} weight="bold" />Definir meta e comissões
                     </button>
                   )}
@@ -509,7 +559,7 @@ export default function Goals() {
           <section id="sales" data-goals-section="sales" className="scroll-mt-8 pt-9" aria-labelledby="sales-title">
             <div className="mb-4 flex items-end justify-between gap-4">
               <div><p className="text-[11px] font-semibold text-[#78867e]">Registros</p><h2 id="sales-title" className="mt-1 text-[23px] font-semibold tracking-[-0.025em]">Vendas do mês</h2><p className="mt-1 text-[13px] text-[#718078]">{sales.length === 0 ? 'Nenhuma venda cadastrada.' : `${sales.length} ${sales.length === 1 ? 'venda cadastrada' : 'vendas cadastradas'}.`}</p></div>
-              <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="hidden min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex"><Plus size={17} weight="bold" />Nova venda</button>
+              <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="hidden min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] disabled:cursor-not-allowed disabled:opacity-45 sm:inline-flex"><Plus size={17} weight="bold" />Nova venda</button>
             </div>
 
             {sales.length === 0 ? (
@@ -517,7 +567,7 @@ export default function Goals() {
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#e8f2ec] text-[#327355]"><Receipt size={22} weight="duotone" /></span>
                 <p className="mt-4 text-[16px] font-semibold">Comece pela primeira venda de {formatMonth(monthKey)}</p>
                 <p className="mt-1 max-w-[42ch] text-[13px] leading-5 text-[#718078]">Registre o MRR comissão e, quando necessário, um MRR farol diferente para a meta.</p>
-                <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"><Plus size={17} weight="bold" />Cadastrar venda</button>
+                <button type="button" onClick={() => setFormSale(null)} disabled={!canMutate} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"><Plus size={17} weight="bold" />Cadastrar venda</button>
               </div>
             ) : (
               <div className="overflow-hidden rounded-2xl border border-[#dfe4e1] bg-white">
@@ -556,7 +606,7 @@ export default function Goals() {
         <div className="fixed inset-0" style={{ zIndex: 60 }}>
           <button type="button" className="absolute inset-0 bg-[#18221e]/42" onClick={() => setShowSettings(false)} aria-label="Fechar configurações" />
           <aside className="goals-drawer absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl bg-[#f8faf8] shadow-[-18px_0_60px_-32px_rgba(24,34,30,0.48)] md:inset-y-0 md:left-auto md:right-0 md:h-[100dvh] md:max-h-none md:w-[460px] md:rounded-none" role="dialog" aria-modal="true" aria-labelledby="goals-settings-title">
-            <div className="flex items-start justify-between gap-4 border-b border-[#dfe6e1] bg-white px-5 py-5 sm:px-6"><div><p className="text-[11px] font-semibold text-[#748078]">{formatMonth(monthKey)}</p><h2 id="goals-settings-title" className="mt-1 text-[22px] font-semibold tracking-[-0.025em]">Configuração do mês</h2></div><button type="button" onClick={() => setShowSettings(false)} className="flex h-10 w-10 items-center justify-center rounded-[10px] text-[#65736c] transition-colors hover:bg-[#edf2ef] active:scale-[0.98]" aria-label="Fechar"><X size={20} weight="bold" /></button></div>
+            <div className="flex items-start justify-between gap-4 border-b border-[#dfe6e1] bg-white px-5 py-5 sm:px-6"><div><p className="text-[11px] font-semibold text-[#748078]">{formatMonth(monthKey)}</p><h2 id="goals-settings-title" className="mt-1 text-[22px] font-semibold tracking-[-0.025em]">Configuração do mês</h2></div><button type="button" onClick={() => setShowSettings(false)} className="flex h-10 w-10 items-center justify-center rounded-[10px] text-[#65736c] transition-colors hover:bg-[#edf2ef]" aria-label="Fechar"><X size={20} weight="bold" /></button></div>
             <div className="min-h-0 flex-1 overflow-y-auto"><CommissionSettingsForm monthKey={monthKey} config={config} previousConfig={previousConfig} onSave={handleConfigSave} /></div>
           </aside>
         </div>
@@ -571,7 +621,7 @@ export default function Goals() {
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#fff8e5] text-[#80641e]"><WarningCircle size={21} weight="duotone" /></span>
             <h2 id="past-config-title" className="mt-4 text-[21px] font-semibold tracking-[-0.025em]">Editar configuração histórica?</h2>
             <p className="mt-2 text-[13px] leading-5 text-[#718078]">Qualquer alteração recalculará somente os resultados de {formatMonth(monthKey)}. Os outros meses permanecem intactos.</p>
-            <div className="mt-6 grid grid-cols-2 gap-2.5"><button type="button" onClick={() => setShowPastConfigConfirm(false)} className="min-h-11 rounded-[10px] border border-[#dce4df] text-[13px] font-semibold transition-colors hover:bg-[#f1f5f2] active:scale-[0.99]">Cancelar</button><button type="button" onClick={() => { setShowPastConfigConfirm(false); setShowSettings(true) }} className="min-h-11 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b] active:scale-[0.99]">Editar este mês</button></div>
+            <div className="mt-6 grid grid-cols-2 gap-2.5"><button type="button" onClick={() => setShowPastConfigConfirm(false)} className="min-h-11 rounded-[10px] border border-[#dce4df] text-[13px] font-semibold transition-colors hover:bg-[#f1f5f2]">Cancelar</button><button type="button" onClick={() => { setShowPastConfigConfirm(false); setShowSettings(true) }} className="min-h-11 rounded-[10px] bg-[#246348] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1d523b]">Editar este mês</button></div>
           </div>
         </div>
       ), document.body)}
@@ -584,7 +634,7 @@ export default function Goals() {
             <h2 id="delete-sale-title" className="mt-4 text-[21px] font-semibold tracking-[-0.025em]">Excluir esta venda?</h2>
             <p className="mt-2 text-[13px] leading-5 text-[#718078]">O registro de {saleToDelete.customerName || saleToDelete.email} será removido de {formatMonth(monthKey)}.</p>
             {actionError && <p className="mt-4 rounded-[10px] bg-[#fff0ed] px-3 py-2.5 text-[12px] font-semibold text-[#9a463b]" role="alert">{actionError}</p>}
-            <div className="mt-6 grid grid-cols-2 gap-2.5"><button type="button" onClick={() => setSaleToDelete(null)} className="min-h-11 rounded-[10px] border border-[#dce4df] text-[13px] font-semibold transition-colors hover:bg-[#f1f5f2] active:scale-[0.99]">Cancelar</button><button type="button" onClick={() => void handleDelete()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#a84f43] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#8f4036] active:scale-[0.99]"><Trash size={17} weight="bold" />Excluir</button></div>
+            <div className="mt-6 grid grid-cols-2 gap-2.5"><button type="button" onClick={() => setSaleToDelete(null)} className="min-h-11 rounded-[10px] border border-[#dce4df] text-[13px] font-semibold transition-colors hover:bg-[#f1f5f2]">Cancelar</button><button type="button" onClick={() => void handleDelete()} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#a84f43] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#8f4036]"><Trash size={17} weight="bold" />Excluir</button></div>
           </div>
         </div>
       ), document.body)}

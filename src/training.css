@@ -163,6 +163,9 @@
 .training-theme .exercise-load {border:0;border-radius:0;background:transparent;padding:0}
 .training-theme .exercise-name {white-space:normal;overflow:visible;font-size:16px}
 .training-theme .training-form-page {max-width:824px}
+@media (min-width: 1024px) {
+  .training-theme .training-form-page { max-width: none; margin-inline: 0; }
+}
 .training-theme .evolution-tabs {margin-bottom:32px}
 .training-theme .evolution-metric {padding-block:8px 32px}
 .training-theme .evolution-metric-value {font-size:56px;line-height:1.1;font-weight:500;letter-spacing:-.05em;font-variant-numeric:tabular-nums}

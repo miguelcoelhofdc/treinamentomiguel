@@ -252,7 +252,7 @@ export function ShapeLayer({
                   type="button"
                   aria-label="Redimensionar forma"
                   title="Arrastar para redimensionar"
-                  className="absolute -bottom-2.5 -right-2.5 h-5 w-5 cursor-nwse-resize rounded-full border-2 border-white bg-[#4f5e9b] shadow-[0_3px_8px_rgba(43,42,45,0.22)] active:scale-90"
+                  className="absolute -bottom-2.5 -right-2.5 h-5 w-5 cursor-nwse-resize rounded-full border-2 border-white bg-[#4f5e9b] shadow-[0_3px_8px_rgba(43,42,45,0.22)]"
                   onPointerDown={event => beginGesture(event, 'resize', shape)}
                 />
               </>

@@ -1,25 +1,16 @@
-import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react'
+import { lazy, Suspense, useEffect, type CSSProperties } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from '@/components/BottomNav'
 import { useSettings } from '@/hooks/useSettings'
 import Access from '@/pages/Access'
 import { useLocalDay } from '@/hooks/useLocalDay'
+import { BODY_GOALS_PATH } from '@/lib/bodyGoals'
 import {
   ACCESS_PROFILES,
   clearStoredProfile,
   getStoredProfileId,
   type ProfileId,
 } from '@/lib/auth'
-
-const NAV_COLLAPSE_KEY = 'meu-ritmo:nav-collapsed'
-
-function readNavCollapsed() {
-  try {
-    return window.localStorage.getItem(NAV_COLLAPSE_KEY) === '1'
-  } catch {
-    return false
-  }
-}
 
 const TrackingHome = lazy(() => import('@/pages/TrackingHome'))
 const Routines = lazy(() => import('@/pages/Routines'))
@@ -29,6 +20,7 @@ const WorkoutTemplates = lazy(() => import('@/pages/WorkoutTemplates'))
 const Guides = lazy(() => import('@/pages/Guides'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const Goals = lazy(() => import('@/pages/Goals'))
+const BodyGoals = lazy(() => import('@/pages/BodyGoals'))
 const Whiteboard = lazy(() => import('@/pages/Whiteboard'))
 const DevVisualizer = import.meta.env.DEV ? lazy(() => import('@/pages/DevVisualizer')) : null
 
@@ -67,14 +59,11 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
   const today = useLocalDay()
   const activeProfile = ACCESS_PROFILES[profileId]
   const isHome = pathname === '/'
-  const [navCollapsed, setNavCollapsed] = useState(readNavCollapsed)
   const shellClass = [
-    'app-shell training-theme tracking-theme app-theme',
+    'app-shell training-theme tracking-theme app-theme is-nav-collapsed',
     isHome ? 'home-theme' : '',
-    navCollapsed ? 'is-nav-collapsed' : '',
   ].filter(Boolean).join(' ')
-  const desktopSidebarWidth = navCollapsed ? '72px' : '256px'
-  const shellStyle = { '--desktop-sidebar-width': desktopSidebarWidth } as CSSProperties
+  const shellStyle = { '--desktop-sidebar-width': '72px' } as CSSProperties
 
   useEffect(() => {
     if (!loaded) return
@@ -83,18 +72,6 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
     metas.forEach(meta => { meta.content = settings.darkMode ? '#18181F' : '#F4F4F6' })
     return () => metas.forEach((meta, index) => { meta.content = previous[index] })
   }, [settings.darkMode, loaded])
-
-  const toggleNavCollapse = () => {
-    setNavCollapsed(current => {
-      const next = !current
-      try {
-        window.localStorage.setItem(NAV_COLLAPSE_KEY, next ? '1' : '0')
-      } catch {
-        /* Storage may be restricted. */
-      }
-      return next
-    })
-  }
 
   const handleLogout = () => {
     clearStoredProfile()
@@ -109,10 +86,11 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
       <ScrollToTop />
       <Suspense fallback={<AppSkeleton />}>
         <Routes>
-          <Route path="/" element={<TrackingHome settings={settings} />} />
+          <Route path="/" element={<TrackingHome key={today} settings={settings} />} />
           <Route path="/rotinas" element={<Routines />} />
           <Route path="/registrar" element={<Recorder key={today} />} />
           <Route path="/historico" element={<TrackingHistory />} />
+          <Route path={BODY_GOALS_PATH} element={<BodyGoals />} />
           <Route path="/fichas" element={<WorkoutTemplates />} />
           <Route path="/hoje" element={<Navigate to="/registrar" replace />} />
           <Route path="/plano" element={<Navigate to="/fichas" replace />} />
@@ -136,7 +114,7 @@ function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
         </Routes>
       </Suspense>
       <div id="training-overlays" />
-      <BottomNav collapsed={navCollapsed} onToggleCollapse={toggleNavCollapse} />
+      <BottomNav />
     </div>
   )
 }

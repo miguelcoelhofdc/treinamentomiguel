@@ -4,9 +4,13 @@ interface ProgressRingProps {
   stroke?: number
   label?: string
   inverse?: boolean
+  /** Classe Tailwind/CSS para a cor do arco (ex.: cor indicativa). */
+  toneClass?: string
+  /** Cor explícita do arco (sobrescreve toneClass quando definida). */
+  toneColor?: string
 }
 
-export default function ProgressRing({ value, size = 72, stroke = 7, label, inverse = false }: ProgressRingProps) {
+export default function ProgressRing({ value, size = 72, stroke = 7, label, inverse = false, toneClass, toneColor }: ProgressRingProps) {
   const safeValue = Math.max(0, Math.min(100, value))
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
@@ -29,13 +33,13 @@ export default function ProgressRing({ value, size = 72, stroke = 7, label, inve
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="currentColor"
+          stroke={toneColor ?? 'currentColor'}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className={inverse ? 'text-primary-300' : 'text-accent'}
-          style={{ transition: 'stroke-dashoffset 480ms cubic-bezier(0.16, 1, 0.3, 1)' }}
+          className={toneColor ? undefined : (inverse ? 'text-primary-300' : (toneClass ?? 'text-accent'))}
+          style={{ transition: 'stroke-dashoffset 480ms cubic-bezier(0.16, 1, 0.3, 1), stroke 480ms ease' }}
         />
       </svg>
       <span className={`absolute text-[13px] font-bold tabular-nums ${inverse ? 'text-white' : 'text-ink'}`}>
