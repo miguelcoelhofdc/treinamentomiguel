@@ -209,6 +209,7 @@
     display: block;
     max-width: 100%;
     text-align: center;
+    white-space: normal;
     overflow-wrap: anywhere;
   }
   .app-theme .training-nav-item .nav-icon {

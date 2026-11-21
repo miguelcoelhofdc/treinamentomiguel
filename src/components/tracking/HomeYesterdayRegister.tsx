@@ -94,6 +94,7 @@ export default function HomeYesterdayRegister({
   const [phase, setPhase] = useState<Phase>('edit')
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [edits, setEdits] = useState<{ date: string; values: DraftMap } | null>(null)
+  const checkInRef = useRef<HTMLElement>(null)
   const leaveTimer = useRef<number | null>(null)
   const submitting = useRef(false)
 
@@ -123,6 +124,10 @@ export default function HomeYesterdayRegister({
   useEffect(() => () => {
     if (leaveTimer.current) window.clearTimeout(leaveTimer.current)
   }, [])
+
+  useEffect(() => {
+    if (phase === 'success') checkInRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [phase])
 
   const rated = targets.filter(routine => draft[routine.id] != null).length
   const canSave = Boolean(date) && targets.length > 0 && rated === targets.length && !busy && phase === 'edit'
@@ -205,6 +210,7 @@ export default function HomeYesterdayRegister({
 
   return (
     <section
+      ref={checkInRef}
       id="check-in"
       data-checkin-date={showDate}
       tabIndex={-1}
@@ -217,7 +223,7 @@ export default function HomeYesterdayRegister({
           <span className="home-checkin-success-icon" aria-hidden="true">
             <CheckCircle size={42} weight="fill" />
           </span>
-          <h2>{outcome?.mode === 'skipped' ? 'Dia pulado' : 'Check-in registrado'}</h2>
+          <h2 id="home-checkin-title">{outcome?.mode === 'skipped' ? 'Dia pulado' : 'Check-in registrado'}</h2>
           <p>
             {outcome?.mode === 'skipped'
               ? `${formatShortDate(showDate)} foi pulado.`

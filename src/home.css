@@ -122,55 +122,6 @@
   border-radius: 50%;
 }
 
-.home-evolution-comparison {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
-}
-
-.home-evolution-comparison > div {
-  display: grid;
-  align-content: start;
-  gap: 3px;
-  min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--dashboard-card-line);
-  border-radius: 12px;
-  background: hsl(var(--color-surface-raised));
-  color: var(--dashboard-muted);
-  font-size: 13px;
-}
-
-.home-evolution-comparison > div:first-child {
-  background: var(--dashboard-green-soft);
-  border-color: color-mix(in srgb, var(--dashboard-green) 16%, var(--dashboard-green-soft));
-}
-
-.home-evolution-comparison small { font-size: 11px; }
-
-.home-evolution-result {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 2px 8px;
-  font-variant-numeric: tabular-nums;
-}
-
-.home-evolution-result strong {
-  color: hsl(var(--color-ink));
-  font-size: clamp(17px, 1.7vw, 22px);
-  line-height: 1.2;
-  font-weight: 650;
-}
-
-.home-evolution-delta {
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.home-evolution-delta[data-direction="up"] { color: var(--dashboard-green-ink); }
-
 .home-evolution-tooltip {
   max-width: min(252px, calc(100vw - 64px));
   font-size: 12px;

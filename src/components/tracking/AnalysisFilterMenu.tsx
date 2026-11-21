@@ -16,21 +16,25 @@ export default function AnalysisFilterMenu({
 }) {
   const id = useId()
   const rootRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   const current = options.find(option => option.value === value) ?? options[0]
 
   useEffect(() => {
     if (!open) return
-    const onPointer = (event: MouseEvent) => {
+    const onPointer = (event: PointerEvent) => {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false)
     }
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key === 'Escape') {
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
     }
-    document.addEventListener('mousedown', onPointer)
+    document.addEventListener('pointerdown', onPointer)
     document.addEventListener('keydown', onKey)
     return () => {
-      document.removeEventListener('mousedown', onPointer)
+      document.removeEventListener('pointerdown', onPointer)
       document.removeEventListener('keydown', onKey)
     }
   }, [open])
@@ -39,15 +43,16 @@ export default function AnalysisFilterMenu({
     <div className={`analysis-menu${open ? ' is-open' : ''}`} ref={rootRef}>
       <span className="analysis-menu-label" id={`${id}-label`}>{label}</span>
       <button
+        ref={triggerRef}
         type="button"
         className="analysis-menu-trigger"
-        aria-labelledby={`${id}-label`}
+        aria-labelledby={`${id}-label ${id}-value`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={`${id}-list`}
         onClick={() => setOpen(current => !current)}
       >
-        <span>{current?.label}</span>
+        <span id={`${id}-value`}>{current?.label}</span>
         <CaretDown size={16} weight="bold" aria-hidden="true" />
       </button>
       {open && (
@@ -69,6 +74,7 @@ export default function AnalysisFilterMenu({
                   onClick={() => {
                     onChange(option.value)
                     setOpen(false)
+                    triggerRef.current?.focus()
                   }}
                 >
                   <span>{option.label}</span>

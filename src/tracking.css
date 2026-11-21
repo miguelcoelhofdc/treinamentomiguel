@@ -621,7 +621,7 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 12px;
   border: 0;
   border-radius: 11px;
@@ -1218,6 +1218,12 @@
   .tracking-theme .latest-session .section-heading { margin-bottom: 13px; }
   .tracking-theme .form-columns { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .tracking-theme .analysis-filters { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .tracking-theme .analysis-menu-panel {
+    position: static;
+    max-height: min(320px, 50dvh);
+    scroll-padding-block: 8px;
+    box-shadow: none;
+  }
   .tracking-theme .activity-choices { gap: 8px; }
   .tracking-theme .activity-choices button { min-height: 82px; padding: 12px 4px; font-size: 12px; gap: 6px; }
   .tracking-theme .activity-choices button svg { width: 24px; height: 24px; }
@@ -1385,7 +1391,7 @@
   background: var(--status-5); color: var(--status-ink-5);
 }
 .tracking-theme .daily-day-value-btn {
-  width: 100%; min-height: 42px; padding: 10px 12px; border-radius: 12px;
+  width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 12px;
   border: 1px dashed hsl(var(--color-line));
   background: hsl(var(--color-surface));
   color: hsl(var(--color-ink));
@@ -1410,6 +1416,16 @@
   margin: 0;
   color: var(--status-ink-5, #2f6b3c);
   font-weight: 500;
+}
+
+@media (max-width: 540px) {
+  .daily-grid { gap: 16px; }
+  .daily-grid .daily-day-panel { grid-row: 1; }
+  .tracking-theme .daily-day-save { width: 100%; }
+}
+
+@media (max-width: 359px) {
+  .tracking-theme .daily-day-item { padding-inline: 8px; }
 }
 .tracking-theme .daily-grid-empty { display: grid; gap: 12px; justify-items: start; }
 @media (min-width: 720px) {

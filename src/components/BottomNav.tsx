@@ -51,7 +51,7 @@ export default function BottomNav() {
               aria-current={active ? 'page' : undefined}
               title={label}
             >
-              <span className="nav-icon">
+              <span className="nav-icon" aria-hidden="true">
                 <Icon size={22} weight="regular" />
               </span>
               <span className="nav-label">{label}</span>

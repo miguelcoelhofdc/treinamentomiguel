@@ -127,36 +127,6 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
   )
 }
 
-function MonthComparison({ habit, today }: { habit: Habit; today: string }) {
-  const [previous, current] = habit.months.slice(-2)
-  const delta = current.score != null && previous.score != null ? current.score - previous.score : null
-  const direction = delta == null || delta === 0 ? 'flat' : delta > 0 ? 'up' : 'down'
-
-  return (
-    <div className="home-evolution-comparison" aria-live="polite">
-      <div>
-        <span>Neste mês</span>
-        <div className="home-evolution-result">
-          <strong>{resultLabel(current.score, habit.binary)}</strong>
-          {delta != null && (
-            <span className="home-evolution-delta" data-direction={direction}>
-              {direction === 'up' ? 'Melhorou' : direction === 'down' ? 'Caiu' : 'Estável'}
-            </span>
-          )}
-        </div>
-        <small>Até {dateTick(today)} · {daysLabel(current.count)}</small>
-      </div>
-      <div>
-        <span>Mês passado</span>
-        <div className="home-evolution-result">
-          <strong>{resultLabel(previous.score, habit.binary)}</strong>
-        </div>
-        <small>{daysLabel(previous.count)}</small>
-      </div>
-    </div>
-  )
-}
-
 export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
   data: TrackingData
   routines: RoutineDefinition[]
@@ -197,7 +167,6 @@ export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
         )}
       </header>
 
-      {selected && <MonthComparison habit={selected} today={today} />}
       {hasData ? (
         <EvolutionChart habits={visible} rows={rows} period={period} />
       ) : (

@@ -111,6 +111,7 @@
   line-height: 1.2;
 }
 .body-goal-type-choices button { min-height: 56px; }
+.body-goal-durations button { min-height: 44px; overflow-wrap: anywhere; }
 .body-goal-type-choices svg { flex-shrink: 0; }
 .body-goal-type-choices button:hover, .body-goal-durations button:enabled:hover { background: hsl(var(--color-surface-raised)); }
 .body-goal-type-choices button[aria-pressed=true], .body-goal-durations button[aria-pressed=true] {
@@ -215,6 +216,7 @@
   .body-goal-card-header { grid-template-columns: auto minmax(0, 1fr); }
   .body-goal-card-header .body-goal-status { justify-self: start; grid-column: 2; }
   .body-goal-card-header { row-gap: 5px; }
+  .body-goal-card-actions .btn-secondary { width: 100%; }
 }
 @media (max-width: 355px) {
   .body-goal-inputs { grid-template-columns: minmax(0, 1fr); }
