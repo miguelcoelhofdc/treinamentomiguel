@@ -6,6 +6,8 @@
   :root {
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
     --color-canvas: 220 14% 96%;
     --color-surface: 0 0% 100%;
     --color-surface-raised: 220 14% 97%;

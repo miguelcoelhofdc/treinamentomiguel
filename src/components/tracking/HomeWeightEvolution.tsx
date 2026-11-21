@@ -8,7 +8,7 @@ import { numberLabel } from '@/lib/tracking'
 import { goalDate } from './BodyGoalDetails'
 
 const shortDate = (date: string) => `${date.slice(8)}/${date.slice(5, 7)}`
-const axisTick = { fill: 'var(--home-muted)', fontSize: 11 }
+const axisTick = { fill: 'var(--dashboard-muted)', fontSize: 11 }
 
 function WeightDot({ cx, cy, payload }: { cx?: number; cy?: number; payload?: GoalWeightPoint }) {
   if (payload?.source !== 'recorded' && payload?.source !== 'baseline') return <></>
@@ -17,8 +17,8 @@ function WeightDot({ cx, cy, payload }: { cx?: number; cy?: number; payload?: Go
       cx={cx}
       cy={cy}
       r={4}
-      fill={payload.source === 'recorded' ? 'var(--home-green)' : 'hsl(var(--color-surface))'}
-      stroke="var(--home-green)"
+      fill={payload.source === 'recorded' ? 'var(--dashboard-green)' : 'hsl(var(--color-surface))'}
+      stroke="var(--dashboard-green)"
       strokeWidth={2}
     />
   )
@@ -41,7 +41,7 @@ function WeightChart({ series, progress }: { series: GoalWeightPoint[]; progress
       <div className="home-chart home-weight-chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 10, right: 18, left: 0, bottom: 0 }} accessibilityLayer title="Peso por dia no período da meta">
-            <CartesianGrid vertical={false} stroke="var(--home-chart-grid)" />
+            <CartesianGrid vertical={false} stroke="var(--dashboard-chart-grid)" />
             <XAxis
               type="number"
               dataKey="day"
@@ -63,16 +63,16 @@ function WeightChart({ series, progress }: { series: GoalWeightPoint[]; progress
               axisLine={false}
               tick={axisTick}
             />
-            {target != null && <ReferenceLine y={target} stroke="var(--home-chart-reference)" strokeDasharray="5 4" ifOverflow="extendDomain" />}
+            {target != null && <ReferenceLine y={target} stroke="var(--dashboard-chart-reference)" strokeDasharray="5 4" ifOverflow="extendDomain" />}
             <Tooltip
-              cursor={{ stroke: 'var(--home-chart-reference)', strokeDasharray: '2 4' }}
+              cursor={{ stroke: 'var(--dashboard-chart-reference)', strokeDasharray: '2 4' }}
               content={({ active, payload }) => {
                 const point = payload?.[0]?.payload as GoalWeightPoint | undefined
                 if (!active || point?.kg == null) return null
                 const detail = point.source === 'recorded' ? 'Pesagem registrada'
                   : point.sourceDate ? `Mantido desde ${shortDate(point.sourceDate)}` : 'Peso inicial da meta'
                 return (
-                  <div className="home-chart-tooltip" role="status">
+                  <div className="dashboard-chart-tooltip" role="status">
                     <span>{goalDate(point.date)}</span>
                     <strong>{numberLabel(point.kg)} kg</strong>
                     <span>{detail}</span>
@@ -83,7 +83,7 @@ function WeightChart({ series, progress }: { series: GoalWeightPoint[]; progress
             <Line
               type="monotone"
               dataKey="kg"
-              stroke="var(--home-green)"
+              stroke="var(--dashboard-green)"
               strokeWidth={2.5}
               dot={<WeightDot />}
               activeDot={{ r: 5 }}
@@ -110,9 +110,9 @@ export default function HomeWeightEvolution({ progress, weights, today }: {
   const series = useMemo(() => goal ? goalWeightSeries(goal, weights, today) : [], [goal, weights, today])
 
   return (
-    <section className="home-card home-weight-evolution" aria-labelledby="home-weight-evolution-title">
-      <header className="home-section-heading">
-        <span className="home-icon" aria-hidden="true"><Scales size={21} /></span>
+    <section className="dashboard-card home-weight-evolution" aria-labelledby="home-weight-evolution-title">
+      <header className="dashboard-section-heading">
+        <span className="dashboard-icon" aria-hidden="true"><Scales size={21} /></span>
         <div>
           <h2 id="home-weight-evolution-title">Evolução do peso</h2>
           {goal && (
@@ -125,7 +125,7 @@ export default function HomeWeightEvolution({ progress, weights, today }: {
         </div>
       </header>
       {progress && series.some(point => point.kg != null) ? <WeightChart series={series} progress={progress} /> : (
-        <div className="home-chart-empty">
+        <div className="dashboard-chart-empty">
           <p>{!goal ? 'Crie uma meta para acompanhar seu peso ao longo do período.'
             : progress?.status === 'scheduled' ? 'O gráfico começa na data de início da meta.'
             : 'Sem pesagens para este período.'}</p>

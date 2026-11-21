@@ -20,9 +20,9 @@ function ActiveGoalCard({ progress, onEdit, onMeasure }: {
   const { goal, current, currentKg, status, targetKg } = progress
   const Icon = goal.type === 'weightLoss' ? Scales : Barbell
   return (
-    <article className="body-goal-card">
+    <article className="dashboard-card dashboard-panel body-goal-card">
       <header className="body-goal-card-header">
-        <span className="body-goal-icon" aria-hidden="true"><Icon size={24} weight="duotone" /></span>
+        <span className="dashboard-icon" aria-hidden="true"><Icon size={20} /></span>
         <div>
           <h3>{goalTitle(goal)}</h3>
           <p>Início em <time dateTime={goal.startDate}>{goalDate(goal.startDate)}</time></p>
@@ -57,11 +57,14 @@ function ActiveGoalCard({ progress, onEdit, onMeasure }: {
 function GoalHistory({ history }: { history: BodyGoalProgress[] }) {
   return (
     <section className="body-goal-section" aria-labelledby="body-goal-history">
-      <h2 id="body-goal-history">Histórico</h2>
-      <ul className="body-goal-history-list">
+      <div className="dashboard-section-heading">
+        <span className="dashboard-icon" aria-hidden="true"><Flag size={20} /></span>
+        <h2 id="body-goal-history">Histórico</h2>
+      </div>
+      <ul className="dashboard-card body-goal-history-list">
         {history.map(progress => (
           <li key={progress.goal.id} className="body-goal-history-item">
-            <span className="body-goal-icon" aria-hidden="true"><Flag size={21} weight="duotone" /></span>
+            <span className="dashboard-icon" aria-hidden="true"><Flag size={20} /></span>
             <div>
               <h3>{goalTitle(progress.goal)}</h3>
               <p>{goalTimeLabel(progress)}</p>
@@ -85,28 +88,35 @@ export default function BodyGoals() {
   const saved = (message: string) => { setEditor(null); setNotice(message) }
 
   return (
-    <main className="page-content body-goals-page">
+    <main className="page-content dashboard-page body-goals-page">
       <PageHeader
         title="Metas"
         description="Escolha seu objetivo, defina o prazo e acompanhe a evolução em quilos."
-        action={ready && (open.length > 0 || history.length > 0) ? (
-          <button className="btn-primary" type="button" onClick={createGoal}><Plus size={20} aria-hidden="true" />Nova meta</button>
+        action={ready && open.length > 0 ? (
+          <button className="btn-primary" type="button" onClick={createGoal}><Plus size={18} aria-hidden="true" />Nova meta</button>
         ) : undefined}
       />
       {notice && <SavedNotice>{notice}</SavedNotice>}
       {!data.loaded ? <TrackingLoading /> : data.error ? <TrackingError retry={data.retry} /> : (
         <>
           {!open.length && (
-            <section className="body-goal-empty" aria-labelledby="body-goal-empty-title">
-              <span className="body-goal-icon" aria-hidden="true"><Target size={30} weight="duotone" /></span>
-              <h2 id="body-goal-empty-title">{history.length ? 'Nenhuma meta em andamento' : 'Qual é sua próxima meta?'}</h2>
-              <p>{history.length ? 'Defina um novo objetivo para continuar acompanhando sua evolução.' : 'Defina quantos quilos quer perder ou ganhar de massa magra e até quando.'}</p>
-              <button className="btn-primary" type="button" onClick={createGoal}><Plus size={19} aria-hidden="true" />{history.length ? 'Criar nova meta' : 'Criar primeira meta'}</button>
+            <section className="dashboard-card dashboard-panel body-goal-empty" aria-labelledby="body-goal-empty-title">
+              <div className="dashboard-section-heading">
+                <span className="dashboard-icon" aria-hidden="true"><Target size={20} /></span>
+                <div>
+                  <h2 id="body-goal-empty-title">{history.length ? 'Nenhuma meta em andamento' : 'Qual é sua próxima meta?'}</h2>
+                  <p>Defina quantos quilos quer perder ou ganhar de massa magra e até quando.</p>
+                </div>
+              </div>
+              <button className="btn-primary" type="button" onClick={createGoal}><Plus size={18} aria-hidden="true" />{history.length ? 'Criar nova meta' : 'Criar primeira meta'}</button>
             </section>
           )}
           {open.length > 0 && (
             <section className="body-goal-section" aria-labelledby="body-goal-open">
-              <h2 id="body-goal-open">Metas abertas</h2>
+              <div className="dashboard-section-heading">
+                <span className="dashboard-icon" aria-hidden="true"><Target size={20} /></span>
+                <h2 id="body-goal-open">Metas abertas</h2>
+              </div>
               <div className="body-goal-list">
                 {open.map(progress => (
                   <ActiveGoalCard

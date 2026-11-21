@@ -21,7 +21,7 @@ export default function HomeGoalProgress({ data }: { data: TrackingData }) {
   const title = featured ? goalTitle(featured.goal) : 'Metas pessoais'
 
   return (
-    <section className="home-card home-weight home-body-goal" aria-label={title}>
+    <section className="dashboard-card home-weight home-body-goal" aria-label={title}>
       {featured ? (
         <>
           <div className="home-weight-current">

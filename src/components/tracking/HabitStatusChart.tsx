@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { ChartBar } from '@phosphor-icons/react'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { TrackingData } from '@/hooks/useTracking'
 import {
@@ -98,8 +99,9 @@ export default function HabitStatusChart({
   const hasBars = chartData.some(item => item.hasData)
 
   return (
-    <section className={`tracking-panel daily-grid-chart-panel${compact ? ' is-compact' : ''}`}>
-      <div className="section-heading">
+    <section className={`dashboard-card dashboard-panel analysis-chart-panel daily-grid-chart-panel${compact ? ' is-compact' : ''}`}>
+      <div className="dashboard-section-heading">
+        <span className="dashboard-icon" aria-hidden="true"><ChartBar size={20} /></span>
         <div>
           <h2>{title}</h2>
           <p className="helper">{description}</p>
@@ -118,14 +120,14 @@ export default function HabitStatusChart({
             >
               <CartesianGrid
                 vertical={false}
-                stroke="hsl(var(--color-line) / .7)"
-                strokeDasharray="4 8"
+                stroke="var(--dashboard-chart-grid)"
+                strokeDasharray="4 6"
               />
               <XAxis
                 dataKey="axis"
                 axisLine={false}
                 tickLine={false}
-                interval={0}
+                minTickGap={10}
                 tick={{ fontSize: 12, fill: 'hsl(var(--color-ink-muted))', fontWeight: 500 }}
                 dy={6}
               />
@@ -176,7 +178,10 @@ export default function HabitStatusChart({
           </ResponsiveContainer>
         </div>
       ) : (
-        <p className="helper mt-3">Sem registros coloridos neste período ainda. Marque os hábitos para encher o gráfico.</p>
+        <div className="dashboard-chart-empty">
+          <ChartBar size={25} aria-hidden="true" />
+          <p>Sem registros por hábito neste período.</p>
+        </div>
       )}
 
       {routines.length > 0 && (

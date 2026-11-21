@@ -4,6 +4,7 @@ import {
   CaretLeft,
   CaretRight,
   Check,
+  ClipboardText,
   Smiley,
   SmileyMeh,
   SmileySad,
@@ -36,6 +37,7 @@ import {
 import type { RoutineDefinition } from '@/types'
 import BottomSheet from '@/components/ui/BottomSheet'
 import RoutineReviewForm from './RoutineReviewForm'
+import { habitIcon } from '@/lib/habitIcons'
 
 const FACE_ICONS = [SmileyXEyes, SmileySad, SmileyMeh, Smiley, SmileyWink] as const
 type DraftMap = Record<string, StatusLevel | null>
@@ -60,9 +62,9 @@ function SummaryCard({
   face?: StatusLevel
 }) {
   return (
-    <article className={`daily-grid-summary-card is-${tone}`}>
-      <span className="daily-grid-summary-mark" aria-hidden="true">
-        {face ? <FaceIcon level={face} size={20} /> : null}
+    <article className={`dashboard-card dashboard-metric daily-grid-summary-card is-${tone}`}>
+      <span className="dashboard-icon" aria-hidden="true">
+        {face ? <FaceIcon level={face} size={20} /> : <ClipboardText size={20} />}
       </span>
       <h2>{label}</h2>
       <strong>{share != null ? `${share}%` : count}</strong>
@@ -83,7 +85,7 @@ function FaceScale({
   onPick: (next: StatusLevel | null) => void
 }) {
   return (
-    <div className="daily-day-faces" role="group" aria-label={`Como foi ${routine.name}`}>
+    <div className="dashboard-faces" role="group" aria-label={`Como foi ${routine.name}`}>
       {STATUS_SCALE.map((item, index) => {
         const Face = FACE_ICONS[index]
         const selected = level === item.level
@@ -91,7 +93,7 @@ function FaceScale({
           <button
             key={item.level}
             type="button"
-            className={`daily-day-face is-level-${item.level}${selected ? ' is-selected' : ''}`}
+            className={`dashboard-face is-level-${item.level}`}
             aria-pressed={selected}
             aria-label={item.label}
             disabled={disabled}
@@ -122,14 +124,14 @@ function BinaryScale({
     { level: 5 as StatusLevel, label: 'Feito', Face: Smiley },
   ]
   return (
-    <div className="daily-day-faces is-binary" role="group" aria-label={routine.name}>
+    <div className="dashboard-faces is-binary" role="group" aria-label={routine.name}>
       {options.map(option => {
         const selected = level === option.level
         return (
           <button
             key={option.level}
             type="button"
-            className={`daily-day-face is-level-${option.level}${selected ? ' is-selected' : ''}`}
+            className={`dashboard-face is-level-${option.level}`}
             aria-pressed={selected}
             disabled={disabled}
             onClick={() => onPick(selected ? null : option.level)}
@@ -268,8 +270,11 @@ export default function DailyRegisterGrid({
 
   if (!routines.length) {
     return (
-      <section className="tracking-panel daily-grid-empty">
-        <h2>Nenhum hábito ativo</h2>
+      <section className="dashboard-card dashboard-panel daily-grid-empty">
+        <div className="dashboard-section-heading">
+          <span className="dashboard-icon" aria-hidden="true"><ClipboardText size={20} /></span>
+          <h2>Nenhum hábito ativo</h2>
+        </div>
         <p className="helper">Ative ou crie acompanhamentos para registrar o dia.</p>
         <Link className="btn-primary" to="/rotinas">Configurar rotinas</Link>
       </section>
@@ -278,14 +283,14 @@ export default function DailyRegisterGrid({
 
   return (
     <div className="daily-grid">
-      <section className="daily-grid-summary" aria-label="Resumo do mês">
+      <section className="dashboard-metrics" aria-label="Resumo do mês">
         <SummaryCard tone="otimo" label="Ótimo" count={summary.otimo} share={percent(summary.otimo, summary.total)} face={5} />
         <SummaryCard tone="regular" label="Mediano" count={summary.regular} share={percent(summary.regular, summary.total)} face={3} />
         <SummaryCard tone="ruim" label="Ruim" count={summary.ruim} share={percent(summary.ruim, summary.total)} face={1} />
         <SummaryCard tone="total" label="Registros" count={summary.total} />
       </section>
 
-      <section className={`tracking-panel daily-day-panel${dirty ? ' is-dirty' : ''}`}>
+      <section className={`dashboard-card dashboard-panel daily-day-panel${dirty ? ' is-dirty' : ''}`} aria-labelledby="register-day">
         <div className="daily-day-toolbar" role="group" aria-label="Dia do registro">
           <button
             type="button"
@@ -296,8 +301,8 @@ export default function DailyRegisterGrid({
             <CaretLeft size={20} />
           </button>
           <div className="daily-day-heading">
-            <strong>{dayHeading(date, data.today)}</strong>
-            <span>{formatShortDate(date)}</span>
+            <h2 id="register-day">{dayHeading(date, data.today)}</h2>
+            <time dateTime={date}>{formatShortDate(date)}</time>
           </div>
           <button
             type="button"
@@ -347,6 +352,7 @@ export default function DailyRegisterGrid({
                 : (draft[routine.id] ?? null)
               const done = mode === 'value' ? reading != null : level != null
               const changed = mode !== 'value' && (draft[routine.id] ?? null) !== (baseline[routine.id] ?? null)
+              const Icon = habitIcon(routine.kind, routine.name)
 
               return (
                 <li
@@ -354,7 +360,8 @@ export default function DailyRegisterGrid({
                   className={`daily-day-item${done ? ' is-done' : ''}${changed ? ' is-changed' : ''}`}
                 >
                   <div className="daily-day-item-top">
-                    <div className="min-w-0">
+                    <span className="dashboard-icon" aria-hidden="true"><Icon size={20} /></span>
+                    <div className="min-w-0 flex-1">
                       <strong>{routine.name}</strong>
                       <span className="helper">
                         {mode === 'value'

@@ -186,7 +186,7 @@
 .training-theme .settings-group .list-surface>div,.training-theme .settings-group .list-surface>form>div {border:0}
 .training-theme .settings-group .list-surface>div {padding-inline:0}
 .training-theme .settings-profile-summary {display:flex;align-items:center;gap:16px;margin-bottom:32px}
-.training-theme .settings-avatar {display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:hsl(var(--color-accent-soft));color:hsl(var(--color-accent));font-size:20px}
+.training-theme .settings-avatar {background:var(--dashboard-green-soft);color:var(--dashboard-green-ink);font-size:19px;font-weight:600}
 .training-theme .skeleton {border-radius:8px}
 .training-theme .state-block {padding-block:32px;max-width:48ch}
 .training-theme .state-block h2 {font-size:20px;font-weight:600}
@@ -196,7 +196,7 @@
 .training-theme .access-form {width:100%;max-width:400px}
 .training-theme .text-canvas {color:var(--action-ink)}
 @media (max-width:390px) {.training-theme .home-checkin {padding:24px 20px}.training-theme .exercise-detail {padding-left:16px}}
-@media (min-width:768px) {.training-theme .journey-sheet {bottom:24px;border-radius:20px;padding-inline:28px}.training-theme .page-content {padding-inline:32px}}
+@media (min-width:768px) {.training-theme .journey-sheet {bottom:max(24px,var(--sheet-keyboard-offset,0px));border-radius:20px;padding-inline:28px}.training-theme .page-content {padding-inline:32px}}
 @media (min-width:1024px) {
   .training-theme.app-shell {padding-left:var(--desktop-sidebar-width, 256px)}
   .training-theme .journey-sheet {top:50%;bottom:auto;transform:translateY(-50%);animation:none}
@@ -212,7 +212,7 @@
   .training-theme .settings-group-nav {display:flex;flex-direction:column;gap:4px;align-self:start}
   .training-theme .settings-group-nav button {min-height:44px;padding:12px;text-align:left;border-radius:12px;font-size:14px;color:hsl(var(--color-ink-muted))}
   .training-theme .settings-group-nav button[aria-current] {color:hsl(var(--color-accent-strong));background:hsl(var(--color-accent-soft))}
-  .training-theme .settings-group {border:0}.training-theme .settings-group:not(.settings-group-active) {display:none}
+  .training-theme .settings-group:not(.settings-group-active) {display:none}
   .training-theme .settings-group-trigger {pointer-events:none}.training-theme .settings-group-trigger>svg:last-child {display:none}
 }
 @media (prefers-reduced-motion:reduce) {.training-theme *,.training-theme *::before,.training-theme *::after {animation:none!important;transition:none!important;scroll-behavior:auto!important}}

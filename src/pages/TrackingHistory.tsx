@@ -2,8 +2,11 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CaretRight,
+  ChartBar,
+  ChartLineUp,
+  ClipboardText,
   PencilSimple,
-  Plus,
+  ThumbsUp,
   TrendDown,
   TrendUp,
 } from '@phosphor-icons/react'
@@ -143,17 +146,17 @@ export default function TrackingHistory() {
     ? 'var(--status-ruim)'
     : qualityTrend?.direction === 'up'
       ? 'var(--status-otimo)'
-      : 'hsl(var(--color-accent-strong))'
+      : 'var(--dashboard-green)'
 
   return (
-    <main className="page-content tracking-history page-enter">
+    <main className="page-content dashboard-page tracking-history page-enter">
       <PageHeader
         title="Análise"
-        description="Como seus hábitos estão: ótimo, mediano ou ruim."
-        action={<Link className="btn-primary" to="/registrar?modo=dia"><Plus size={20} />Registrar</Link>}
+        description="Acompanhe a qualidade dos seus hábitos e consulte o histórico."
+        action={<Link className="btn-primary" to="/registrar?modo=dia"><ClipboardText size={18} aria-hidden="true" />Registrar hábitos</Link>}
       />
 
-      <div className="analysis-filters">
+      <div className="dashboard-card dashboard-panel analysis-filters">
         <AnalysisFilterMenu
           label="Hábito"
           value={filter}
@@ -169,7 +172,7 @@ export default function TrackingHistory() {
         />
         <div className="analysis-period">
           <span className="analysis-menu-label">Período</span>
-          <div className="analysis-period-tabs" role="group" aria-label="Período">
+          <div className="dashboard-periods analysis-period-tabs" role="group" aria-label="Período">
             {PERIOD_OPTIONS.map(option => (
               <button
                 key={option.value}
@@ -191,15 +194,17 @@ export default function TrackingHistory() {
         <>
           {filter !== 'treinos' && (
             <>
-              <section className="analysis-summary" aria-label="Resumo do período">
-                <article className="analysis-summary-card">
-                  <span>No alvo</span>
-                  <strong>{onTarget}<em>%</em></strong>
+              <section className="dashboard-metrics analysis-summary" aria-label="Resumo do período">
+                <article className="dashboard-card dashboard-metric">
+                  <span className="dashboard-icon" aria-hidden="true"><ThumbsUp size={20} /></span>
+                  <h2>No alvo</h2>
+                  <strong>{onTarget}%</strong>
                   <p>{summary.otimo} ótimo · {summary.regular} mediano · {summary.ruim} ruim</p>
                 </article>
-                <article className="analysis-summary-card">
-                  <span>Média</span>
-                  <strong>{periodScore == null ? '—' : numberLabel(periodScore)}<em>/5</em></strong>
+                <article className="dashboard-card dashboard-metric">
+                  <span className="dashboard-icon" aria-hidden="true"><ChartLineUp size={20} /></span>
+                  <h2>Média</h2>
+                  <strong>{periodScore == null ? '—' : <>{numberLabel(periodScore)}<small>/5</small></>}</strong>
                   <p>
                     {qualityTrend ? (
                       <span className={`home-insight-trend is-${qualityTrend.direction}`}>
@@ -210,210 +215,213 @@ export default function TrackingHistory() {
                     ) : 'Sem tendência ainda'}
                   </p>
                 </article>
-                <article className="analysis-summary-card">
-                  <span>Distribuição</span>
+                <article className="dashboard-card dashboard-metric">
+                  <span className="dashboard-icon" aria-hidden="true"><ChartBar size={20} /></span>
+                  <h2>Registros no período</h2>
+                  <strong>{summary.total}</strong>
                   <div className="analysis-summary-bars" aria-hidden="true">
                     <i style={{ width: `${onTarget}%`, background: 'var(--status-otimo)' }} />
                     <i style={{ width: `${midShare}%`, background: 'var(--status-regular)' }} />
                     <i style={{ width: `${lowShare}%`, background: 'var(--status-ruim)' }} />
                   </div>
-                  <p>{summary.total} registros no período</p>
                 </article>
               </section>
 
-              <section className="tracking-panel analysis-quality">
-                <div className="section-heading">
-                  <div>
-                    <h2>Qualidade no período</h2>
-                    <p className="helper">Média diária dos hábitos · escala 1 a 5</p>
+              <div className="analysis-charts">
+                <section className="dashboard-card dashboard-panel analysis-chart-panel">
+                  <div className="dashboard-section-heading">
+                    <span className="dashboard-icon" aria-hidden="true"><ChartLineUp size={20} /></span>
+                    <div>
+                      <h2>Qualidade no período</h2>
+                      <p className="helper">Média diária dos hábitos · escala 1 a 5</p>
+                    </div>
                   </div>
-                </div>
-                {qualitySeries.some(point => point.score != null) ? (
-                  <div className="analysis-quality-chart" role="img" aria-label="Evolução da qualidade dos hábitos">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={qualitySeries} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="analysisQualityFill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={chartAccent} stopOpacity={0.28} />
-                            <stop offset="100%" stopColor={chartAccent} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid vertical={false} stroke="hsl(var(--color-line))" strokeDasharray="3 8" />
-                        <XAxis
-                          dataKey="label"
-                          axisLine={false}
-                          tickLine={false}
-                          minTickGap={16}
-                          tick={{ fill: 'hsl(var(--color-ink-muted))', fontSize: 10 }}
-                        />
-                        <YAxis
-                          domain={[1, 5]}
-                          ticks={[1, 3, 5]}
-                          axisLine={false}
-                          tickLine={false}
-                          width={28}
-                          tick={{ fill: 'hsl(var(--color-ink-muted))', fontSize: 10 }}
-                        />
-                        <Tooltip
-                          content={({ active, payload }) => {
-                            const point = payload?.[0]?.payload as { date?: string; score?: number | null } | undefined
-                            if (!active || !point?.date || point.score == null) return null
-                            return (
-                              <div className="home-insight-tooltip">
-                                <span>{formatShortDate(point.date)}</span>
-                                <strong>{numberLabel(point.score)} / 5</strong>
-                              </div>
-                            )
-                          }}
-                        />
-                        <Area type="monotone" dataKey="score" stroke="none" fill="url(#analysisQualityFill)" connectNulls dot={false} isAnimationActive={false} />
-                        <Line
-                          type="monotone"
-                          dataKey="score"
-                          stroke={chartAccent}
-                          strokeWidth={2.5}
-                          strokeLinecap="round"
-                          connectNulls
-                          dot={false}
-                          activeDot={{ r: 4, strokeWidth: 0, fill: chartAccent }}
-                          isAnimationActive={false}
-                        />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="helper mt-3">Sem avaliações neste período. Registre hábitos para ver a curva.</p>
-                )}
-              </section>
+                  {qualitySeries.some(point => point.score != null) ? (
+                    <div className="analysis-quality-chart" role="img" aria-label="Evolução da qualidade dos hábitos">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={qualitySeries} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="analysisQualityFill" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={chartAccent} stopOpacity={0.28} />
+                              <stop offset="100%" stopColor={chartAccent} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid vertical={false} stroke="var(--dashboard-chart-grid)" strokeDasharray="4 6" />
+                          <XAxis
+                            dataKey="label"
+                            axisLine={false}
+                            tickLine={false}
+                            minTickGap={16}
+                            tick={{ fill: 'hsl(var(--color-ink-muted))', fontSize: 10 }}
+                          />
+                          <YAxis
+                            domain={[1, 5]}
+                            ticks={[1, 3, 5]}
+                            axisLine={false}
+                            tickLine={false}
+                            width={28}
+                            tick={{ fill: 'hsl(var(--color-ink-muted))', fontSize: 10 }}
+                          />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              const point = payload?.[0]?.payload as { date?: string; score?: number | null } | undefined
+                              if (!active || !point?.date || point.score == null) return null
+                              return (
+                                <div className="dashboard-chart-tooltip">
+                                  <span>{formatShortDate(point.date)}</span>
+                                  <strong>{numberLabel(point.score)} / 5</strong>
+                                </div>
+                              )
+                            }}
+                          />
+                          <Area type="monotone" dataKey="score" stroke="none" fill="url(#analysisQualityFill)" connectNulls dot={false} isAnimationActive={false} />
+                          <Line
+                            type="monotone"
+                            dataKey="score"
+                            stroke={chartAccent}
+                            strokeWidth={2.5}
+                            strokeLinecap="round"
+                            connectNulls
+                            dot={false}
+                            activeDot={{ r: 4, strokeWidth: 0, fill: chartAccent }}
+                            isAnimationActive={false}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="dashboard-chart-empty">
+                      <ChartLineUp size={25} aria-hidden="true" />
+                      <p>Sem avaliações neste período.</p>
+                    </div>
+                  )}
+                </section>
 
-              <HabitStatusChart
-                data={data}
-                dates={periodDates}
-                routineIds={selectedHabit ? [selectedHabit.id] : undefined}
-                title="Por hábito"
-                description="Quanto cada hábito ficou em ótimo, mediano ou ruim"
-              />
+                <HabitStatusChart
+                  data={data}
+                  dates={periodDates}
+                  routineIds={selectedHabit ? [selectedHabit.id] : undefined}
+                  title="Por hábito"
+                  description="Quanto cada hábito ficou em ótimo, mediano ou ruim"
+                />
+              </div>
             </>
           )}
 
-          <section className="tracking-panel daily-grid-history-cta">
-            <div className="section-heading">
-              <div>
-                <h2>Registrar hábitos</h2>
-                <p className="helper">Toque nas carinhas dia a dia — ótimo, mediano ou ruim.</p>
-              </div>
-              <Link className="btn-secondary" to="/registrar?modo=dia">Abrir registrar</Link>
+          <section className="analysis-history" aria-labelledby="analysis-history-title">
+            <div className="dashboard-section-heading">
+              <span className="dashboard-icon" aria-hidden="true"><ClipboardText size={20} /></span>
+              <h2 id="analysis-history-title">Histórico de registros</h2>
             </div>
-          </section>
 
-          {saved && <SavedNotice>Registro atualizado.</SavedNotice>}
+            {saved && <SavedNotice>Registro atualizado.</SavedNotice>}
 
-          {!habitDates.length ? (
-            <section className="tracking-panel">
-              <EmptyBlock
-                title="Nenhum hábito neste período"
-                action={<Link to="/registrar?modo=dia" className="btn-secondary">Registrar hábitos</Link>}
-              >
-                Escolha outro filtro ou marque como foi o dia.
-              </EmptyBlock>
-            </section>
-          ) : (
-            <>
-              {habitDates.slice(0, visible).map(date => {
-                const items = showWorkouts
-                  ? activities.filter(activity => activity.date === date).reverse()
-                  : []
-                const dayHabits = focusRoutines.filter(routine => routineReading(routine, date, data) != null)
+            {!habitDates.length ? (
+              <div className="dashboard-card">
+                <EmptyBlock
+                  title="Nenhum registro neste período"
+                  action={<Link to="/registrar?modo=dia" className="btn-secondary">Registrar hábitos</Link>}
+                >
+                  Escolha outro filtro ou marque como foi o dia.
+                </EmptyBlock>
+              </div>
+            ) : (
+              <>
+                {habitDates.slice(0, visible).map(date => {
+                  const items = showWorkouts
+                    ? activities.filter(activity => activity.date === date).reverse()
+                    : []
+                  const dayHabits = focusRoutines.filter(routine => routineReading(routine, date, data) != null)
 
-                return (
-                  <section className="history-day" key={date}>
-                    <h2>
-                      {formatShortDate(date)}
-                      <span>{date.slice(0, 4)}</span>
-                    </h2>
-                    <div className="tracking-panel history-day-panel">
-                      {items.map(activity => {
-                        const sets = sessionStrength(activity, data.strength)
-                        return (
+                  return (
+                    <section className="history-day" key={date}>
+                      <h3 className="history-day-date">
+                        <time dateTime={date}>{formatShortDate(date)} <span>{date.slice(0, 4)}</span></time>
+                      </h3>
+                      <div className="dashboard-card history-day-panel">
+                        {items.map(activity => {
+                          const sets = sessionStrength(activity, data.strength)
+                          return (
+                            <button
+                              className="history-session"
+                              key={activity.id}
+                              onClick={() => {
+                                setSelected(activity)
+                                setSaved(false)
+                              }}
+                            >
+                              <ActivityBadge activity={activity.activity} />
+                              <span className="min-w-0 flex-1">
+                                <strong>{activity.name}</strong>
+                                <span className="helper block">
+                                  {activitySummary(activity)}
+                                  {sets.length ? ` · ${sets.length} ${sets.length === 1 ? 'exercício' : 'exercícios'}` : ''}
+                                </span>
+                              </span>
+                              <CaretRight size={20} />
+                            </button>
+                          )
+                        })}
+
+                        {dayHabits.map(routine => {
+                          const reading = routineReading(routine, date, data)
+                          const level = readingToStatus(routine, reading)
+                          const mode = cellEditMode(routine.kind)
+                          const Icon = habitIcon(routine.kind, routine.name)
+                          const detail = mode === 'value'
+                            ? readingLabel(routine, reading)
+                            : statusLabel(level)
+
+                          return (
+                            <button
+                              key={routine.id}
+                              className="history-checkin history-habit"
+                              onClick={() => {
+                                setReview({ date, routineId: routine.id })
+                                setSaved(false)
+                              }}
+                            >
+                              <span className="dashboard-icon" aria-hidden="true">
+                                <Icon size={20} />
+                              </span>
+                              <span className="flex-1 text-left min-w-0">
+                                <strong>{routine.name}</strong>
+                                <span className="helper block">{detail}</span>
+                              </span>
+                              {level != null && mode !== 'value' && (
+                                <span className={`home-insight-chip is-${statusTone(level)}`}>
+                                  {statusLabel(level)}
+                                </span>
+                              )}
+                              <PencilSimple size={18} />
+                            </button>
+                          )
+                        })}
+
+                        {filter === 'all' && !dayHabits.length && !items.length && (
                           <button
-                            className="history-session"
-                            key={activity.id}
+                            className="history-checkin"
                             onClick={() => {
-                              setSelected(activity)
+                              setCheckIn(date)
                               setSaved(false)
                             }}
                           >
-                            <ActivityBadge activity={activity.activity} />
-                            <span className="min-w-0 flex-1">
-                              <strong>{activity.name}</strong>
-                              <span className="helper block">
-                                {activitySummary(activity)}
-                                {sets.length ? ` · ${sets.length} ${sets.length === 1 ? 'exercício' : 'exercícios'}` : ''}
-                              </span>
-                            </span>
-                            <CaretRight size={20} />
-                          </button>
-                        )
-                      })}
-
-                      {dayHabits.map(routine => {
-                        const reading = routineReading(routine, date, data)
-                        const level = readingToStatus(routine, reading)
-                        const mode = cellEditMode(routine.kind)
-                        const Icon = habitIcon(routine.kind, routine.name)
-                        const detail = mode === 'value'
-                          ? readingLabel(routine, reading)
-                          : statusLabel(level)
-
-                        return (
-                          <button
-                            key={routine.id}
-                            className="history-checkin history-habit"
-                            onClick={() => {
-                              setReview({ date, routineId: routine.id })
-                              setSaved(false)
-                            }}
-                          >
-                            <span className="history-habit-icon" aria-hidden="true">
-                              <Icon size={18} weight="duotone" />
-                            </span>
-                            <span className="flex-1 text-left min-w-0">
-                              <strong>{routine.name}</strong>
-                              <span className="helper block">{detail}</span>
-                            </span>
-                            {level != null && mode !== 'value' && (
-                              <span className={`home-insight-chip is-${statusTone(level)}`}>
-                                {statusLabel(level)}
-                              </span>
-                            )}
+                            <span className="flex-1 text-left">Completar registros do dia</span>
                             <PencilSimple size={18} />
                           </button>
-                        )
-                      })}
-
-                      {filter === 'all' && !dayHabits.length && !items.length && (
-                        <button
-                          className="history-checkin"
-                          onClick={() => {
-                            setCheckIn(date)
-                            setSaved(false)
-                          }}
-                        >
-                          <span className="flex-1 text-left">Completar registros do dia</span>
-                          <PencilSimple size={18} />
-                        </button>
-                      )}
-                    </div>
-                  </section>
-                )
-              })}
-              {habitDates.length > visible && (
-                <button className="btn-secondary w-full" onClick={() => setVisible(current => current + 14)}>
-                  Ver mais registros
-                </button>
-              )}
-            </>
-          )}
+                        )}
+                      </div>
+                    </section>
+                  )
+                })}
+                {habitDates.length > visible && (
+                  <button className="btn-secondary w-full" onClick={() => setVisible(current => current + 14)}>
+                    Ver mais registros
+                  </button>
+                )}
+              </>
+            )}
+          </section>
         </>
       )}
 

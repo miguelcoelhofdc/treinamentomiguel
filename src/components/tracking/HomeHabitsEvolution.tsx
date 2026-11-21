@@ -23,7 +23,7 @@ const PERIODS = [
 type Period = (typeof PERIODS)[number]['id']
 
 const COLORS = ['#37845e', '#2d729d', '#ad771f', '#bc5158', '#6666a3', '#6a872f', '#a95b82', '#3d8080', '#976149']
-const axisTick = { fill: 'var(--home-muted)', fontSize: 11 }
+const axisTick = { fill: 'var(--dashboard-muted)', fontSize: 11 }
 const shortMonth = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' })
 const dateTick = (date: string) => `${date.slice(8)}/${date.slice(5, 7)}`
 const monthTick = (date: string) => shortMonth.format(new Date(`${date}T12:00:00Z`)).replace('.', '')
@@ -70,7 +70,7 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
       <div className="home-chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={rows} margin={{ top: 7, right: 14, left: 0, bottom: 0 }} accessibilityLayer>
-            <CartesianGrid vertical={false} stroke="var(--home-chart-grid)" />
+            <CartesianGrid vertical={false} stroke="var(--dashboard-chart-grid)" />
             <XAxis
               dataKey="date" ticks={ticks} tickFormatter={byMonth ? monthTick : dateTick}
               tickLine={false} axisLine={false} tickMargin={10} interval="preserveStartEnd" minTickGap={10} tick={axisTick}
@@ -80,12 +80,12 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
               width={ratingOnly ? 68 : 40} tickLine={false} axisLine={false} tick={axisTick}
             />
             <Tooltip
-              cursor={{ stroke: 'var(--home-chart-reference)', strokeWidth: 1, strokeDasharray: '3 3' }}
+              cursor={{ stroke: 'var(--dashboard-chart-reference)', strokeWidth: 1, strokeDasharray: '3 3' }}
               content={({ active, payload }) => {
                 const row: ChartRow | undefined = payload?.[0]?.payload
                 if (!active || !row) return null
                 return (
-                  <div className="home-chart-tooltip home-evolution-tooltip">
+                  <div className="dashboard-chart-tooltip home-evolution-tooltip">
                     <strong>{pointLabel(row.date)}</strong>
                     {habits.map((habit, index) => {
                       const point = row.points[index]
@@ -179,17 +179,17 @@ export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
   const hasData = rows.some(row => row.points.some(point => point.score != null))
 
   return (
-    <section className="home-card home-evolution" aria-labelledby="home-evolution-title">
-      <header className="home-section-header">
-        <div className="home-section-heading">
-          <span className="home-icon" aria-hidden="true"><ChartLineUp size={21} /></span>
+    <section className="dashboard-card home-evolution" aria-labelledby="home-evolution-title">
+      <header className="dashboard-section-header">
+        <div className="dashboard-section-heading">
+          <span className="dashboard-icon" aria-hidden="true"><ChartLineUp size={21} /></span>
           <div>
             <h2 id="home-evolution-title">Evolução dos hábitos</h2>
             <p>{period === 'months' ? 'Desempenho por mês' : `Desempenho nos ${HABIT_AVERAGE_DAYS} dias até cada data`}</p>
           </div>
         </div>
         {habits.length > 0 && (
-          <div className="home-periods" role="group" aria-label="Período da evolução dos hábitos">
+          <div className="dashboard-periods" role="group" aria-label="Período da evolução dos hábitos">
             {PERIODS.map(({ id, label }) => (
               <button key={id} type="button" aria-pressed={period === id} onClick={() => setPeriod(id)}>{label}</button>
             ))}
@@ -201,7 +201,7 @@ export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
       {hasData ? (
         <EvolutionChart habits={visible} rows={rows} period={period} />
       ) : (
-        <div className="home-chart-empty">
+        <div className="dashboard-chart-empty">
           <ChartLineUp size={31} aria-hidden="true" />
           <p>{habits.length === 0 ? 'Ative um hábito em Rotinas para acompanhar a evolução.' : period === 'months'
             ? `Sem registros para exibir nos últimos ${HABIT_HISTORY_MONTHS} meses.`

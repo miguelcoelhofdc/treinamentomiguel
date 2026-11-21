@@ -1,35 +1,17 @@
 .body-goals-page, .body-goal-form {
-  --goal-accent: hsl(var(--color-accent-strong));
-  --goal-wash: hsl(var(--color-accent-soft));
+  --goal-accent: var(--dashboard-green-ink);
+  --goal-wash: var(--dashboard-green-soft);
 }
 
-.body-goals-page > .saved-notice { margin-bottom: 20px; }
-.body-goal-section + .body-goal-section, .body-goal-empty + .body-goal-section { margin-top: 32px; }
-.body-goal-section > h2 { font-size: 17px; font-weight: 600; margin-bottom: 12px; }
-.body-goal-list { display: grid; gap: 16px; }
-.body-goal-card, .body-goal-empty, .body-goal-history-list {
-  background: hsl(var(--color-surface));
-  border: 1px solid hsl(var(--color-line));
-  border-radius: 22px;
-  min-width: 0;
-}
-.body-goal-card { display: grid; gap: 18px; padding: clamp(16px, 3vw, 26px); }
+.body-goal-section, .body-goal-list { display: grid; gap: 12px; min-width: 0; }
+.body-goal-card { display: grid; gap: 18px; }
 .body-goal-card-header, .body-goal-history-item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
 }
-.body-goal-icon {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: var(--goal-wash);
-  color: var(--goal-accent);
-}
-.body-goal-card-header h3 { font-size: clamp(19px, 2.5vw, 24px); font-weight: 600; line-height: 1.16; letter-spacing: -.025em; }
+.body-goal-card-header h3 { font-size: clamp(17px, 1.45vw, 21px); font-weight: 610; line-height: 1.15; letter-spacing: -.025em; }
 .body-goal-card-header p, .body-goal-history-item p { margin-top: 4px; color: hsl(var(--color-ink-muted)); font-size: 13px; }
 .body-goal-status {
   justify-self: end;
@@ -103,19 +85,14 @@
 .body-goal-history-item { padding-block: 13px; }
 .body-goal-history-item + .body-goal-history-item { border-top: 1px solid hsl(var(--color-line)); }
 .body-goal-history-item h3 { font-size: 15px; font-weight: 600; line-height: 1.35; }
-.body-goal-standalone-measurement { margin-top: 10px; }
+.body-goal-standalone-measurement { justify-self: start; }
 .body-goal-empty {
-  display: grid;
-  justify-items: center;
-  text-align: center;
-  gap: 10px;
-  padding: clamp(28px, 6vw, 56px) 20px;
-  background: linear-gradient(165deg, var(--goal-wash), hsl(var(--color-surface)) 65%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
 }
-.body-goal-empty .body-goal-icon { width: 56px; height: 56px; background: hsl(var(--color-surface)); border-radius: 17px; }
-.body-goal-empty h2 { font-size: 24px; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; }
-.body-goal-empty p { max-width: 36ch; color: hsl(var(--color-ink-muted)); font-size: 14px; }
-.body-goal-empty .btn-primary { margin-top: 4px; }
 
 .body-goal-type-choices, .body-goal-inputs, .body-goal-durations { display: grid; gap: 8px; }
 .body-goal-type-choices, .body-goal-inputs, .body-goal-durations { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -159,9 +136,9 @@
 .body-goal-form-preview span { color: hsl(var(--color-ink-muted)); }
 
 .home-body-goal {
-  --goal-accent: var(--home-green-ink);
+  --goal-accent: var(--dashboard-green-ink);
   background: hsl(var(--color-surface));
-  border-color: var(--home-card-line);
+  border-color: var(--dashboard-card-line);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -180,14 +157,14 @@
   padding: clamp(18px, 2.2vw, 26px);
   border-radius: 18px;
   background: color-mix(in srgb, hsl(var(--color-ink)) 3.5%, hsl(var(--color-surface)));
-  border: 1px solid var(--home-card-line);
+  border: 1px solid var(--dashboard-card-line);
   box-sizing: border-box;
 }
 .home-body-goal .home-weight-current > span {
   font-size: 13px;
   font-weight: 550;
   letter-spacing: .01em;
-  color: var(--home-muted);
+  color: var(--dashboard-muted);
 }
 .home-body-goal .home-weight-current > strong {
   font-size: clamp(48px, 5.2vw, 72px);
@@ -205,14 +182,14 @@
 .home-body-goal .home-weight-current > p {
   margin: 2px 0 0;
   font-size: 13px;
-  color: var(--home-muted);
+  color: var(--dashboard-muted);
 }
 .home-body-goal .home-weight-progress {
   flex: 0 0 auto;
   margin: 0;
   padding: 16px 16px 14px;
   border-radius: 16px;
-  border: 1px solid var(--home-card-line);
+  border: 1px solid var(--dashboard-card-line);
   background: color-mix(in srgb, hsl(var(--color-ink)) 2.8%, hsl(var(--color-surface)));
 }
 .home-body-goal-empty {

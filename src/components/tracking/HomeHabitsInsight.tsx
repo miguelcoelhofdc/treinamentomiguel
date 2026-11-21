@@ -59,10 +59,10 @@ export function HomeHabitProgress({ data, routines, dates, yesterday }: {
   yesterday: string
 }) {
   return (
-    <section className="home-card home-habits" aria-labelledby="home-habits-title">
-      <header className="home-section-header">
-        <div className="home-section-heading">
-          <span className="home-icon" aria-hidden="true"><ListChecks size={21} /></span>
+    <section className="dashboard-card home-habits" aria-labelledby="home-habits-title">
+      <header className="dashboard-section-header">
+        <div className="dashboard-section-heading">
+          <span className="dashboard-icon" aria-hidden="true"><ListChecks size={21} /></span>
           <div>
             <h2 id="home-habits-title">Seus hábitos</h2>
             <p>Desempenho neste mês</p>
@@ -83,7 +83,7 @@ export function HomeHabitProgress({ data, routines, dates, yesterday }: {
               <li className="home-habit-card" key={routine.id}>
                 <div className="home-habit-card-main">
                   <div className="home-habit-card-copy">
-                    <span className="home-icon home-habit-icon" aria-hidden="true"><Icon size={20} weight="regular" /></span>
+                    <span className="dashboard-icon home-habit-icon" aria-hidden="true"><Icon size={20} weight="regular" /></span>
                     <div className="min-w-0">
                       <h3>{routine.name}</h3>
                       <p>{caption}</p>

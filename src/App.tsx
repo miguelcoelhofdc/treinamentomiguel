@@ -54,15 +54,10 @@ function AppSkeleton() {
 }
 
 function AuthenticatedApp({ profileId }: { profileId: ProfileId }) {
-  const { pathname } = useLocation()
   const { settings, updateSetting, loaded, error, retry } = useSettings()
   const today = useLocalDay()
   const activeProfile = ACCESS_PROFILES[profileId]
-  const isHome = pathname === '/'
-  const shellClass = [
-    'app-shell training-theme tracking-theme app-theme is-nav-collapsed',
-    isHome ? 'home-theme' : '',
-  ].filter(Boolean).join(' ')
+  const shellClass = 'app-shell training-theme tracking-theme app-theme is-nav-collapsed'
   const shellStyle = { '--desktop-sidebar-width': '72px' } as CSSProperties
 
   useEffect(() => {

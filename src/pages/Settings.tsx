@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import {
+  ArrowUpRight,
   CaretDown,
   CalendarDots,
   CheckCircle,
@@ -67,11 +68,11 @@ function SettingsSection({ icon: SectionIcon, title, description, children }: { 
   const { active, select } = useContext(SettingsGroupContext)
   const id = useId()
   const open = active === title
-  return <section className={'settings-group ' + (open ? 'settings-group-active' : '')}>
+  return <section className={'dashboard-card settings-group' + (open ? ' settings-group-active' : '')}>
     <button className="settings-group-trigger" aria-expanded={open} aria-controls={id} onClick={() => select(open && !window.matchMedia('(min-width: 1024px)').matches ? null : title)}>
-      <SectionIcon size={22} className="shrink-0 text-ink-muted" />
+      <span className="dashboard-icon" aria-hidden="true"><SectionIcon size={20} /></span>
       <span className="flex-1 min-w-0"><span className="block text-[20px] font-semibold">{title}</span><span className="block mt-1 text-[13px] leading-5 text-ink-muted">{description}</span></span>
-      <CaretDown size={18} className={open ? 'rotate-180' : ''} />
+      <CaretDown size={18} className={open ? 'shrink-0 rotate-180' : 'shrink-0'} aria-hidden="true" />
     </button>
     <div id={id} className="settings-group-body" hidden={!open}>{children}</div>
   </section>
@@ -255,15 +256,21 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
   }
 
   return (
-    <main className="page-content settings-page page-enter">
+    <main className="page-content dashboard-page settings-page page-enter">
       <PageHeader
-        eyebrow="Preferências"
         title="Perfil"
-        description="Seus dados, suas preferências."
+        description="Gerencie seus dados, a aparência e os backups."
       />
 
-      <div className="settings-profile-summary"><span className="settings-avatar" aria-hidden="true">{settings.name.trim()[0] ?? 'P'}</span><div className="min-w-0 flex-1"><p className="text-[16px] font-medium">{settings.name}</p><p className="helper">Perfil de {profileLabel}</p></div><Link to="/fichas" className="inline-link">Minhas fichas</Link></div>
-      <div aria-live="polite" aria-atomic="true">
+      <div className="dashboard-card dashboard-panel settings-profile-summary">
+        <span className="dashboard-icon settings-avatar" aria-hidden="true">{settings.name.trim()[0] ?? 'P'}</span>
+        <div className="min-w-0 flex-1">
+          <p className="settings-profile-name">{settings.name}</p>
+          <p className="helper">Perfil de {profileLabel}</p>
+        </div>
+        <Link to="/fichas" className="inline-link">Minhas fichas <ArrowUpRight size={15} aria-hidden="true" /></Link>
+      </div>
+      <div className="settings-feedback" aria-live="polite" aria-atomic="true">
         {feedback && (
           <div
             role={feedback.type === 'error' ? 'alert' : 'status'}
@@ -282,7 +289,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
       </div>
 
       <SettingsGroupContext.Provider value={{ active: activeGroup, select: setActiveGroup }}>
-      <div className="settings-layout"><nav className="settings-group-nav" aria-label="Grupos de preferências">{GROUPS.map(group => <button key={group} aria-current={activeGroup === group ? 'true' : undefined} onClick={() => setActiveGroup(group)}>{group}</button>)}</nav><div className="min-w-0">
+      <div className="settings-layout"><nav className="dashboard-card settings-group-nav" aria-label="Grupos de preferências">{GROUPS.map(group => <button key={group} type="button" aria-current={activeGroup === group ? 'true' : undefined} onClick={() => setActiveGroup(group)}>{group}</button>)}</nav><div className="min-w-0">
       <SettingsSection
         icon={UserCircle}
         title="Dados pessoais"
@@ -360,7 +367,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-[1fr_auto] sm:items-end sm:p-5">
+          <div className="flex justify-end p-4 sm:p-5">
             <button
               type="submit"
               className="btn-primary w-full sm:w-auto"
@@ -550,7 +557,7 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
                 <button
                   type="button"
                   onClick={() => void handleReset()}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[15px] bg-red-600 px-5 py-3 text-[15px] font-semibold text-white transition duration-200 hover:bg-red-700 disabled:opacity-50"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-red-600 px-5 py-3 text-[15px] font-semibold text-white transition duration-200 hover:bg-red-700 disabled:opacity-50"
                   disabled={busy !== null}
                 >
                   {busy === 'reset'

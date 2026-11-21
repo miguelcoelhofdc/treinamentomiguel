@@ -208,7 +208,7 @@ export default function HomeYesterdayRegister({
       id="check-in"
       data-checkin-date={showDate}
       tabIndex={-1}
-      className={`home-card home-checkin is-${phase}${showDate === yesterday ? '' : ' is-overdue'}`}
+      className={`dashboard-card home-checkin is-${phase}${showDate === yesterday ? '' : ' is-overdue'}`}
       aria-labelledby="home-checkin-title"
       aria-busy={busy || phase !== 'edit'}
     >
@@ -231,9 +231,9 @@ export default function HomeYesterdayRegister({
         </div>
       ) : (
         <>
-          <header className="home-section-header">
-            <div className="home-section-heading">
-              <span className="home-icon" aria-hidden="true"><ClipboardText size={21} /></span>
+          <header className="dashboard-section-header">
+            <div className="dashboard-section-heading">
+              <span className="dashboard-icon" aria-hidden="true"><ClipboardText size={21} /></span>
               <div>
                 <h2 id="home-checkin-title">{title}</h2>
                 <p>
@@ -265,12 +265,12 @@ export default function HomeYesterdayRegister({
                       <Icon size={20} aria-hidden="true" />
                       <h3>{routine.name}</h3>
                     </div>
-                    <div className={`home-checkin-faces${binary ? ' is-binary' : ''}`} role="group" aria-label={routine.name}>
+                    <div className={`dashboard-faces${binary ? ' is-binary' : ''}`} role="group" aria-label={routine.name}>
                       {(binary ? BINARY : FACES).map(({ level: option, label, Icon: Face }) => (
                         <button
                           key={option}
                           type="button"
-                          className={`home-checkin-face is-level-${option}`}
+                          className={`dashboard-face is-level-${option}`}
                           aria-pressed={level === option}
                           disabled={busy}
                           onClick={() => pickStatus(routine, option)}
