@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, ChartLineUp } from '@phosphor-icons/react'
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -39,6 +39,30 @@ type Habit = ReturnType<typeof habitEvolution> & {
 interface ChartRow {
   date: string
   points: HabitEvolutionPoint[]
+  scores: Record<string, number | null>
+}
+
+function scoreKey(habitId: string) {
+  return `s_${habitId.replace(/[^a-zA-Z0-9_-]/g, '_')}`
+}
+
+function buildChartRows(habits: Habit[], period: Period): ChartRow[] {
+  if (habits.length === 0) return []
+  const series = habits.map(habit => (period === 'months' ? habit.months : habit.recent.slice(-period)))
+  const length = series[0]?.length ?? 0
+  return Array.from({ length }, (_, index) => {
+    const date = series[0]![index].date
+    const points = series.map(points => points[index]!)
+    const scores: Record<string, number | null> = {}
+    habits.forEach((habit, habitIndex) => {
+      scores[scoreKey(habit.id)] = points[habitIndex]?.score ?? null
+    })
+    return { date, points, scores }
+  })
+}
+
+function rowsHaveScores(rows: ChartRow[]) {
+  return rows.some(row => row.points.some(point => point.score != null))
 }
 
 function qualityLabel(score: number) {
@@ -65,10 +89,12 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
       .map(row => row.date)
     : undefined
 
+  const yAxisWidth = binaryOnly ? 44 : ratingOnly ? 68 : 52
+
   return (
     <>
-      <div className="home-chart">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="home-chart home-chart-stable">
+        <ResponsiveContainer width="100%" height="100%" debounce={48} minWidth={0}>
           <LineChart data={rows} margin={{ top: 7, right: 14, left: 0, bottom: 0 }} accessibilityLayer>
             <CartesianGrid vertical={false} stroke="var(--dashboard-chart-grid)" />
             <XAxis
@@ -77,7 +103,7 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
             />
             <YAxis
               domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={axisLabel}
-              width={ratingOnly ? 68 : 40} tickLine={false} axisLine={false} tick={axisTick}
+              width={yAxisWidth} tickLine={false} axisLine={false} tick={axisTick}
             />
             <Tooltip
               cursor={{ stroke: 'var(--dashboard-chart-reference)', strokeWidth: 1, strokeDasharray: '3 3' }}
@@ -102,10 +128,16 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
                 )
               }}
             />
-            {habits.map((habit, index) => (
+            {habits.map(habit => (
               <Line
-                key={habit.id} name={habit.name} type="monotone" dataKey={(row: ChartRow) => row.points[index].score}
-                stroke={habit.color} strokeWidth={2.25} isAnimationActive={false}
+                key={habit.id}
+                name={habit.name}
+                type="monotone"
+                dataKey={scoreKey(habit.id)}
+                stroke={habit.color}
+                strokeWidth={2.25}
+                isAnimationActive={false}
+                connectNulls={false}
                 dot={{ r: period === 30 ? 2 : 3, fill: habit.color, strokeWidth: 0 }}
                 activeDot={{ r: 5, fill: habit.color }}
               />
@@ -132,7 +164,7 @@ export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
   routines: RoutineDefinition[]
   showCheckIn: boolean
 }) {
-  const [period, setPeriod] = useState<Period>('months')
+  const [period, setPeriod] = useState<Period>(7)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { activities, daily, entries, today } = data
   const habits = useMemo(() => routines.map((routine, index): Habit => ({
@@ -144,9 +176,24 @@ export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
   })), [activities, daily, entries, routines, today])
   const selected = habits.find(habit => habit.id === selectedId)
   const visible = selected ? [selected] : habits
-  const series = visible.map(habit => period === 'months' ? habit.months : habit.recent.slice(-period))
-  const rows = series[0]?.map(({ date }, index) => ({ date, points: series.map(points => points[index]) })) ?? []
-  const hasData = rows.some(row => row.points.some(point => point.score != null))
+  const allRows = buildChartRows(habits, period)
+  const visibleRows = buildChartRows(visible, period)
+  const hasChartData = rowsHaveScores(allRows)
+  const visibleHasData = rowsHaveScores(visibleRows)
+
+  const periodSubtitle = period === 'months'
+    ? 'Desempenho por mês'
+    : period === 7
+      ? 'Desempenho nos últimos 7 dias'
+      : `Desempenho nos ${HABIT_AVERAGE_DAYS} dias até cada data`
+
+  const selectHabit = (habitId: string) => {
+    setSelectedId(current => (current === habitId ? null : habitId))
+  }
+
+  const keepLegendFocus = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault()
+  }
 
   return (
     <section className="dashboard-card home-evolution" aria-labelledby="home-evolution-title">
@@ -155,7 +202,7 @@ export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
           <span className="dashboard-icon" aria-hidden="true"><ChartLineUp size={21} /></span>
           <div>
             <h2 id="home-evolution-title">Evolução dos hábitos</h2>
-            <p>{period === 'months' ? 'Desempenho por mês' : `Desempenho nos ${HABIT_AVERAGE_DAYS} dias até cada data`}</p>
+            <p>{periodSubtitle}</p>
           </div>
         </div>
         {habits.length > 0 && (
@@ -167,31 +214,52 @@ export default function HomeHabitsEvolution({ data, routines, showCheckIn }: {
         )}
       </header>
 
-      {hasData ? (
-        <EvolutionChart habits={visible} rows={rows} period={period} />
-      ) : (
+      {habits.length === 0 ? (
         <div className="dashboard-chart-empty">
           <ChartLineUp size={31} aria-hidden="true" />
-          <p>{habits.length === 0 ? 'Ative um hábito em Rotinas para acompanhar a evolução.' : period === 'months'
+          <p>Ative um hábito em Rotinas para acompanhar a evolução.</p>
+          <Link className="home-text-link" to="/rotinas">Ver rotinas <ArrowUpRight size={15} aria-hidden="true" /></Link>
+        </div>
+      ) : !hasChartData ? (
+        <div className="dashboard-chart-empty">
+          <ChartLineUp size={31} aria-hidden="true" />
+          <p>{period === 'months'
             ? `Sem registros para exibir nos últimos ${HABIT_HISTORY_MONTHS} meses.`
             : 'Sem registros para exibir neste período.'}</p>
-          {habits.length === 0 ? (
-            <Link className="home-text-link" to="/rotinas">Ver rotinas <ArrowUpRight size={15} aria-hidden="true" /></Link>
-          ) : showCheckIn ? (
+          {showCheckIn ? (
             <a className="home-text-link" href="#check-in">Fazer check-in <ArrowUpRight size={15} aria-hidden="true" /></a>
           ) : (
             <Link className="home-text-link" to="/registrar?modo=dia">Registrar hábitos <ArrowUpRight size={15} aria-hidden="true" /></Link>
           )}
         </div>
+      ) : (
+        <div className="home-evolution-chart-shell">
+          {!visibleHasData && (
+            <p className="home-evolution-filter-empty" role="status">
+              {selected ? `Sem registros de ${selected.name} neste período.` : 'Sem registros neste período.'}
+            </p>
+          )}
+          <EvolutionChart habits={visible} rows={visibleRows} period={period} />
+        </div>
       )}
 
       {habits.length > 0 && (
         <div className="home-evolution-legend" role="group" aria-label="Hábitos no gráfico">
-          <button type="button" aria-pressed={!selected} onClick={() => setSelectedId(null)}>Todos</button>
+          <button
+            type="button"
+            aria-pressed={!selected}
+            onMouseDown={keepLegendFocus}
+            onClick={() => setSelectedId(null)}
+          >
+            Todos
+          </button>
           {habits.map(habit => (
             <button
-              key={habit.id} type="button" aria-pressed={selected?.id === habit.id}
-              onClick={() => setSelectedId(selected?.id === habit.id ? null : habit.id)}
+              key={habit.id}
+              type="button"
+              aria-pressed={selected?.id === habit.id}
+              onMouseDown={keepLegendFocus}
+              onClick={() => selectHabit(habit.id)}
             >
               <i style={{ backgroundColor: habit.color }} aria-hidden="true" />
               {habit.name}

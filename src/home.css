@@ -147,6 +147,29 @@
   height: clamp(202px, 20vw, 264px);
 }
 
+.home-chart-stable {
+  min-height: clamp(202px, 20vw, 264px);
+  min-width: 0;
+  position: relative;
+  isolation: isolate;
+}
+
+.home-evolution-chart-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.home-evolution-filter-empty {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--dashboard-muted);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .home-weight-chart { height: clamp(224px, 25vw, 320px); }
 
 .home-chart-legend {
@@ -607,7 +630,23 @@
   .home-dashboard-grid { gap: 16px; }
   .home-evolution .dashboard-periods { width: 100%; }
   .home-evolution .dashboard-periods button { flex: 1 1 0; min-width: 0; padding-inline: 4px; }
-  .home-evolution-legend button { min-width: 44px; min-height: 44px; }
+  .home-evolution-legend {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 2px;
+    margin-inline: -4px;
+    padding-inline: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .home-evolution-legend::-webkit-scrollbar { display: none; }
+  .home-evolution-legend button {
+    flex: 0 0 auto;
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
   .home-checkin .dashboard-section-heading p { font-size: 12px; }
   .home-checkin-name { min-height: 32px; }
   .home-checkin-save { width: 100%; }

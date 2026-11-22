@@ -1,6 +1,15 @@
 import Dexie, { type Table } from 'dexie'
 import type { ActivityLog, AppSettings, BodyGoal, DailyLog, ExerciseCheck, PlannedSession, RoutineDefinition, RoutineEntry, RoutineGoal, RunningLog, StrengthLog, WorkoutTemplate } from '@/types'
-import { ACCESS_PROFILES, getStoredProfileId } from '@/lib/auth'
+import { ACCESS_PROFILES, loadedProfileId } from '@/lib/auth'
+import type { SyncRecord, SyncSnapshot } from '@/lib/trainingSyncModel'
+
+export const GLOBAL_ID_START = 2 ** 51
+const RANDOM_ID_START = 2 ** 52
+
+function globalRecordId() {
+  const [high, low] = crypto.getRandomValues(new Uint32Array(2))
+  return RANDOM_ID_START + (high & 0xfffff) * 2 ** 32 + low
+}
 
 export class TrainingDB extends Dexie {
   dailyLogs!: Table<DailyLog>
@@ -15,6 +24,10 @@ export class TrainingDB extends Dexie {
   routineEntries!: Table<RoutineEntry, string>
   routineGoals!: Table<RoutineGoal, string>
   bodyGoals!: Table<BodyGoal, string>
+  trainingSync!: Table<
+    | { id: 'baseline'; snapshot: SyncSnapshot }
+    | { id: 'pending'; records: SyncRecord[]; batchId: string }
+    | { id: 'migration' }, string>
 
   constructor(databaseName: string) {
     super(databaseName)
@@ -45,10 +58,13 @@ export class TrainingDB extends Dexie {
     })
     this.version(7).stores({ bodyGoals: 'id' })
     this.version(8).stores({ activityLogs: 'id, date, activity, &recordingId' })
+    this.version(9).stores({ trainingSync: 'id' })
+    this.runningLogs.hook('creating', key => key == null ? globalRecordId() : undefined)
+    this.strengthLogs.hook('creating', key => key == null ? globalRecordId() : undefined)
   }
 }
 
-const activeProfileId = getStoredProfileId() ?? 'miguel'
+const activeProfileId = loadedProfileId ?? 'miguel'
 
 export const db = new TrainingDB(ACCESS_PROFILES[activeProfileId].databaseName)
 
