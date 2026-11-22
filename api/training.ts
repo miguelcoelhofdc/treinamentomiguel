@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import {
   TRAINING_TABLES, hasLocalPrimaryKey, mergeTrainingChanges, trainingChanges, trainingRowKey,
   type SyncChange, type SyncRow, type SyncSnapshot, type TrainingTable,
-} from '../src/lib/trainingSyncModel'
+} from '../src/lib/trainingSyncModel.js'
 
 type Profile = 'miguel' | 'sintia'
 interface CloudSnapshot extends SyncSnapshot { deleted: [string, number][]; applied: string[] }
