@@ -4,40 +4,34 @@ import {
   ShieldCheck,
   SpinnerGap,
 } from '@phosphor-icons/react'
-import { authenticateAccessCode, storeProfileId } from '@/lib/auth'
-
-const PIN_LENGTH = 4
+import { ACCESS_PROFILES, getStoredProfileId, storeProfileId, type ProfileId } from '@/lib/auth'
+import { signInTraining, TrainingCloudError } from '@/lib/trainingAccess'
 
 export default function Access() {
-  const [accessCode, setAccessCode] = useState('')
+  const [profile, setProfile] = useState<ProfileId>(getStoredProfileId() ?? 'miguel')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const submittingRef = useRef(false)
 
-  const unlock = async (code: string) => {
-    if (submittingRef.current) return
-    if (!/^\d{4}$/.test(code)) {
-      setError('Digite os 4 dígitos da senha.')
-      return
-    }
+  const unlock = async () => {
+    if (submittingRef.current || !password) return
 
     submittingRef.current = true
     setSubmitting(true)
     setError('')
 
     try {
-      const profileId = await authenticateAccessCode(code)
-      if (!profileId) {
-        setError('Senha incorreta. Tente novamente.')
-        setAccessCode('')
-        return
-      }
-
-      storeProfileId(profileId)
+      const result = await signInTraining(profile, password)
+      storeProfileId(result.profile)
       window.location.assign('/')
-    } catch {
-      setError('Não foi possível validar o acesso neste navegador.')
-      setAccessCode('')
+    } catch (cause) {
+      if (cause instanceof TrainingCloudError && cause.status === 401) {
+        setError('Senha incorreta para este perfil.')
+        setPassword('')
+      } else {
+        setError('Não foi possível conectar à nuvem. Tente novamente em instantes.')
+      }
     } finally {
       submittingRef.current = false
       setSubmitting(false)
@@ -46,7 +40,7 @@ export default function Access() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    void unlock(accessCode)
+    void unlock()
   }
 
   return (
@@ -55,32 +49,38 @@ export default function Access() {
         <span className="icon-tile mb-6" aria-hidden="true"><ShieldCheck size={28} /></span>
         <p className="page-kicker">Rotinas de saúde</p>
         <h1 className="page-title mt-2">Seu acompanhamento começa aqui</h1>
-        <p className="page-subtitle mt-3">Digite sua senha de 4 dígitos para abrir seus registros.</p>
+        <p className="page-subtitle mt-3">Entre para acessar seus registros em qualquer aparelho.</p>
         <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
           <div>
-            <label htmlFor="access-code" className="label">Senha</label>
+            <label htmlFor="access-profile" className="label">Perfil</label>
+            <select
+              id="access-profile"
+              className="input h-12"
+              autoComplete="username"
+              value={profile}
+              disabled={submitting}
+              onChange={event => { setProfile(event.target.value as ProfileId); setError('') }}
+            >
+              {Object.values(ACCESS_PROFILES).map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="access-password" className="label">Senha</label>
             <input
-              id="access-code"
+              id="access-password"
               type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              autoComplete="one-time-code"
-              autoFocus
-              maxLength={PIN_LENGTH}
-              placeholder="••••"
-              className="input h-14 px-4 text-center text-[28px] tracking-[0.45em] tabular-nums"
-              value={accessCode}
+              autoComplete="current-password"
+              maxLength={256}
+              className="input h-12"
+              value={password}
               disabled={submitting}
               aria-invalid={Boolean(error)}
-              aria-describedby={error ? 'access-error' : 'access-helper'}
+              aria-describedby={error ? 'access-error' : undefined}
               onChange={event => {
-                const value = event.target.value.replace(/\D/g, '').slice(0, PIN_LENGTH)
-                setAccessCode(value)
+                setPassword(event.target.value)
                 if (error) setError('')
-                if (value.length === PIN_LENGTH) void unlock(value)
               }}
             />
-            <p id="access-helper" className="helper">Quatro números. A entrada acontece ao completar.</p>
             {error && (
               <p id="access-error" role="alert" className="mt-2 text-[13px] font-semibold leading-5 text-red-600 dark:text-red-300">
                 {error}
@@ -88,7 +88,7 @@ export default function Access() {
             )}
           </div>
 
-          <button type="submit" className="btn-primary w-full" disabled={submitting || accessCode.length !== PIN_LENGTH}>
+          <button type="submit" className="btn-primary w-full" disabled={submitting || !password}>
             {submitting
               ? <SpinnerGap size={20} weight="bold" className="animate-spin" />
               : <ArrowRight size={20} weight="bold" />}

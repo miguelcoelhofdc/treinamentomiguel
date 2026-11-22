@@ -39,6 +39,7 @@ import plan from '@/data/activePlan'
 import { type UpdateTrainingSetting } from '@/lib/trainingSettings'
 import type { TrainingSettings } from '@/types'
 import { createTrainingBackup, restoreTrainingBackup } from '@/db/trainingBackup'
+import type { TrainingCloudStatus } from '@/db/trainingCloud'
 import { backupRecordCount, parseTrainingBackup, stringifyTrainingBackup } from '@/lib/trainingBackup'
 
 type SettingsData = TrainingSettings
@@ -48,6 +49,7 @@ interface Props {
   updateSetting: UpdateTrainingSetting
   profileId: ProfileId
   profileLabel: string
+  cloudStatus: TrainingCloudStatus
   onLogout: () => void
 }
 
@@ -78,7 +80,7 @@ function SettingsSection({ icon: SectionIcon, title, description, children }: { 
   </section>
 }
 
-export default function Settings({ settings, updateSetting, profileId, profileLabel, onLogout }: Props) {
+export default function Settings({ settings, updateSetting, profileId, profileLabel, cloudStatus, onLogout }: Props) {
   const [activeGroup, setActiveGroup] = useState<string | null>(GROUPS[0])
   const [profileDraft, setProfileDraft] = useState<ProfileDraft>({
     name: settings.name,
@@ -465,8 +467,12 @@ export default function Settings({ settings, updateSetting, profileId, profileLa
       <SettingsSection
         icon={Database}
         title="Dados e backup"
-        description="Crie uma cópia portátil ou restaure o histórico neste aparelho."
+        description="Acompanhe a sincronização ou guarde uma cópia portátil."
       >
+        <p role="status" className="mb-3 text-sm font-medium text-ink">
+          {cloudStatus === 'synced' ? 'Sincronizado com a nuvem'
+            : cloudStatus === 'pending' ? 'Aguardando conexão com a nuvem' : 'Sincronizando com a nuvem'}
+        </p>
         <div className="list-surface divide-y divide-line/80">
           <div className="flex items-start gap-3 bg-accent-soft/35 p-4 sm:p-5">
             <ShieldCheck size={22} weight="duotone" className="mt-0.5 shrink-0 text-accent-strong" aria-hidden="true" />

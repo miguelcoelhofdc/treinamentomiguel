@@ -8,11 +8,6 @@ export interface AccessProfile {
 
 const ACTIVE_PROFILE_KEY = 'treino-active-profile'
 
-const ACCESS_HASHES: Record<ProfileId, string> = {
-  miguel: '69e62ea6ec1e1e35959c97f5631d02c93286c13410c20895fb8b5118cf644ef0',
-  sintia: '69be0182f4d8fa9f909126ba2ded763d076e10fc4999b9dee9cec1f596ea2cad',
-}
-
 export const ACCESS_PROFILES: Record<ProfileId, AccessProfile> = {
   miguel: { id: 'miguel', label: 'Miguel', databaseName: 'treinamento-miguel' },
   sintia: { id: 'sintia', label: 'Cíntia', databaseName: 'treinamento-sintia' },
@@ -33,6 +28,10 @@ export function getStoredProfileId(): ProfileId | null {
   }
 }
 
+// The database and the authenticated app must use the same profile for the
+// lifetime of a tab, even when another tab switches the shared session.
+export const loadedProfileId = getStoredProfileId()
+
 export function storeProfileId(profileId: ProfileId): void {
   window.localStorage.setItem(ACTIVE_PROFILE_KEY, profileId)
 }
@@ -43,17 +42,4 @@ export function clearStoredProfile(): void {
   } finally {
     document.documentElement.classList.remove('dark')
   }
-}
-
-async function sha256(value: string): Promise<string> {
-  const bytes = new TextEncoder().encode(value)
-  const digest = await window.crypto.subtle.digest('SHA-256', bytes)
-  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')
-}
-
-export async function authenticateAccessCode(accessCode: string): Promise<ProfileId | null> {
-  if (!window.crypto?.subtle) return null
-  const hash = await sha256(accessCode.trim())
-  return (Object.keys(ACCESS_HASHES) as ProfileId[])
-    .find(profileId => ACCESS_HASHES[profileId] === hash) ?? null
 }
