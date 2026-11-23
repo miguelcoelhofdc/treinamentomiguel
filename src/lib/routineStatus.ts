@@ -24,7 +24,7 @@ export type CellEditMode = 'status' | 'binary' | 'value'
 
 export function cellEditMode(kind: RoutineKind): CellEditMode {
   if (kind === 'weight') return 'value'
-  if (kind === 'check' || kind === 'exercise') return 'binary'
+  if (kind === 'check') return 'binary'
   return 'status'
 }
 
@@ -46,7 +46,9 @@ export function readingToStatus(routine: RoutineDefinition, reading: RoutineRead
     if (!Number.isInteger(value) || value < 1 || value > 5) return null
     return value as StatusLevel
   }
-  if (reading.format === 'binary' || routine.kind === 'check' || routine.kind === 'exercise') return value >= 1 ? 5 : 1
+  if (reading.format === 'binary' || routine.kind === 'check') return value >= 1 ? 5 : 1
+  // Treinos sem avaliação explícita ainda contam como “feito” (nível 5) na grade.
+  if (routine.kind === 'exercise') return value >= 1 ? 5 : 1
   // Historical liters, hours, counts and weight are measurements, not self-assessments.
   return null
 }
@@ -128,8 +130,8 @@ export function statusToSaveValue(routine: RoutineDefinition, level: StatusLevel
 
 /** No check-in da home: só carinhas (ou feito/não fiz). Hábitos de valor ficam na grade. */
 export function homeCheckInMode(kind: RoutineKind): 'faces' | 'binary' | null {
-  if (kind === 'check' || kind === 'exercise') return 'binary'
-  if (kind === 'rating' || kind === 'nutrition' || kind === 'sleep' || kind === 'water' || kind === 'duration' || kind === 'count') {
+  if (kind === 'check') return 'binary'
+  if (kind === 'exercise' || kind === 'rating' || kind === 'nutrition' || kind === 'sleep' || kind === 'water' || kind === 'duration' || kind === 'count') {
     return 'faces'
   }
   return null
@@ -363,7 +365,7 @@ export interface HabitInsightRow {
 }
 
 export function habitChartMode(kind: RoutineKind): HabitChartMode {
-  if (kind === 'check' || kind === 'exercise') return 'binary'
+  if (kind === 'check') return 'binary'
   if (kind === 'weight') return 'value'
   return 'status'
 }

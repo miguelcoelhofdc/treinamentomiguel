@@ -10,7 +10,7 @@ import { readingToStatus } from '@/lib/routineStatus'
 import type { RoutineDefinition, RoutineKind } from '@/types'
 
 const FACES = [SmileyXEyes, SmileySad, SmileyMeh, Smiley, SmileyWink]
-const FACE_KINDS = new Set<RoutineKind>(['nutrition', 'rating', 'count', 'sleep', 'water', 'duration'])
+const FACE_KINDS = new Set<RoutineKind>(['exercise', 'nutrition', 'rating', 'count', 'sleep', 'water', 'duration'])
 
 export function FiveRating({ value, onChange, label }: { value?: number; onChange: (value: number | undefined) => void; label: string }) {
   return <div className="rating-options routine-rating" role="group" aria-label={label}>{FIVE_RATINGS.map((name, index) => {
@@ -27,7 +27,6 @@ function draftValue(routine: RoutineDefinition, reading: ReturnType<typeof routi
     const level = readingToStatus(routine, reading)
     return level ? String(level) : ''
   }
-  if (routine.kind === 'exercise') return String(Math.min(1, reading.value)).replace('.', ',')
   return String(reading.value).replace('.', ',')
 }
 
@@ -62,11 +61,17 @@ export default function RoutineReviewForm({ data, date, routineId, onSaved, onDa
     const draft = drafts[routine.id]
     if (!draft) return null
     if (FACE_KINDS.has(routine.kind)) {
-      return <FiveRating label={routine.name} value={draft.value ? Number(draft.value) : undefined} onChange={value => update(routine.id, { value: value == null ? '' : String(value) })} />
+      return <>
+        <FiveRating label={routine.name} value={draft.value ? Number(draft.value) : undefined} onChange={value => update(routine.id, { value: value == null ? '' : String(value) })} />
+        {routine.kind === 'exercise' && (
+          <Link className="inline-link mt-3" to={`/registrar?atividade=${encodeURIComponent(routine.activity!)}&data=${date}`}>
+            Registrar outra sessão ou seus detalhes
+          </Link>
+        )}
+      </>
     }
-    if (routine.kind === 'check' || routine.kind === 'exercise') {
-      const locked = false // Habit assessments are independent of detailed training history.
-      return <><div className="entry-tabs" role="group" aria-label={routine.name}>{[{ value: '1', label: 'Feito' }, { value: '0', label: 'Não fiz' }].map(option => <button key={option.value} disabled={locked} type="button" aria-pressed={draft.value === option.value} onClick={() => update(routine.id, { value: option.value === draft.value ? '' : option.value })}>{option.label}</button>)}</div>{locked && <p className="helper mt-2">Treino já registrado. Você pode editá-lo no histórico.</p>}{routine.kind === 'exercise' && <Link className="inline-link mt-3" to={`/registrar?atividade=${encodeURIComponent(routine.activity!)}&data=${date}`}>Registrar outra sessão ou seus detalhes</Link>}</>
+    if (routine.kind === 'check') {
+      return <div className="entry-tabs" role="group" aria-label={routine.name}>{[{ value: '1', label: 'Feito' }, { value: '0', label: 'Não fiz' }].map(option => <button key={option.value} type="button" aria-pressed={draft.value === option.value} onClick={() => update(routine.id, { value: option.value === draft.value ? '' : option.value })}>{option.label}</button>)}</div>
     }
     return <><label className="sr-only" htmlFor={`${formId}-${routine.id}`}>{routine.name}</label><input id={`${formId}-${routine.id}`} className="input" inputMode="decimal" placeholder="Peso em kg" value={draft.value} onChange={event => update(routine.id, { value: event.target.value })} /></>
   }

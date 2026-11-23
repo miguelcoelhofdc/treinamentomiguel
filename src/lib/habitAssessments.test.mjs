@@ -13,7 +13,7 @@ const entry = (kind, value, date = yesterday, extras = {}) => ({ id: `${kind}:${
 
 describe('qualitative habit assessments', () => {
   it('round trips all five selected levels without fabricating measurements', () => {
-    for (const kind of ['water', 'nutrition', 'sleep', 'count', 'duration', 'rating']) {
+    for (const kind of ['water', 'nutrition', 'sleep', 'count', 'duration', 'rating', 'exercise']) {
       for (const bottleMl of [500, 1700, 2000]) {
         const habit = routine(kind, { bottleMl })
         for (const level of [1, 2, 3, 4, 5]) {
@@ -53,7 +53,7 @@ describe('qualitative habit assessments', () => {
   })
   it('distinguishes a bad assessment, not done, and unanswered', () => {
     const habits = [routine('water'), routine('exercise'), routine('weight')]
-    const rows = data([entry('water', 1), entry('exercise', 0)], { daily: [{ date: yesterday, weightKg: 75 }] })
+    const rows = data([entry('water', 1), entry('exercise', 1)], { daily: [{ date: yesterday, weightKg: 75 }] })
     assert.deepEqual(homeCheckInProgress(habits, yesterday, rows), { done: 2, total: 2, complete: true })
     assert.deepEqual(dayRegisterProgress(habits, yesterday, rows), { done: 2, total: 2, complete: true })
     const missing = data([], { daily: [{ date: yesterday, sleepH: 8 }] })
@@ -112,9 +112,9 @@ describe('habit evolution', () => {
     assert.deepEqual(recent.at(-3), { date: '2026-11-19', score: null, count: 0 })
   })
 
-  it('counts done and not done for binary habits, including old workout entries once per day', () => {
+  it('rates exercise on the 1–5 scale, keeps legacy binary overrides, and counts old workouts once per day', () => {
     const rows = data([
-      entry('exercise', 0, '2026-11-03'),
+      entry('exercise', 0, '2026-11-03', { format: 'binary' }),
       entry('exercise', null, '2026-11-04'),
     ], { activities: ['02', '02', '03', '04'].map((day, index) => ({
       id: String(index), date: `2026-11-${day}`, activity: 'forca', completed: true,
@@ -125,6 +125,7 @@ describe('habit evolution', () => {
     ])
     assert.equal(result.months.at(-1).score, 50)
     assert.equal(result.months.at(-1).count, 2)
+    assert.equal(readingToStatus(routine('exercise'), routineReading(routine('exercise'), '2026-11-05', data([entry('exercise', 3, '2026-11-05')]))), 3)
   })
 
   it('separates calendar months across years while the daily average carries across', () => {
@@ -209,7 +210,17 @@ describe('assessment goals', () => {
     const binaryGoal = goal({ routineId: 'exercise', format: 'binary', threshold: 1 })
     const rows = data([], { activities: [{ id: 'a', date: yesterday, activity: 'forca', completed: true }, { id: 'b', date: yesterday, activity: 'corrida', completed: true }] })
     assert.equal(routineGoalProgress(binaryGoal, routine('exercise'), rows, today).current, 1)
-    rows.entries.push(entry('exercise', 0))
+    rows.entries.push(entry('exercise', 1))
     assert.equal(routineGoalProgress(binaryGoal, routine('exercise'), rows, today).current, 0)
+    rows.entries = [entry('exercise', 4)]
+    assert.equal(routineGoalProgress(binaryGoal, routine('exercise'), rows, today).current, 1)
+  })
+
+  it('creates rating goals for exercise with a 1–5 day threshold', () => {
+    const ratingGoal = goal({ routineId: 'exercise', format: 'rating', threshold: 4 })
+    assert.equal(validRoutineGoal(ratingGoal, routine('exercise')), true)
+    assert.equal(assessmentFormat('exercise'), 'rating')
+    const rows = data([entry('exercise', 5, '2026-11-18'), entry('exercise', 2, '2026-11-19'), entry('exercise', 4, yesterday)])
+    assert.equal(routineGoalProgress(ratingGoal, routine('exercise'), rows, today).current, 2)
   })
 })

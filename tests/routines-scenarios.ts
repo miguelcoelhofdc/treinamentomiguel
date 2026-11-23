@@ -112,10 +112,10 @@ await test('Mover sessão para ontem sem deixar marcação duplicada no dia ante
   assert((await readData()).activities.filter(item => item.date === yesterday).length === 2)
 })
 await test('Contabilizar dias realizados sem usar a quantidade de sessões', async () => {
-  await saveRoutineValues(yesterday, [{ routineId: 'exercise', value: 1 }])
+  await saveRoutineValues(yesterday, [{ routineId: 'exercise', value: 4 }])
   const rows = await readData()
   const general = (await db.routines.get('exercise'))!
-  const g = { id: 'qa-week', routineId: general.id, title: 'Dias realizados', metric: 'days' as const, period: 'week' as const, target: 3, threshold: 1, format: 'binary' as const, startDate: yesterday }
+  const g = { id: 'qa-week', routineId: general.id, title: 'Dias realizados', metric: 'days' as const, period: 'week' as const, target: 3, threshold: 4, format: 'rating' as const, startDate: yesterday }
   await saveRoutineGoal(g)
   assert(routineGoalProgress(g, general, rows, today).current === 1)
 })

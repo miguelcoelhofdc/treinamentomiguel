@@ -16,8 +16,12 @@ function weeklyLabel(routine: RoutineDefinition, data: TrackingData) {
   }
   if (!readings.length) return 'Sem registro nesta semana'
   if (routine.kind === 'weight') return `${numberLabel(readings.at(-1)!.value)} kg · último registro`
-  if (routine.kind === 'exercise' || routine.kind === 'check') return `${readings.filter(item => item.value >= 1).length} dias realizados · ${readings.length} registros`
-  return `${numberLabel(readings.reduce((sum, item) => sum + item.value, 0) / readings.length)} de 5 · média de ${readings.length} registros`
+  if (routine.kind === 'check') return `${readings.filter(item => item.value >= 1).length} dias realizados · ${readings.length} registros`
+  const levels = readings
+    .map(item => readingToStatus(routine, item))
+    .filter((level): level is NonNullable<typeof level> => level != null)
+  if (!levels.length) return 'Sem registro nesta semana'
+  return `${numberLabel(levels.reduce((sum, level) => sum + level, 0) / levels.length)} de 5 · média de ${levels.length} registros`
 }
 
 export default function RoutineDashboard({ data, onRecord }: { data: TrackingData; onRecord: (date: string, routineId?: string) => void }) {

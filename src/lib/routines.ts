@@ -7,7 +7,7 @@ export const KIND_LABELS: Record<RoutineKind, string> = { water: 'Água', nutrit
 export interface RoutineData { daily: DailyLog[]; activities: ActivityLog[]; entries: RoutineEntry[] }
 export interface RoutineReading { value: number; volumeMl?: number; format?: 'rating' | 'binary' }
 export function assessmentFormat(kind: RoutineKind): 'rating' | 'binary' | null {
-  return kind === 'weight' ? null : kind === 'check' || kind === 'exercise' ? 'binary' : 'rating'
+  return kind === 'weight' ? null : kind === 'check' ? 'binary' : 'rating'
 }
 export function validAssessment(value: unknown, format: 'rating' | 'binary'): value is number {
   return typeof value === 'number' && Number.isInteger(value)
@@ -135,7 +135,15 @@ export function routineSessions(routine: RoutineDefinition, data: RoutineData, s
 export function routineReading(routine: RoutineDefinition, date: string, data: RoutineData): RoutineReading | null {
   if (!isDateKey(date)) return null
   const entry = data.entries.find(item => item.routineId === routine.id && item.date === date)
-  if (entry?.format) return validEntry(entry, routine) && entry.value != null ? { value: entry.value, format: entry.format } : null
+  if (entry?.format) {
+    if (validEntry(entry, routine) && entry.value != null) return { value: entry.value, format: entry.format }
+    // Exercício passou de feito/não fiz para 1–5; leituras antigas em binary ainda contam.
+    if (routine.kind === 'exercise' && entry.format === 'binary') {
+      if (entry.value == null) return null
+      if (validAssessment(entry.value, 'binary')) return { value: entry.value, format: 'binary' }
+    }
+    return null
+  }
   if (routine.kind === 'exercise') {
     const sessions = routineSessions(routine, data, date, date)
     if (sessions.length) return { value: sessions.length }
@@ -177,7 +185,15 @@ export function routineGoalProgress(goal: RoutineGoal, routine: RoutineDefinitio
       return routineReading(routine, day, { ...data, entries })
     }
     const reading = routineReading(routine, day, data)
-    if (goal.format === 'binary' && reading && !reading.format && (routine.kind === 'exercise' || routine.kind === 'check')) return { value: reading.value >= 1 ? 1 : 0, format: 'binary' as const }
+    if (goal.format === 'binary') {
+      if (reading?.format === 'binary') return reading
+      // Novas notas 1–5: Bom/Excelente contam como “feito” nas metas binary antigas.
+      if (reading?.format === 'rating') return { value: reading.value >= 4 ? 1 : 0, format: 'binary' as const }
+      if (reading && !reading.format && (routine.kind === 'exercise' || routine.kind === 'check')) {
+        return { value: reading.value >= 1 ? 1 : 0, format: 'binary' as const }
+      }
+      return null
+    }
     return reading?.format === goal.format ? reading : null
   }
   let current: number | null = null
