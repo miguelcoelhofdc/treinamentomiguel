@@ -206,7 +206,7 @@ test('synchronizes training between isolated devices through the authenticated P
       })
     })
 
-    await t.test('automatically uploads local saves and refreshes another device on focus', async () => {
+    await t.test('automatically uploads local saves and refreshes another device on poll', async () => {
       globalThis.window = Object.assign(new EventTarget(), { setTimeout, clearTimeout, setInterval, clearInterval })
       globalThis.document = Object.assign(new EventTarget(), { visibilityState: 'visible' })
       const phoneStatus = []
@@ -214,7 +214,7 @@ test('synchronizes training between isolated devices through the authenticated P
       const stopPhone = watchTrainingCloud('miguel', status => phoneStatus.push(status), phone)
       const stopComputer = watchTrainingCloud('miguel', status => computerStatus.push(status), computer)
       const until = async condition => {
-        const deadline = Date.now() + 5_000
+        const deadline = Date.now() + 8_000
         while (Date.now() < deadline) {
           if (await condition()) return
           await pause(30)
@@ -226,7 +226,6 @@ test('synchronizes training between isolated devices through the authenticated P
         await phone.routineEntries.update(recordId, { value: 2 })
         await until(() => phoneStatus.at(-1) === 'synced' && cloudRows.get('miguel').records
           .some(record => record.table === 'routineEntries' && record.row.id === recordId && record.row.value === 2))
-        window.dispatchEvent(new Event('focus'))
         await until(async () => (await computer.routineEntries.get(recordId)).value === 2)
       } finally {
         stopPhone()

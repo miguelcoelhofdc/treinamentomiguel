@@ -8,7 +8,7 @@ import {
 } from '@/lib/trainingSyncModel'
 
 export type TrainingCloudStatus = 'loading' | 'synced' | 'syncing' | 'pending' | 'expired'
-const POLL_MS = 45_000
+const POLL_MS = 2_000
 const DEBOUNCE_MS = 450
 
 // The same historical record imported on two devices gets the same key. Older
