@@ -217,7 +217,7 @@ export function createPostgresTrainingStore(url: string, secret: string, send = 
   }
 }
 
-const configuredPassword = (password?: string) => password && /^[A-Za-z0-9_-]{24,256}$/.test(password) ? password : undefined
+const configuredPassword = (password?: string) => password && /^[\x20-\x7E]{8,256}$/.test(password) ? password : undefined
 
 export default {
   fetch(request: Request) {

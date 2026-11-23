@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie'
 import type { ActivityLog, AppSettings, BodyGoal, DailyLog, ExerciseCheck, PlannedSession, RoutineDefinition, RoutineEntry, RoutineGoal, RunningLog, StrengthLog, WorkoutTemplate } from '@/types'
 import { ACCESS_PROFILES, loadedProfileId } from '@/lib/auth'
+import type { SyncRecord, SyncSnapshot } from '@/lib/trainingSyncModel'
 
 export const GLOBAL_ID_START = 2 ** 51
 const RANDOM_ID_START = 2 ** 52
@@ -23,6 +24,10 @@ export class TrainingDB extends Dexie {
   routineEntries!: Table<RoutineEntry, string>
   routineGoals!: Table<RoutineGoal, string>
   bodyGoals!: Table<BodyGoal, string>
+  trainingSync!: Table<
+    | { id: 'baseline'; snapshot: SyncSnapshot }
+    | { id: 'pending'; records: SyncRecord[]; batchId: string }
+    | { id: 'migration' }, string>
 
   constructor(databaseName: string) {
     super(databaseName)
@@ -53,7 +58,6 @@ export class TrainingDB extends Dexie {
     })
     this.version(7).stores({ bodyGoals: 'id' })
     this.version(8).stores({ activityLogs: 'id, date, activity, &recordingId' })
-    // Preserve the existing database schema for devices that synced before.
     this.version(9).stores({ trainingSync: 'id' })
     this.runningLogs.hook('creating', key => key == null ? globalRecordId() : undefined)
     this.strengthLogs.hook('creating', key => key == null ? globalRecordId() : undefined)

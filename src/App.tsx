@@ -1,10 +1,12 @@
-import { lazy, Suspense, useEffect, type CSSProperties } from 'react'
+import { lazy, Suspense, useEffect, useState, type CSSProperties } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import BottomNav from '@/components/BottomNav'
 import { useSettings } from '@/hooks/useSettings'
 import Access from '@/pages/Access'
 import { useLocalDay } from '@/hooks/useLocalDay'
 import { BODY_GOALS_PATH } from '@/lib/bodyGoals'
+import { watchTrainingCloud, type TrainingCloudStatus } from '@/db/trainingCloud'
+import { signOutTraining } from '@/lib/trainingAccess'
 import {
   ACCESS_PROFILES,
   clearStoredProfile,
@@ -54,6 +56,15 @@ function AppSkeleton() {
 }
 
 function TrainingApp({ profileId }: { profileId: ProfileId }) {
+  const [cloudStatus, setCloudStatus] = useState<TrainingCloudStatus>('loading')
+  useEffect(() => watchTrainingCloud(profileId, setCloudStatus), [profileId])
+
+  if (cloudStatus === 'expired') return <Access />
+  if (cloudStatus === 'loading') return <div className="training-theme tracking-theme app-theme"><AppSkeleton /></div>
+  return <AuthenticatedApp profileId={profileId} cloudStatus={cloudStatus} />
+}
+
+function AuthenticatedApp({ profileId, cloudStatus }: { profileId: ProfileId; cloudStatus: TrainingCloudStatus }) {
   const { settings, updateSetting, loaded, error, retry } = useSettings()
   const today = useLocalDay()
   const activeProfile = ACCESS_PROFILES[profileId]
@@ -68,9 +79,10 @@ function TrainingApp({ profileId }: { profileId: ProfileId }) {
     return () => metas.forEach((meta, index) => { meta.content = previous[index] })
   }, [settings.darkMode, loaded])
 
-  const handleProfileExit = () => {
+  const handleLogout = async () => {
     clearStoredProfile()
-    window.location.replace('/')
+    try { await signOutTraining() }
+    finally { window.location.assign('/') }
   }
 
   if (!loaded) return <div className={shellClass} style={shellStyle}><AppSkeleton /></div>
@@ -79,6 +91,11 @@ function TrainingApp({ profileId }: { profileId: ProfileId }) {
   return (
     <div className={shellClass} style={shellStyle}>
       <ScrollToTop />
+      {cloudStatus === 'pending' && (
+        <p role="status" className="mx-auto mt-4 max-w-xl rounded-lg bg-amber-100 px-4 py-2 text-sm text-amber-950">
+          Sem conexão com a nuvem. As alterações neste aparelho serão enviadas automaticamente quando a conexão voltar.
+        </p>
+      )}
       <Suspense fallback={<AppSkeleton />}>
         <Routes>
           <Route path="/" element={<TrackingHome key={today} settings={settings} />} />
@@ -100,7 +117,8 @@ function TrainingApp({ profileId }: { profileId: ProfileId }) {
                 updateSetting={updateSetting}
                 profileId={profileId}
                 profileLabel={activeProfile.label}
-                onProfileExit={handleProfileExit}
+                cloudStatus={cloudStatus}
+                onLogout={() => { void handleLogout().catch(() => {}) }}
               />
             )}
           />
