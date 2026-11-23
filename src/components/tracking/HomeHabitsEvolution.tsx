@@ -24,6 +24,13 @@ type Period = (typeof PERIODS)[number]['id']
 
 const COLORS = ['#37845e', '#2d729d', '#ad771f', '#bc5158', '#6666a3', '#6a872f', '#a95b82', '#3d8080', '#976149']
 const axisTick = { fill: 'var(--dashboard-muted)', fontSize: 11 }
+const AXIS_INK: Record<number, string> = {
+  100: 'var(--status-ink-5)',
+  75: 'var(--status-ink-4)',
+  50: 'var(--status-ink-3)',
+  25: 'var(--status-ink-2)',
+  0: 'var(--status-ink-1)',
+}
 const shortMonth = new Intl.DateTimeFormat('pt-BR', { month: 'short', timeZone: 'UTC' })
 const dateTick = (date: string) => `${date.slice(8)}/${date.slice(5, 7)}`
 const monthTick = (date: string) => shortMonth.format(new Date(`${date}T12:00:00Z`)).replace('.', '')
@@ -102,8 +109,29 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
               tickLine={false} axisLine={false} tickMargin={10} interval="preserveStartEnd" minTickGap={10} tick={axisTick}
             />
             <YAxis
-              domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={axisLabel}
-              width={yAxisWidth} tickLine={false} axisLine={false} tick={axisTick}
+              domain={[0, 100]}
+              ticks={[0, 25, 50, 75, 100]}
+              width={yAxisWidth}
+              tickLine={false}
+              axisLine={false}
+              tick={({ x, y, payload }) => {
+                const value = Number(payload.value)
+                const label = axisLabel(value)
+                if (!label) return <g />
+                return (
+                  <text
+                    x={x}
+                    y={y}
+                    dy={4}
+                    textAnchor="end"
+                    fill={AXIS_INK[value] ?? 'var(--dashboard-muted)'}
+                    fontSize={11}
+                    fontWeight={600}
+                  >
+                    {label}
+                  </text>
+                )
+              }}
             />
             <Tooltip
               cursor={{ stroke: 'var(--dashboard-chart-reference)', strokeWidth: 1, strokeDasharray: '3 3' }}
@@ -113,17 +141,12 @@ function EvolutionChart({ habits, rows, period }: { habits: Habit[]; rows: Chart
                 return (
                   <div className="dashboard-chart-tooltip home-evolution-tooltip">
                     <strong>{pointLabel(row.date)}</strong>
-                    {habits.map((habit, index) => {
-                      const point = row.points[index]
-                      return (
-                        <div key={habit.id}>
-                          <i style={{ backgroundColor: habit.color }} aria-hidden="true" />
-                          <span>{habit.name}</span>
-                          <b>{resultLabel(point.score, habit.binary)}</b>
-                          {point.count > 0 && <small>{daysLabel(point.count)}</small>}
-                        </div>
-                      )
-                    })}
+                    {habits.map(habit => (
+                      <div key={habit.id}>
+                        <i style={{ backgroundColor: habit.color }} aria-hidden="true" />
+                        <span>{habit.name}</span>
+                      </div>
+                    ))}
                   </div>
                 )
               }}

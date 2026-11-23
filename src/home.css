@@ -123,23 +123,20 @@
 }
 
 .home-evolution-tooltip {
-  max-width: min(252px, calc(100vw - 64px));
+  max-width: min(200px, calc(100vw - 64px));
   font-size: 12px;
   overflow-wrap: anywhere;
 }
 
 .home-evolution-tooltip > div {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  column-gap: 6px;
+  gap: 8px;
 }
 
-.home-evolution-tooltip b { font-weight: 600; }
-
-.home-evolution-tooltip small {
-  grid-column: 2 / -1;
-  color: var(--dashboard-muted);
+.home-evolution-tooltip > div span {
+  color: hsl(var(--color-ink));
+  font-weight: 500;
 }
 
 .home-chart {

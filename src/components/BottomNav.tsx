@@ -3,10 +3,13 @@ import {
   ChartLineUp,
   House,
   Leaf,
+  Moon,
   PlusCircle,
+  Sun,
   Target,
   UserCircle,
 } from '@phosphor-icons/react'
+import { useSettings } from '@/hooks/useSettings'
 import { BODY_GOALS_PATH } from '@/lib/bodyGoals'
 
 const tabs = [
@@ -19,6 +22,9 @@ const tabs = [
 
 export default function BottomNav() {
   const { pathname } = useLocation()
+  const { settings, updateSetting } = useSettings()
+  const dark = settings.darkMode
+  const lightLabel = dark ? 'Usar iluminação clara' : 'Usar iluminação escura'
 
   return (
     <nav
@@ -58,6 +64,19 @@ export default function BottomNav() {
             </NavLink>
           )
         })}
+        <button
+          type="button"
+          className="training-nav-item training-nav-light"
+          aria-pressed={dark}
+          aria-label={lightLabel}
+          title={lightLabel}
+          onClick={() => { void updateSetting('darkMode', !dark) }}
+        >
+          <span className="nav-icon" aria-hidden="true">
+            {dark ? <Moon size={22} weight="regular" /> : <Sun size={22} weight="regular" />}
+          </span>
+          <span className="nav-label">Iluminação</span>
+        </button>
       </div>
     </nav>
   )

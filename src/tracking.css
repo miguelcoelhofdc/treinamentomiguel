@@ -923,6 +923,7 @@
   .tracking-theme .nav-active .nav-icon {
     width: auto; height: auto; background: transparent; color: inherit; flex-shrink: 0;
   }
+  .tracking-theme .training-nav-light { display: none; }
 }
 .tracking-theme .journey-sheet { border: 2px solid hsl(var(--color-line)); }
 @keyframes tracking-confirm { from { opacity: .3; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -1119,6 +1120,21 @@
     border-radius: 14px;
     margin: 0 auto;
     flex-shrink: 0;
+  }
+  .tracking-theme .training-nav-light {
+    margin-top: auto;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    color: var(--nav-item);
+    appearance: none;
+  }
+  .tracking-theme .training-nav-light:focus-visible .nav-icon {
+    background: rgba(255, 255, 255, 0.12);
+    color: #f5f5f5;
+    outline: 2px solid rgba(255, 255, 255, 0.72);
+    outline-offset: 2px;
   }
   .tracking-theme.app-shell.is-nav-collapsed .nav-active {
     background: transparent !important;
