@@ -3,7 +3,6 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import recognizeHandwriting from './api/recognize-handwriting'
-import training from './api/training'
 
 function apiDevPlugin(): Plugin {
   return {
@@ -12,7 +11,6 @@ function apiDevPlugin(): Plugin {
     configureServer(server) {
       for (const [path, handler] of [
         ['/api/recognize-handwriting', recognizeHandwriting],
-        ['/api/training', training],
       ] as const) server.middlewares.use(path, async (request, response) => {
         try {
           const chunks: Buffer[] = []
@@ -51,8 +49,6 @@ export default defineConfig(({ mode }) => {
   const serverEnv = {
     ...loadEnv(mode, process.cwd(), 'OPENAI_'),
     ...loadEnv(mode, process.cwd(), 'OPENROUTER_'),
-    ...loadEnv(mode, process.cwd(), 'SUPABASE_'),
-    ...loadEnv(mode, process.cwd(), 'TRAINING_'),
   }
   Object.entries(serverEnv).forEach(([key, value]) => { process.env[key] = value })
 

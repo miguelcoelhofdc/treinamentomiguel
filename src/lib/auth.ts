@@ -28,8 +28,7 @@ export function getStoredProfileId(): ProfileId | null {
   }
 }
 
-// The database and the authenticated app must use the same profile for the
-// lifetime of a tab, even when another tab switches the shared session.
+// Keep the database and plan on the profile selected when this tab loaded.
 export const loadedProfileId = getStoredProfileId()
 
 export function storeProfileId(profileId: ProfileId): void {

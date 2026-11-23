@@ -6,3 +6,6 @@
 node_modules/
 dist/
 /tmp/routines-build/
+tmp/*.env
+tmp/*passwords*
+tmp/*secret*

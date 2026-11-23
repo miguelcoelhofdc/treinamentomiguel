@@ -1,8 +1,5 @@
-# Sincronização do Meu Ritmo
+# Histórico do Meu Ritmo
 
-1. No projeto Supabase destinado ao Meu Ritmo, execute `training_sync.sql` no editor SQL. A tabela usa PostgreSQL com acesso restrito ao servidor.
-2. No projeto Vercel do app, configure `SUPABASE_URL` e `SUPABASE_SECRET_KEY` no ambiente de produção. Use a chave de servidor `sb_secret_` da Data API.
-3. Configure `TRAINING_SESSION_SECRET`, `TRAINING_MIGUEL_PASSWORD` e `TRAINING_SINTIA_PASSWORD` na Vercel. Gere cada valor separadamente com 32 bytes aleatórios em base64url. As novas senhas dão acesso aos mesmos perfis e substituem o PIN local.
-4. Publique a versão e valide o acesso de cada perfil. Em um navegador de teste, grave uma avaliação e confirme que ela aparece em outro navegador conectado ao mesmo perfil.
+O Meu Ritmo abre os perfis diretamente e salva os registros no navegador de cada aparelho. Em **Ajustes → Dados e backup**, é possível exportar e importar um arquivo JSON para transferir registros.
 
-Para migrar o histórico antigo, abra o mesmo endereço do app na instalação ou no navegador do celular onde você fez os registros e entre no mesmo perfil com a nova senha. O envio começa automaticamente. Em **Ajustes → Dados e backup**, aguarde **Sincronizado com a nuvem** antes de limpar os dados do navegador ou trocar de aparelho. Se houver registros em outras instalações ou navegadores, abra o app em cada um para enviar o histórico local daquele aparelho.
+O arquivo `training_sync.sql` documenta a estrutura usada pela sincronização anterior. Os registros enviados ao Supabase continuam no projeto original. A versão local abre os registros já salvos no aparelho.
