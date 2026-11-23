@@ -36,11 +36,10 @@ type Habit = ReturnType<typeof habitEvolution> & {
   binary: boolean
 }
 
-interface ChartRow {
+type ChartRow = {
   date: string
   points: HabitEvolutionPoint[]
-  scores: Record<string, number | null>
-}
+} & Record<string, string | number | null | HabitEvolutionPoint[]>
 
 function scoreKey(habitId: string) {
   return `s_${habitId.replace(/[^a-zA-Z0-9_-]/g, '_')}`
@@ -53,11 +52,12 @@ function buildChartRows(habits: Habit[], period: Period): ChartRow[] {
   return Array.from({ length }, (_, index) => {
     const date = series[0]![index].date
     const points = series.map(points => points[index]!)
-    const scores: Record<string, number | null> = {}
-    habits.forEach((habit, habitIndex) => {
-      scores[scoreKey(habit.id)] = points[habitIndex]?.score ?? null
-    })
-    return { date, points, scores }
+    const scores = Object.fromEntries(habits.map((habit, habitIndex) => [
+      scoreKey(habit.id),
+      points[habitIndex]?.score ?? null,
+    ]))
+    // Recharts Line dataKey reads top-level fields (s_water), not nested objects.
+    return { date, points, ...scores }
   })
 }
 
